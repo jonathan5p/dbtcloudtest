@@ -18,8 +18,6 @@ phases:
     commands:
       
       - cd terraformScripts
-      - ls
-
       - terraform init -backend-config="${ENVIRONMENT}_backend.conf"
       
       - export TF_VAR_site=$SITE
