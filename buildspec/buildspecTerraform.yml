@@ -1,0 +1,58 @@
+version: 0.2
+env:
+  shell: bash
+  variables:
+    TERRAFORM_DOWNLOAD_URL: https://releases.hashicorp.com/terraform/1.1.3/terraform_1.1.3_linux_amd64.zip
+  #parameter-store:
+  #  SSH_KEY: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/github_ssh_private_key'
+
+phases:
+  install:
+    commands:
+      - wget $TERRAFORM_DOWNLOAD_URL
+      - unzip -o terraform_1.1.3_linux_amd64.zip
+      - mv terraform /bin
+      - rm terraform_1.1.3_linux_amd64.zip
+
+  build:
+    commands:
+      
+      - cd terraformScripts
+      - ls
+
+      - terraform init -backend-config="${ENVIRONMENT}_backend.conf"
+      
+      - export TF_VAR_site=$SITE
+      - export TF_VAR_aws_account_number_env=$ENV_ACCOUNT_NUMBER
+      - export TF_VAR_environment=$ENVIRONMENT
+      - export TF_VAR_workspace=$TERRAFORM_WORKSPACE
+      - export TF_VAR_role_arn=$TERRAFORM_DEPLOYMENT_ROLE
+
+      - echo "SITE = ${TF_VAR_site}"
+      - echo "ENV_ACCOUNT_NUMBER = ${TF_VAR_aws_account_number_env}"
+      - echo "ENVIRONMENT = ${TF_VAR_environment}"
+      - echo "TERRAFORM_WORKSPACE = ${TF_VAR_workspace}"
+      - echo "TERRAFORM_DEPLOYMENT_ROLE = ${TF_VAR_role_arn}"
+      - echo "TF_ACTION = ${TF_ACTION}"
+
+      # send terraform plan file to s3 bucket/terraform_plan bucket for display
+      - |
+        if [ $TF_ACTION = "plan" ] || [ $TF_ACTION = "deploy" ]; then
+          terraform plan -out="$TERRAFORM_WORKSPACE.tfplan" -var-file="${TERRAFORM_WORKSPACE}.tfvars"
+          if [ $? != 0 ] ; then exit 1; fi
+          ls -al
+          #aws s3 sync . $S3_FOR_TERRAFORM_PLAN --exclude "*" --include "$TERRAFORM_WORKSPACE.tfplan" --only-show-errors
+          echo "Plan_stage is executed!"
+        fi
+      - |
+        if [ $TF_ACTION = "provision" ] || [ $TF_ACTION = "deploy" ] ; then
+          #aws s3 sync $S3_FOR_TERRAFORM_PLAN/ . --exclude "*" --include "$TERRAFORM_WORKSPACE.tfplan" --only-show-errors
+          # terraform apply $TERRAFORM_WORKSPACE.tfplan
+          terraform apply -var-file="${TERRAFORM_WORKSPACE}.tfvars" -auto-approve
+          if [ $? != 0 ] ; then exit 1; fi
+          echo "Provision stage is executed!"
+        fi
+
+  post_build:
+    commands:
+      - echo "Build executed successfully. "

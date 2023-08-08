@@ -1,0 +1,8 @@
+aws_shared_credential_file_path  = "~/.aws/credentials"
+aws_profile_code                 = "devops"
+aws_profile_dev                  = "test"
+zone                             = "z1"
+environment_devops               = "c1"
+environment_dev                  = "t1"
+code_source_branch               = "test"
+enable_codepipeline_notification = "true"
