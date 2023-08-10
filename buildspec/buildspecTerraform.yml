@@ -18,39 +18,41 @@ phases:
     commands:
       
       - cd terraformScripts
-      - terraform init -backend-config="${ENVIRONMENT}_backend.conf"
-      
-      - export TF_VAR_site=$SITE
-      - export TF_VAR_aws_account_number_env=$ENV_ACCOUNT_NUMBER
-      - export TF_VAR_environment=$ENVIRONMENT
-      - export TF_VAR_workspace=$TERRAFORM_WORKSPACE
-      - export TF_VAR_role_arn=$TERRAFORM_DEPLOYMENT_ROLE
+      - environment_set=$(aws ssm get-parameter --name /datapipeline_cicd_oidh/${SOURCE_BRANCH}/active_environment --with-decryption --query Parameter.Value | tr -d '"' )
+      - |
+        IFS=';' read -ra ADDR <<< "$environment_set"
+            
+        for i in "${ADDR[@]}"; do
+          IFS=',' read -ra ADDR_INT <<< "$i"
+          tmp="${ADDR_INT[0]}='${ADDR_INT[1]}'"
+          eval $tmp
+        done
 
-      - echo "SITE = ${TF_VAR_site}"
-      - echo "ENV_ACCOUNT_NUMBER = ${TF_VAR_aws_account_number_env}"
-      - echo "ENVIRONMENT = ${TF_VAR_environment}"
-      - echo "TERRAFORM_WORKSPACE = ${TF_VAR_workspace}"
-      - echo "TERRAFORM_DEPLOYMENT_ROLE = ${TF_VAR_role_arn}"
+      - |
+        sed -i "s/\${bucket_backend}/${bucket_backend}/" ${TF_VAR_environment}_backend.conf
+        cat ${TF_VAR_environment}_backend.conf
+
+      - terraform init -backend-config=${TF_VAR_environment}_backend.conf
+      - terraform workspace select $TF_VAR_environment || terraform workspace new $TF_VAR_environment
       - echo "TF_ACTION = ${TF_ACTION}"
 
       # send terraform plan file to s3 bucket/terraform_plan bucket for display
       - |
         if [ $TF_ACTION = "plan" ] || [ $TF_ACTION = "deploy" ]; then
-          terraform plan -out="$TERRAFORM_WORKSPACE.tfplan" -var-file="${TERRAFORM_WORKSPACE}.tfvars"
+          terraform plan -out="$TF_VAR_environment.tfplan" -var-file="${TF_VAR_environment}.tfvars"
           if [ $? != 0 ] ; then exit 1; fi
           ls -al
-          #aws s3 sync . $S3_FOR_TERRAFORM_PLAN --exclude "*" --include "$TERRAFORM_WORKSPACE.tfplan" --only-show-errors
           echo "Plan_stage is executed!"
         fi
       - |
         if [ $TF_ACTION = "provision" ] || [ $TF_ACTION = "deploy" ] ; then
-          #aws s3 sync $S3_FOR_TERRAFORM_PLAN/ . --exclude "*" --include "$TERRAFORM_WORKSPACE.tfplan" --only-show-errors
-          # terraform apply $TERRAFORM_WORKSPACE.tfplan
-          terraform apply -var-file="${TERRAFORM_WORKSPACE}.tfvars" -auto-approve
+          terraform apply -var-file="${TF_VAR_environment}.tfvars" -auto-approve
           if [ $? != 0 ] ; then exit 1; fi
           echo "Provision stage is executed!"
         fi
-
+    finally:
+      # take tfstate files of the current workspace and write them back to s3 for the next time this runs
+      #- aws s3 sync . $S3_FOR_TERRAFORM_STATE --exclude "*" --include "*/$TERRAFORM_WORKSPACE/*.tfstate*" --include "*.terraform/*" --only-show-errors
   post_build:
     commands:
       - echo "Build executed successfully. "
