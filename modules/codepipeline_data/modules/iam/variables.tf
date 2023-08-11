@@ -34,6 +34,10 @@ variable "site" {
   default = {}
 }
 
+variable "sns_topic_approval" {
+  default = {}
+}
+
 variable "s3_code_bucket_arn" {
   default = {}
 }

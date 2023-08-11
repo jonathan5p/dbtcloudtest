@@ -1,3 +1,4 @@
+
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   app_group = var.project_app_group
@@ -77,6 +78,15 @@ data "aws_iam_policy_document" "cpl_access" {
     ]
     resources = [var.codestar_github_connection]
   }
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:GetParameter"
+    ]
+    resources = [
+      "arn:aws:ssm:*:036360966563:parameter/datapipeline_cicd_oidh/*"
+    ]
+  }
 }
 
 module "ipl_cpl_access_naming" {
@@ -121,7 +131,8 @@ data "aws_iam_policy_document" "cbd_build" {
     actions = ["s3:*"]
     resources = [
         var.s3_code_bucket_arn,
-        "${var.s3_code_bucket_arn}/*"
+        "${var.s3_code_bucket_arn}/*",
+        "${var.s3_code_bucket_arn}/env*"
     ]
   }
   statement {
@@ -136,6 +147,38 @@ data "aws_iam_policy_document" "cbd_build" {
       "arn:aws:ssm:*:${var.aws_account_number_devops}:parameter/parameter/${var.site}/c1/codebuild/*"
     ]
   }
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem",
+      "dynamodb:DeleteItem"
+    ]
+    resources = [
+      "arn:aws:dynamodb:*:${var.aws_account_number_devops}:table/terraform-*"
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "sns:Publish",
+    ]
+    resources = [
+      var.sns_topic_approval
+    ]
+  }
+
+  # adding permission to generate unit test report inside codebuild
+  #statement {
+  #  effect = "Allow"
+  #  actions = [
+  #    "codebuild:CreateReportGroup",
+  #    "codebuild:CreateReport",
+  #    "codebuild:UpdateReport",
+  #    "codebuild:BatchPutTestCases"
+  #  ]
+  #  resources = ["arn:aws:codebuild:*:${var.aws_account_number_devops}:report-group/${module.cbd_build_naming.name}*"]
+  #}
 }
 
 module "irp_cbd_build_naming" {

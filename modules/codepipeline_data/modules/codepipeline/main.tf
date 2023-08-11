@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   app_group = var.project_app_group
@@ -210,6 +212,11 @@ resource "aws_codebuild_project" "provision" {
       name  = "S3_FOR_TERRAFORM_LOCK"
       value = join("", ["s3://", var.s3_code_bucket_name, "/terraform_state/terraform.tfstate.d/", var.environment_dev, "/"])
     }
+    environment_variable {
+      name  = "SOURCE_BRANCH"
+      value = var.code_source_branch
+    }
+
     dynamic "environment_variable" {
       for_each = [for i in var.environment_variable_codeprovision : {
         name  = i.name
@@ -244,12 +251,21 @@ resource "aws_codestarnotifications_notification_rule" "notification" {
   ]
   name     = "${module.cpl_project_naming.name}-notification-${var.environment_dev}"
   resource = aws_codepipeline.codepipeline.arn
-  target {
-    address = var.sns_arn_codepipeline_notification
-    type    = "SNS"
-  }
+  #target {
+  #  address = var.sns_arn_codepipeline_notification
+  #  type    = "SNS"
+  #}
   target {
     address = var.chatbot_arn_codepipeline_notification
     type    = "AWSChatbotSlack"
   }
+}
+
+
+resource "aws_ssm_parameter" "active_environment" {
+  name        = "/${var.datapipeline_name}/${var.code_source_branch}/active_environment"
+  type        = "SecureString"
+  value       = "region,${data.aws_region.current.name};dynamo_state_backend,${var.dynamo_state_backend};bucket_backend,${var.s3_code_bucket_name};TF_VAR_role_arn,${var.dev_deployment_role};TF_VAR_environment,${var.environment_dev};TF_VAR_site,${var.site}"
+  description = "Name for the code bucket datapipeline"
+  overwrite   = true
 }

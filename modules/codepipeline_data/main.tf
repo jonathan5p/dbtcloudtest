@@ -46,6 +46,11 @@ data "aws_ssm_parameter" "iam_role_cpl_name" {
   name        = "/${var.datapipeline_name}/iam/iam_role_cpl_name"
 }
 
+data "aws_ssm_parameter" "approval_notification_parameter" {
+  count = var.sns_notification_create_approval ? 0 : 1
+  name = "/${var.datapipeline_name}/sns/approval_notification"
+}
+
 
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
@@ -81,6 +86,7 @@ module "iam_roles" {
   project_ledger = var.project_ledger
   project_prefix = var.project_prefix
   site = var.site
+  sns_topic_approval = var.sns_notification_create_approval ? module.sns_topic[0].sns_topic_approval : data.aws_ssm_parameter.approval_notification_parameter[0].value
   s3_code_bucket_arn = var.create_code_bucket ? module.s3_bucket[0].s3_code_bucket_arn : data.aws_ssm_parameter.s3_code_bucket_arn[0].value
   tier = var.tier
   zone = var.zone 
@@ -97,6 +103,7 @@ module "codepipeline" {
     compute_type = var.compute_type
     datapipeline_name = var.datapipeline_name
     dev_deployment_role = var.dev_deployment_role
+    dynamo_state_backend = var.dynamo_state_backend
     enable_codepipeline_notification = var.enable_codepipeline_notification
     environment_dev = var.environment_dev
     environment_devops = var.environment_devops
@@ -113,7 +120,7 @@ module "codepipeline" {
     project_prefix = var.project_prefix
     s3_code_bucket_name = var.create_code_bucket ? module.s3_bucket[0].s3_code_bucket_name : data.aws_ssm_parameter.s3_code_bucket_name[0].value
     site = var.site
-    sns_arn_codepipeline_notification = var.sns_arn_codepipeline_notification
+    sns_arn_codepipeline_notification = var.sns_notification_create_approval ? module.sns_topic[0].sns_topic_approval : data.aws_ssm_parameter.approval_notification_parameter[0].value
     source_owner = var.source_owner
     source_repo = var.source_repo
     tier = var.tier
@@ -145,4 +152,12 @@ module "post_creation_privileges" {
     site = var.site
     tier = var.tier
     zone = var.zone
+}
+
+module "sns_topic" {
+  source = "./modules/sns_notification"
+  count = var.sns_notification_create_approval ? 1 : 0
+
+  datapipeline_name =  var.datapipeline_name
+  sns_notification_create_approval = var.sns_notification_create_approval
 }

@@ -25,6 +25,10 @@ variable "dev_deployment_role" {
   default = {}
 }
 
+variable "dynamo_state_backend" {
+  default = {}
+}
+
 variable "enable_codepipeline_notification" {
   default = {}
 }
@@ -107,8 +111,13 @@ variable "site" {
   default = {}
 }
 
-variable "sns_arn_codepipeline_notification" {
-  default = {}
+#variable "sns_arn_codepipeline_notification" {
+#  default = ""
+#}
+
+variable "sns_notification_create_approval" {
+  default = false
+  type = bool
 }
 
 variable "source_owner" {

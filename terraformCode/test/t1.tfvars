@@ -5,4 +5,6 @@ zone                             = "z1"
 environment_devops               = "c1"
 environment_dev                  = "t1"
 code_source_branch               = "test"
-enable_codepipeline_notification = "true"
+enable_codepipeline_notification = true
+sns_notification_create_approval = false
+#sns_arn_codepipeline_notification= "arn:aws:sns:us-east-2:036360966563:datapipeline_cicd_oidh-approval"

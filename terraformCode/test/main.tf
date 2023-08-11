@@ -18,6 +18,7 @@ provider "aws" {
   profile                 = var.aws_profile_dev
 }
 
+
 module "provision_roles" {
     source = "../../modules/provision_roles"
 
@@ -52,6 +53,7 @@ module "codepipeline" {
   compute_type                          = var.compute_type
   datapipeline_name                     = var.datapipeline_name
   dev_deployment_role                   = module.provision_roles.provision_role_arn
+  dynamo_state_backend                  = var.dynamo_state_backend
   enable_codepipeline_notification      = var.enable_codepipeline_notification
   environment_dev                       = var.environment_dev
   environment_devops                    = var.environment_devops
@@ -97,7 +99,8 @@ module "codepipeline" {
   project_prefix                        = var.project_prefix
 
   site                                  = var.site
-  sns_arn_codepipeline_notification     = var.sns_arn_codepipeline_notification
+  #sns_arn_codepipeline_notification     = var.sns_arn_codepipeline_notification
+  sns_notification_create_approval      = var.sns_notification_create_approval
   source_owner                          = var.source_owner
   source_repo                           = var.source_repo
   tier                                  = var.tier
