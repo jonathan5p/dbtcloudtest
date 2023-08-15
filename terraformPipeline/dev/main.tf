@@ -52,7 +52,6 @@ module "codepipeline" {
   compute_type                          = var.compute_type
   datapipeline_name                     = var.datapipeline_name
   dev_deployment_role                   = module.provision_roles.provision_role_arn
-  #dynamo_state_backend                  = var.dynamo_state_backend
   enable_codepipeline_notification      = var.enable_codepipeline_notification
   environment_dev                       = var.environment_dev
   environment_devops                    = var.environment_devops

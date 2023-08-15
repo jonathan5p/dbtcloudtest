@@ -76,7 +76,7 @@ variable "jfrog_repository_name" {
 
 variable "project_app_group" {
   description = "This is Bright's specified value"
-  default     = "oidh"
+  default     = "ds"
 }
 
 variable "project_ledger" {
@@ -86,7 +86,7 @@ variable "project_ledger" {
 
 variable "project_prefix" {
   description = "This is part of bright naming convention belongs to project repo and resources purpose"
-  default     = "oidh"
+  default     = "oidh-dev"
 }
 
 variable "region" {
