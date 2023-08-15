@@ -6,6 +6,7 @@ provider "aws" {
   }
 }
 
+data "aws_region" "current" {}
 
 resource "aws_ssm_parameter" "foo" {
   name  = "foo"

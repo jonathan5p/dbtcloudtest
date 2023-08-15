@@ -25,9 +25,9 @@ variable "dev_deployment_role" {
   default = {}
 }
 
-variable "dynamo_state_backend" {
-  default = {}
-}
+#variable "dynamo_state_backend" {
+#  default = {}
+#}
 
 variable "enable_codepipeline_notification" {
   default = {}
@@ -111,13 +111,8 @@ variable "site" {
   default = {}
 }
 
-#variable "sns_arn_codepipeline_notification" {
-#  default = ""
-#}
-
-variable "sns_notification_create_approval" {
-  default = false
-  type = bool
+variable "sns_arn_codepipeline_notification" {
+  default = ""
 }
 
 variable "source_owner" {
@@ -150,25 +145,25 @@ variable "zone" {
 
 
 
-variable "create_code_bucket" {
-    default = true
-    type    = bool
-}
+#variable "create_code_bucket" {
+#    default = true
+#    type    = bool
+#}
 
-variable "s3_code_bucket_arn" {
-    default = ""
-    type    = string
-}
+#variable "s3_code_bucket_arn" {
+#    default = ""
+#    type    = string
+#}
 
-variable "s3_code_bucket" {
-    default = ""
-    type = string
-}
+#variable "s3_code_bucket" {
+#    default = ""
+#    type = string
+#}
 
-variable "create_iam_roles" {
-    default = true
-    type    = bool
-}
+#variable "create_iam_roles" {
+#    default = true
+#    type    = bool
+#}
 
 variable "iam_role_cbd_build_arn" {
     default = ""

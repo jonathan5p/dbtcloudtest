@@ -34,7 +34,7 @@ variable "site" {
   default = {}
 }
 
-variable "sns_topic_approval" {
+variable "sns_arn_codepipeline_notification" {
   default = {}
 }
 

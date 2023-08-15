@@ -77,19 +77,19 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
-  stage {
-    name = "Approve"
-    action {
-      name     = "Approval"
-      category = "Approval"
-      owner    = "AWS"
-      provider = "Manual"
-      version  = "1"
-      configuration = {
-        NotificationArn = "${var.sns_arn_codepipeline_notification}"
-      }
-    }
-  }
+  #stage {
+  #  name = "Approve"
+  #  action {
+  #    name     = "Approval"
+  #    category = "Approval"
+  #    owner    = "AWS"
+  #    provider = "Manual"
+  #    version  = "1"
+  #    configuration = {
+  #      NotificationArn = "${var.sns_arn_codepipeline_notification}"
+  #    }
+  #  }
+  #}
   stage {
     name = "Deploy"
     action {
@@ -216,6 +216,23 @@ resource "aws_codebuild_project" "provision" {
       name  = "SOURCE_BRANCH"
       value = var.code_source_branch
     }
+    environment_variable {
+      name  = "bucket_backend"
+      value = var.s3_code_bucket_name
+    }
+    environment_variable {
+      name = "TF_VAR_role_arn"
+      value = var.dev_deployment_role
+    }
+    environment_variable {
+      name = "TF_VAR_environment"
+      value = var.environment_dev
+    }
+    environment_variable {
+      name = "TF_VAR_site"
+      value = var.site
+    }
+
 
     dynamic "environment_variable" {
       for_each = [for i in var.environment_variable_codeprovision : {
@@ -251,21 +268,12 @@ resource "aws_codestarnotifications_notification_rule" "notification" {
   ]
   name     = "${module.cpl_project_naming.name}-notification-${var.environment_dev}"
   resource = aws_codepipeline.codepipeline.arn
-  #target {
-  #  address = var.sns_arn_codepipeline_notification
-  #  type    = "SNS"
-  #}
   target {
-    address = var.chatbot_arn_codepipeline_notification
-    type    = "AWSChatbotSlack"
+    address = var.sns_arn_codepipeline_notification
+    type    = "SNS"
   }
-}
-
-
-resource "aws_ssm_parameter" "active_environment" {
-  name        = "/${var.datapipeline_name}/${var.code_source_branch}/active_environment"
-  type        = "SecureString"
-  value       = "region,${data.aws_region.current.name};dynamo_state_backend,${var.dynamo_state_backend};bucket_backend,${var.s3_code_bucket_name};TF_VAR_role_arn,${var.dev_deployment_role};TF_VAR_environment,${var.environment_dev};TF_VAR_site,${var.site}"
-  description = "Name for the code bucket datapipeline"
-  overwrite   = true
+  #target {
+  #  address = var.chatbot_arn_codepipeline_notification
+  #  type    = "AWSChatbotSlack"
+  #}
 }

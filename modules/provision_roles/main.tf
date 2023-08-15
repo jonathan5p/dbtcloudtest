@@ -74,11 +74,28 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ssm:DescribeParameters",
       "ssm:ListTagsForResource",
       "ssm:GetParameters",
-      "ssm:DeleteParameter"
+      "ssm:DeleteParameter",
+      "ssm:AddTagsToResource"
     ]
     resources = [
       "*"
     ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:*"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+     effect = "Allow"
+     actions = [
+      "lambda:*"
+     ]
+     resources = ["*"]
   }
 }
 

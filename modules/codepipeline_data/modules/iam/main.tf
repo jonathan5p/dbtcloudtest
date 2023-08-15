@@ -78,15 +78,6 @@ data "aws_iam_policy_document" "cpl_access" {
     ]
     resources = [var.codestar_github_connection]
   }
-  statement {
-    effect = "Allow"
-    actions = [
-      "ssm:GetParameter"
-    ]
-    resources = [
-      "arn:aws:ssm:*:036360966563:parameter/datapipeline_cicd_oidh/*"
-    ]
-  }
 }
 
 module "ipl_cpl_access_naming" {
@@ -144,7 +135,8 @@ data "aws_iam_policy_document" "cbd_build" {
     ]
     resources = [
       "arn:aws:ssm:*:${var.aws_account_number_devops}:parameter/secure/${var.site}/c1/codebuild/*",
-      "arn:aws:ssm:*:${var.aws_account_number_devops}:parameter/parameter/${var.site}/c1/codebuild/*"
+      "arn:aws:ssm:*:${var.aws_account_number_devops}:parameter/parameter/${var.site}/c1/codebuild/*",
+      "arn:aws:ssm:*:${var.aws_account_number_devops}:parameter/parameter/${var.site}/c1/${var.datapipeline_name}/*"
     ]
   }
   statement {
@@ -161,24 +153,12 @@ data "aws_iam_policy_document" "cbd_build" {
   statement {
     effect = "Allow"
     actions = [
-      "sns:Publish",
+      "sns:Publish"
     ]
     resources = [
-      var.sns_topic_approval
+      var.sns_arn_codepipeline_notification
     ]
   }
-
-  # adding permission to generate unit test report inside codebuild
-  #statement {
-  #  effect = "Allow"
-  #  actions = [
-  #    "codebuild:CreateReportGroup",
-  #    "codebuild:CreateReport",
-  #    "codebuild:UpdateReport",
-  #    "codebuild:BatchPutTestCases"
-  #  ]
-  #  resources = ["arn:aws:codebuild:*:${var.aws_account_number_devops}:report-group/${module.cbd_build_naming.name}*"]
-  #}
 }
 
 module "irp_cbd_build_naming" {
@@ -212,53 +192,4 @@ resource "aws_iam_role_policy_attachment" "cdb_cpl_access" {
 resource "aws_iam_role_policy_attachment" "cpl_build_access" {
   role       = aws_iam_role.cpl_role.name
   policy_arn = aws_iam_policy.cbd_build.arn
-}
-
-# SSM parameters
-resource "aws_ssm_parameter" "iam_role_cbd_build_arn" {
-  name        = "/${var.datapipeline_name}/iam/iam_role_cbd_build_arn"
-  type        = "SecureString"
-  value       = aws_iam_role.cbd_build.arn
-  description = "Arn for the role used in the build step"
-  overwrite   = true
-}
-
-resource "aws_ssm_parameter" "iam_role_cbd_build_name" {
-  name        = "/${var.datapipeline_name}/iam/iam_role_cbd_build_name"
-  type        = "SecureString"
-  value       = aws_iam_role.cbd_build.name
-  description = "Name for the role used in the build step"
-  overwrite   = true
-}
-
-resource "aws_ssm_parameter" "iam_role_cbd_provision_arn" {
-  name        = "/${var.datapipeline_name}/iam/iam_role_cbd_provision_arn"
-  type        = "SecureString"
-  value       = aws_iam_role.cbd_provision.arn
-  description = "Arn for the role used in the provision step"
-  overwrite   = true
-}
-
-resource "aws_ssm_parameter" "iam_role_cbd_provision_name" {
-  name        = "/${var.datapipeline_name}/iam/iam_role_cbd_provision_name"
-  type        = "SecureString"
-  value       = aws_iam_role.cbd_provision.name
-  description = "Name for the role used in the provision step"
-  overwrite   = true
-}
-
-resource "aws_ssm_parameter" "iam_role_cpl_arn" {
-  name        = "/${var.datapipeline_name}/iam/iam_role_cpl_arn"
-  type        = "SecureString"
-  value       = aws_iam_role.cpl_role.arn
-  description = "Arn for the role used in codepipeline"
-  overwrite   = true
-}
-
-resource "aws_ssm_parameter" "iam_role_cpl_name" {
-  name        = "/${var.datapipeline_name}/iam/iam_role_cpl_name"
-  type        = "SecureString"
-  value       = aws_iam_role.cpl_role.name
-  description = "Name for the role used in codepipeline"
-  overwrite   = true
 }

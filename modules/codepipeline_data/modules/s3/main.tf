@@ -23,19 +23,3 @@ resource "aws_s3_bucket" "output" {
   acl    = "private"
   tags   = module.s3b_output_naming.tags
 }
-
-resource "aws_ssm_parameter" "code_bucket_arn" {
-  name        = "/${var.datapipeline_name}/s3/code_bucket_arn"
-  type        = "SecureString"
-  value       = aws_s3_bucket.output.arn
-  description = "Arn for the code bucket datapipeline"
-  overwrite   = true
-}
-
-resource "aws_ssm_parameter" "code_bucket" {
-  name        = "/${var.datapipeline_name}/s3/code_bucket"
-  type        = "SecureString"
-  value       = aws_s3_bucket.output.bucket
-  description = "Name for the code bucket datapipeline"
-  overwrite   = true
-}

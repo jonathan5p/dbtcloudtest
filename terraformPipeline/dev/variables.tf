@@ -1,11 +1,11 @@
 variable "aws_account_number_devops" {
   description = "Devops AWS Account Number"
-  default     = "036360966563"
+  default     = "522857095635"
 }
 
 variable "aws_account_number_env" {
   description = "Dev Env  AWS Account Number"
-  default     = "133613997269"
+  default     = "497607366324"
 }
 
 variable "aws_profile_code" {
@@ -13,7 +13,7 @@ variable "aws_profile_code" {
 }
 
 variable "aws_profile_dev" {
-  description = "AWS profile for Test Account"
+  description = "AWS profile for Dev Account"
 }
 
 variable "aws_shared_credential_file_path" {
@@ -23,7 +23,7 @@ variable "aws_shared_credential_file_path" {
 
 variable "chatbot_arn_codepipeline_notification" {
   description = "Chatbot ARN to be used by codepipeline for notification"
-  default     = "arn:aws:chatbot::036360966563:chat-configuration/slack-channel/infra-slack"
+  default     = "arn:aws:chatbot::00000000000:chat-configuration/slack-channel/channel-name"
 }
 
 variable "code_source_branch" {
@@ -32,7 +32,7 @@ variable "code_source_branch" {
 }
 
 variable "codestar_github_connection" {
-  default = "arn:aws:codestar-connections:us-east-2:036360966563:connection/6a4c92d5-384c-4184-b0cc-030702506bea"
+  default = "arn:aws:codestar-connections:us-east-1:522857095635:connection/27115013-e5c8-40ab-a75d-06ac874306b2"
 }
 
 variable "compute_type" {
@@ -43,10 +43,6 @@ variable "compute_type" {
 variable "datapipeline_name" {
   description = "Name of the pipeline to be deployied"
   default     = "datapipeline_cicd_oidh"
-}
-
-variable "dynamo_state_backend" {
-  default = "terraform-state-lock-dynamo"
 }
 
 variable "enable_codepipeline_notification" {
@@ -110,23 +106,17 @@ variable "site" {
 
 variable "sns_arn_codepipeline_notification" {
   description = "SNS ARN to be used by codepipeline for notification"
-  default     = ""
-}
-
-variable "sns_notification_create_approval" {
-  default = false
-  type = bool
+  default     = "arn:aws:sns:us-east-1:522857095635:aue1c1z1snrbcompipelinenotification"
 }
 
 variable "source_owner" {
   description = "Repo Owner, most likely BrightMLS in all cases"
-  #default     = "BrightMLS"
-  default      = "gilcamilo"
+  default     = "BrightMLS"
 }
 
 variable "source_repo" {
   description = "Repo name"
-  default     = "oidh_datapipeline"
+  default     = "bdmp-oidh"
 }
 
 variable "tier" {

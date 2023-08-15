@@ -26,10 +26,6 @@ variable "dev_deployment_role" {
   default = {}
 }
 
-variable "dynamo_state_backend" {
-  default = {}
-}
-
 variable "enable_codepipeline_notification" {
   default = {}
 }
