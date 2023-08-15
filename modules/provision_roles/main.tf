@@ -52,19 +52,6 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:logs:${var.region}:${var.aws_account_number_env}:log-group::log-stream:*"
     ]
   }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "ssm:GetParameters",
-      "ssm:GetParameter",
-      "ssm:GetParametersByPath"
-    ]
-    resources = [
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/alaya/terraform_variable_file",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/alaya/publicRecordCredentials",
-    ]
-  }
   
   statement {
     effect = "Allow"
@@ -81,15 +68,6 @@ data "aws_iam_policy_document" "dev_deploy" {
       "*"
     ]
   }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "iam:*"
-    ]
-    resources = ["*"]
-  }
-
   statement {
      effect = "Allow"
      actions = [
