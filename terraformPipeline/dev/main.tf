@@ -1,20 +1,17 @@
 provider "aws" {
   region                  = var.region[var.site]
-  shared_credentials_file = var.aws_shared_credential_file_path
   profile                 = var.aws_profile_code
 }
 
 provider "aws" {
   alias                   = "code"
   region                  = var.region[var.site]
-  shared_credentials_file = var.aws_shared_credential_file_path
   profile                 = var.aws_profile_code
 }
 
 provider "aws" {
   alias                   = "dev"
   region                  = var.region[var.site]
-  shared_credentials_file = var.aws_shared_credential_file_path
   profile                 = var.aws_profile_dev
 }
 

@@ -16,11 +16,6 @@ variable "aws_profile_dev" {
   description = "AWS profile for Dev Account"
 }
 
-variable "aws_shared_credential_file_path" {
-  description = "AWS credentials path on local system"
-  default     = {}
-}
-
 variable "chatbot_arn_codepipeline_notification" {
   description = "Chatbot ARN to be used by codepipeline for notification"
   default     = "arn:aws:chatbot::00000000000:chat-configuration/slack-channel/channel-name"
@@ -86,7 +81,7 @@ variable "project_ledger" {
 
 variable "project_prefix" {
   description = "This is part of bright naming convention belongs to project repo and resources purpose"
-  default     = "oidh-dev"
+  default     = "oidh"
 }
 
 variable "region" {
