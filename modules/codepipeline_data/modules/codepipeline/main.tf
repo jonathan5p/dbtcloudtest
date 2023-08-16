@@ -77,21 +77,21 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
-  #stage {
-  #  name = "Approve"
-  #  action {
-  #    name     = "Approval"
-  #    category = "Approval"
-  #    owner    = "AWS"
-  #    provider = "Manual"
-  #    version  = "1"
-  #    configuration = {
-  #      NotificationArn = "${var.sns_arn_codepipeline_notification}"
-  #    }
-  #  }
-  #}
   stage {
-    name = "Deploy"
+    name = "Approve"
+    action {
+      name     = "Approval"
+      category = "Approval"
+      owner    = "AWS"
+      provider = "Manual"
+      version  = "1"
+      configuration = {
+        NotificationArn = "${var.sns_arn_codepipeline_notification}"
+      }
+    }
+  }
+  stage {
+    name = "TerraformApply"
     action {
       name            = "Provision"
       category        = "Build"
