@@ -25,15 +25,6 @@ phases:
       - echo "a:${SITE}"
       - echo "b:${ENVIRONMENT_DEVOPS}"
       - |
-        IFS=';' read -ra ADDR <<< "$environment_set"
-            
-        for i in "${ADDR[@]}"; do
-          IFS=',' read -ra ADDR_INT <<< "$i"
-          tmp="${ADDR_INT[0]}='${ADDR_INT[1]}'"
-          eval $tmp
-        done
-
-      - |
         sed -i "s/\${bucket_backend}/${bucket_backend}/" ${TF_VAR_environment}_backend.conf
         cat ${TF_VAR_environment}_backend.conf
 

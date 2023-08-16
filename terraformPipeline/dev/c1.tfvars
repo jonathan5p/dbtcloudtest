@@ -5,4 +5,4 @@ zone                             = "z1"
 environment_devops               = "c1"
 environment_dev                  = "d1"
 code_source_branch               = "dev"
-enable_codepipeline_notification = false
+enable_codepipeline_notification = true
