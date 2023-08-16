@@ -101,7 +101,7 @@ variable "site" {
 
 variable "sns_arn_codepipeline_notification" {
   description = "SNS ARN to be used by codepipeline for notification"
-  default     = "arn:aws:sns:us-east-1:522857095635:aue1c1z1snrbcompipelinenotification"
+  default     = "arn:aws:sns:us-east-1:522857095635:aue1c1z1snsdatascience-notifications"
 }
 
 variable "source_owner" {

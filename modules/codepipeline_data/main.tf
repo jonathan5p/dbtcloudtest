@@ -95,18 +95,3 @@ module "post_creation_privileges" {
     tier = var.tier
     zone = var.zone
 }
-
-#module "sns_topic" {
-#  source = "./modules/sns_notification"
-#  count = var.sns_notification_create_approval ? 1 : 0
-
-#  datapipeline_name = var.datapipeline_name
-#  environment_devops= var.environment_devops
-#  project_app_group = var.project_app_group
-#  project_ledger    = var.project_ledger
-#  project_prefix    = var.project_prefix
-#  site              = var.site
-#  sns_notification_create_approval = var.sns_notification_create_approval
-#  tier              = var.tier
-#  zone              = var.zone
-#}
