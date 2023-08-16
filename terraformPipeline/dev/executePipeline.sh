@@ -14,6 +14,7 @@ echo -e "${GREEN}Codepipeline Site is ${BLUE}${SITE}${NC}"
 echo -e "${GREEN}Codepipeline ENV is ${BLUE}${ENV}${NC}"
 
 terraform init -upgrade
+#terraform init -reconfigure
 terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
 
 export TF_VAR_site=$SITE
