@@ -22,9 +22,9 @@ variable "site" {
   default = {}
 }
 
-variable "sns_notification_create_approval" {
-    type = bool
-}
+#variable "sns_notification_create_approval" {
+#    type = bool
+#}
 
 variable "tier" {
   default = {}
