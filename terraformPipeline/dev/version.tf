@@ -36,7 +36,6 @@ terraform {
     # that profile name.  See https://wiki.brightmls.com/display/MRIS/AWS+Role+Shortcuts for more
     # information
     profile = "bright_tf_admin"
-    #profile = "devops"
 
   }
 }
