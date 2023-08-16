@@ -18,7 +18,7 @@ variable "aws_profile_dev" {
 
 variable "chatbot_arn_codepipeline_notification" {
   description = "Chatbot ARN to be used by codepipeline for notification"
-  default     = "arn:aws:chatbot::00000000000:chat-configuration/slack-channel/channel-name"
+  default     = "arn:aws:chatbot::522857095635:chat-configuration/slack-channel/oidh-notifications"
 }
 
 variable "code_source_branch" {

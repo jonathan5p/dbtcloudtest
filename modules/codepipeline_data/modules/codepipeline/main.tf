@@ -272,8 +272,8 @@ resource "aws_codestarnotifications_notification_rule" "notification" {
     address = var.sns_arn_codepipeline_notification
     type    = "SNS"
   }
-  #target {
-  #  address = var.chatbot_arn_codepipeline_notification
-  #  type    = "AWSChatbotSlack"
-  #}
+  target {
+    address = var.chatbot_arn_codepipeline_notification
+    type    = "AWSChatbotSlack"
+  }
 }
