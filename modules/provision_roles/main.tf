@@ -35,12 +35,20 @@ data "aws_iam_policy_document" "assume_dev_deploy" {
 }
 
 data "aws_iam_policy_document" "dev_deploy" {
+
   statement {
-    effect  = "Allow"
-    actions = ["lambda:*"]
-    resources = [
-      "*",
-    ]
+    effect = "Allow"
+    actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", 
+               "kms:EnableKey", "kms:CreateKey", "kms:CreateAlias"]
+    resources = []
+    sid = "kmspermissions"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = ["s3:CreateBucket"]
+    resources = []
+    sid = "s3permissions"
   }
   
   statement {
@@ -67,13 +75,6 @@ data "aws_iam_policy_document" "dev_deploy" {
     resources = [
       "*"
     ]
-  }
-  statement {
-     effect = "Allow"
-     actions = [
-      "lambda:*"
-     ]
-     resources = ["*"]
   }
 }
 
