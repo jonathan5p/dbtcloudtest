@@ -38,16 +38,30 @@ data "aws_iam_policy_document" "dev_deploy" {
 
   statement {
     effect = "Allow"
-    actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", 
-               "kms:EnableKey", "kms:CreateKey", "kms:CreateAlias"]
-    resources = []
+    actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", "kms:EnableKey",
+              "kms:PutKeyPolicy", "kms:CreateAlias", "kms:GenerateDataKey"]
+    resources = ["arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
     sid = "kmspermissions"
   }
 
   statement {
     effect = "Allow"
+    actions = ["iam:CreateServiceLinkedRole"]
+    resources = ["*"]
+    sid = "iampermissions"
+  }
+
+    statement {
+    effect = "Allow"
+    actions = ["kms:CreateKey", "kms:CreateAlias"]
+    resources = ["*"]
+    sid = "kmscreatepermissions"
+  }
+
+  statement {
+    effect = "Allow"
     actions = ["s3:CreateBucket"]
-    resources = []
+    resources = ["*"]
     sid = "s3permissions"
   }
   
