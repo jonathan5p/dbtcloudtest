@@ -24,7 +24,7 @@ resource "aws_ssm_parameter" "foo" {
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   app_group = var.project_app_group
-  env       = var.environment_devops
+  env       = var.environment
   ledger    = var.project_ledger
   site      = var.site
   tier      = var.tier
