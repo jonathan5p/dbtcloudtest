@@ -38,13 +38,9 @@ data "aws_iam_policy_document" "dev_deploy" {
 
   statement {
     effect = "Allow"
-<<<<<<< Updated upstream
     actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", "kms:EnableKey",
               "kms:PutKeyPolicy", "kms:CreateAlias", "kms:GenerateDataKey"]
-=======
-    actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", 
-               "kms:EnableKey", "kms:CreateKey", "kms:CreateAlias"]
->>>>>>> Stashed changes
+
     resources = ["arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
     sid = "kmspermissions"
   }
