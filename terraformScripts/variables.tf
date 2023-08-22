@@ -2,6 +2,11 @@ variable "environment_devops" {
   default = {}
 }
 
+variable "environment" {
+  description = "Env value belongs to dev, tst, prod account like d1, t1, p1 resp."
+  default     = {}
+}
+
 variable "project_app_group" {
   description = "This is Bright's specified value"
   default     = "oidh"
