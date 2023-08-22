@@ -44,3 +44,15 @@ variable "tier" {
 variable "zone" {
   default = {}
 }
+
+variable "s3_bucket_tmp_expiration_days" {
+  description = "Expiration lifecycle policy for all objects store in the tmp prefix of the s3 buckets"
+}
+
+variable "s3_bucket_objects_expiration_days" {
+  description = "Expiration lifecycle policy for all objects store in the s3 buckets except tmp"
+}
+
+variable "s3_bucket_objects_transition_days" {
+  description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
+}
