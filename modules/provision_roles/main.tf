@@ -9,12 +9,16 @@ terraform {
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   app_group = var.project_app_group
-  env       = var.environment_devops
+  env       = var.environment
   ledger    = var.project_ledger
   site      = var.site
   tier      = var.tier
   zone      = var.zone
 }
+
+# ------------------------------------------------------------------------------
+# Defining resources names
+# ------------------------------------------------------------------------------
 
 module "irp_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
@@ -23,6 +27,53 @@ module "irp_dev_deployment_naming" {
   env         = var.environment
   purpose     = join("", ["deployment", var.project_prefix])
 }
+
+#----------------------------------
+# KMS Key names
+#----------------------------------
+
+module "data_key_name" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "kma"
+  purpose     = join("", [var.project_prefix, "-", "datakey"])
+}
+
+module "glue_enc_key_name" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "kma"
+  purpose     = join("", [var.project_prefix, "-", "glueenckey"])
+}
+
+#----------------------------------
+# S3 Bucket names
+#----------------------------------
+
+module "s3b_data_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "datastorage"])
+}
+
+module "s3b_artifacts_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "artifacts"])
+}
+
+module "s3b_glue_artifacts_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "glueartifacts"])
+}
+
+# ------------------------------------------------------------------------------
+# Create Role for Dev Account for Deployments
+# ------------------------------------------------------------------------------
 
 data "aws_iam_policy_document" "assume_dev_deploy" {
   statement {
@@ -34,38 +85,70 @@ data "aws_iam_policy_document" "assume_dev_deploy" {
   }
 }
 
+# ------------------------------------------------------------------------------
+# KMS, S3, SSM Policies
+# ------------------------------------------------------------------------------
+
 data "aws_iam_policy_document" "dev_deploy" {
 
   statement {
     effect = "Allow"
-    actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", "kms:EnableKey",
-              "kms:PutKeyPolicy", "kms:CreateAlias", "kms:GenerateDataKey"]
-
-    resources = ["arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
+    actions = [
+      "kms:TagResource",
+      "kms:DeleteKey",
+      "kms:ScheduleKeyDeletion",
+      "kms:EnableKey",
+      "kms:PutKeyPolicy",
+      "kms:GenerateDataKey",
+      "kms:EnableKeyRotation",
+      "kms:DescribeKey",
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus",
+      "kms:ListResourceTags",
+      "kms:DeleteAlias"
+    ]
+    resources = [
+    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
     sid = "kmspermissions"
   }
 
   statement {
     effect = "Allow"
-    actions = ["iam:CreateServiceLinkedRole"]
-    resources = ["*"]
-    sid = "iampermissions"
-  }
-
-    statement {
-    effect = "Allow"
-    actions = ["kms:CreateKey", "kms:CreateAlias"]
-    resources = ["*"]
-    sid = "kmscreatepermissions"
+    actions = ["kms:DeleteAlias"]
+    resources = [
+    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
+    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"]
+    sid = "kmsaliaspermissions"
   }
 
   statement {
-    effect = "Allow"
-    actions = ["s3:CreateBucket"]
+    effect    = "Allow"
+    actions   = ["kms:CreateKey", "kms:CreateAlias", "kms:ListAliases"]
     resources = ["*"]
+    sid       = "kmscreatepermissions"
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:CreateServiceLinkedRole"]
+    resources = ["*"]
+    sid       = "iampermissions"
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["s3:*"]
+    resources = [
+      "arn:aws:s3:::${module.s3b_data_naming.name}",
+      "arn:aws:s3:::${module.s3b_data_naming.name}/*",
+      "arn:aws:s3:::${module.s3b_artifacts_naming.name}",
+      "arn:aws:s3:::${module.s3b_artifacts_naming.name}/*",
+      "arn:aws:s3:::${module.s3b_glue_artifacts_naming.name}",
+      "arn:aws:s3:::${module.s3b_glue_artifacts_naming.name}/*"
+    ]
     sid = "s3permissions"
   }
-  
+
   statement {
     actions = [
       "logs:DescribeLogGroups"
@@ -75,7 +158,7 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:logs:${var.region}:${var.aws_account_number_env}:log-group::log-stream:*"
     ]
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -93,6 +176,9 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 }
 
+# ------------------------------------------------------------------------------
+# Deployment role policy attachements
+# ------------------------------------------------------------------------------
 
 module "iro_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
@@ -106,12 +192,12 @@ resource "aws_iam_role" "dev_deployment" {
   tags               = module.iro_dev_deployment_naming.tags
 }
 
-resource "aws_iam_role_policy_attachment" "dev_deployment" {
-  role       = aws_iam_role.dev_deployment.name
-  policy_arn = aws_iam_policy.dev_deployment.arn
-}
-
 resource "aws_iam_policy" "dev_deployment" {
   name   = module.irp_dev_deployment_naming.name
   policy = data.aws_iam_policy_document.dev_deploy.json
+}
+
+resource "aws_iam_role_policy_attachment" "dev_deployment" {
+  role       = aws_iam_role.dev_deployment.name
+  policy_arn = aws_iam_policy.dev_deployment.arn
 }
