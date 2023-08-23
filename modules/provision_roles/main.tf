@@ -20,14 +20,6 @@ module "base_naming" {
 # Defining resources names
 # ------------------------------------------------------------------------------
 
-module "irp_dev_deployment_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "irp"
-  env         = var.environment
-  purpose     = join("", ["deployment", var.project_prefix])
-}
-
 #----------------------------------
 # KMS Key names
 #----------------------------------
@@ -69,6 +61,17 @@ module "s3b_glue_artifacts_naming" {
   base_object = module.base_naming
   type        = "s3b"
   purpose     = join("", [var.project_prefix, "-", "glueartifacts"])
+}
+
+#----------------------------------
+# Glue names
+#----------------------------------
+
+module "glue_db_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "gld"
+  purpose     = join("", [var.project_prefix, "_", "gluedb"])
 }
 
 # ------------------------------------------------------------------------------
@@ -162,13 +165,10 @@ data "aws_iam_policy_document" "dev_deploy" {
   statement {
     effect = "Allow"
     actions = [
-      "ssm:PutParameter",
       "ssm:GetParameter",
       "ssm:DescribeParameters",
-      "ssm:ListTagsForResource",
       "ssm:GetParameters",
-      "ssm:DeleteParameter",
-      "ssm:AddTagsToResource"
+      "ssm:GetParametersByPath"
     ]
     resources = [
       "*"
@@ -177,8 +177,75 @@ data "aws_iam_policy_document" "dev_deploy" {
 }
 
 # ------------------------------------------------------------------------------
+# ETL Policies
+# ------------------------------------------------------------------------------
+data "aws_iam_policy_document" "dev_deploy2" {
+
+  statement {
+    actions = [
+      "glue:GetDatabase",
+      "glue:UpdateDatabase",
+      "glue:DeleteDatabase",
+      "glue:CreateDatabase",
+      "glue:GetDatabases",
+      "glue:CreateConnection",
+      "glue:DeleteConnection",
+      "glue:GetConnection",
+      "glue:UpdateConnection"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:database/${module.glue_db_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog/*",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection/*",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection"
+    ]
+  }
+
+  statement {
+    actions = [
+      "glue:GetSecurityConfiguration",
+      "glue:CreateSecurityConfiguration",
+      "glue:DeleteSecurityConfiguration"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "glue:DeleteJob",
+      "glue:CreateJob",
+      "glue:UpdateJob",
+      "glue:GetJob"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+
+}
+
+# ------------------------------------------------------------------------------
 # Deployment role policy attachements
 # ------------------------------------------------------------------------------
+
+module "irp_dev_deployment_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "irp"
+  env         = var.environment
+  purpose     = join("", ["deployment", var.project_prefix])
+}
+
+module "irp_dev_deployment_naming2" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "irp"
+  env         = var.environment
+  purpose     = join("", ["deployment2", var.project_prefix])
+}
 
 module "iro_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
@@ -197,7 +264,17 @@ resource "aws_iam_policy" "dev_deployment" {
   policy = data.aws_iam_policy_document.dev_deploy.json
 }
 
+resource "aws_iam_policy" "dev_deployment2" {
+  name   = module.irp_dev_deployment_naming2.name
+  policy = data.aws_iam_policy_document.dev_deploy2.json
+}
+
 resource "aws_iam_role_policy_attachment" "dev_deployment" {
   role       = aws_iam_role.dev_deployment.name
   policy_arn = aws_iam_policy.dev_deployment.arn
+}
+
+resource "aws_iam_role_policy_attachment" "dev_deployment2" {
+  role       = aws_iam_role.dev_deployment.name
+  policy_arn = aws_iam_policy.dev_deployment2.arn
 }
