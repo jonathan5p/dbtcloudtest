@@ -5,6 +5,8 @@ env:
     TERRAFORM_DOWNLOAD_URL: https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
   parameter-store:
     SSH_KEY: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/github_ssh_private_key'
+    JF_PYRC_FILE: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/bright_pypi_pypirc'
+    JF_PIP_FILE: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/bright_pypi_pipconf'
 
 phases:
   install:
@@ -20,10 +22,11 @@ phases:
 
   build:
     commands:
-      
+      - mkdir ${HOME}/.pip
+      - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
+      - JF_FILE_PARSED=$(sed -e 's/^"//' -e 's/"$//' -e 's/\\n/\n/g' <<<"${JF_PIP_FILE}")
+      - cat ${HOME}/.pip/pip.conf
       - cd terraformScripts
-      - echo "a:${SITE}"
-      - echo "b:${ENVIRONMENT_DEVOPS}"
       - |
         sed -i "s/\${bucket_backend}/${bucket_backend}/" ${TF_VAR_environment}_backend.conf
         cat ${TF_VAR_environment}_backend.conf
