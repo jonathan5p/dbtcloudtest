@@ -29,6 +29,24 @@ module "irp_dev_deployment_naming" {
 }
 
 #----------------------------------
+# KMS Key names
+#----------------------------------
+
+module "data_key_name" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "kma"
+  purpose     = join("", [var.project_prefix, "-", "datakey"])
+}
+
+module "glue_enc_key_name" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "kma"
+  purpose     = join("", [var.project_prefix, "-", "glueenckey"])
+}
+
+#----------------------------------
 # S3 Bucket names
 #----------------------------------
 
@@ -37,6 +55,20 @@ module "s3b_data_naming" {
   base_object = module.base_naming
   type        = "s3b"
   purpose     = join("", [var.project_prefix, "-", "datastorage"])
+}
+
+module "s3b_artifacts_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "artifacts"])
+}
+
+module "s3b_glue_artifacts_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "glueartifacts"])
 }
 
 # ------------------------------------------------------------------------------
@@ -84,7 +116,8 @@ data "aws_iam_policy_document" "dev_deploy" {
     effect = "Allow"
     actions = ["kms:DeleteAlias"]
     resources = [
-    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/*"]
+    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
+    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"]
     sid = "kmsaliaspermissions"
   }
 
@@ -107,7 +140,11 @@ data "aws_iam_policy_document" "dev_deploy" {
     actions = ["s3:*"]
     resources = [
       "arn:aws:s3:::${module.s3b_data_naming.name}",
-      "arn:aws:s3:::${module.s3b_data_naming.name}/*"
+      "arn:aws:s3:::${module.s3b_data_naming.name}/*",
+      "arn:aws:s3:::${module.s3b_artifacts_naming.name}",
+      "arn:aws:s3:::${module.s3b_artifacts_naming.name}/*",
+      "arn:aws:s3:::${module.s3b_glue_artifacts_naming.name}",
+      "arn:aws:s3:::${module.s3b_glue_artifacts_naming.name}/*"
     ]
     sid = "s3permissions"
   }

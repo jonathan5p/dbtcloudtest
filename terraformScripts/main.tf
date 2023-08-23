@@ -15,12 +15,6 @@ locals {
 
 data "aws_region" "current" {}
 
-resource "aws_ssm_parameter" "foo" {
-  name  = "foo"
-  type  = "String"
-  value = "bar"
-}
-
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   app_group = var.project_app_group
@@ -39,7 +33,7 @@ module "base_naming" {
 module "data_key_name" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
-  type        = "kmk"
+  type        = "kma"
   purpose     = join("", [var.project_prefix, "-", "datakey"])
 }
 module "data_key" {
@@ -54,7 +48,7 @@ module "data_key" {
 module "glue_enc_key_name" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
-  type        = "kmk"
+  type        = "kma"
   purpose     = join("", [var.project_prefix, "-", "glueenckey"])
 }
 module "glue_enc_key" {
@@ -86,4 +80,64 @@ module "s3_data_bucket" {
   s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
   s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
   s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+}
+
+# Artifacts Bucket
+module "s3b_artifacts_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "artifacts"])
+}
+
+module "s3_artifacts_bucket" {
+  source                            = "../modules/s3"
+  s3_bucket                         = module.s3b_artifacts_naming.name
+  s3_bucket_tags                    = module.s3b_artifacts_naming.tags
+  s3_bucket_key_id                  = module.data_key.key_id
+  s3_bucket_key_arn                 = module.data_key.key_arn
+  s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
+  s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
+  s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+}
+
+# Glue Bucket
+module "s3b_glue_artifacts_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "glueartifacts"])
+}
+
+module "s3_glue_artifacts_bucket" {
+  source                            = "../modules/s3"
+  s3_bucket                         = module.s3b_glue_artifacts_naming.name
+  s3_bucket_tags                    = module.s3b_glue_artifacts_naming.tags
+  s3_bucket_key_id                  = module.glue_enc_key.key_id
+  s3_bucket_key_arn                 = module.glue_enc_key.key_arn
+  s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
+  s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
+  s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+}
+
+#------------------------------------------------------------------------------
+# S3 Data
+#------------------------------------------------------------------------------
+
+resource "aws_s3_object" "artifacts" {
+  bucket                 = module.s3_artifacts_bucket.bucket_id
+  for_each               = fileset("../src/artifacts/", "**")
+  key                    = each.value
+  source                 = "../src/artifacts/${each.value}"
+  server_side_encryption = "aws:kms"
+  bucket_key_enabled     = true
+}
+
+resource "aws_s3_object" "glue_artifacts" {
+  bucket                 = module.s3_glue_artifacts_bucket.bucket_id
+  for_each               = fileset("../src/glue/", "**")
+  key                    = each.value
+  source                 = "../src/glue/${each.value}"
+  server_side_encryption = "aws:kms"
+  bucket_key_enabled     = true
 }
