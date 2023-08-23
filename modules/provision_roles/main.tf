@@ -39,8 +39,8 @@ data "aws_iam_policy_document" "dev_deploy" {
   statement {
     effect = "Allow"
     actions = ["kms:TagResource", "kms:DeleteAlias", "kms:DeleteKey", "kms:EnableKey",
-              "kms:PutKeyPolicy", "kms:CreateAlias", "kms:GenerateDataKey"]
-
+              "kms:PutKeyPolicy", "kms:CreateAlias", "kms:GenerateDataKey", "kms:EnableKeyRotation",
+              "kms:DescribeKey","kms:GetKeyPolicy"]
     resources = ["arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
     sid = "kmspermissions"
   }
