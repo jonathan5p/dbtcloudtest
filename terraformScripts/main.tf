@@ -141,3 +141,48 @@ resource "aws_s3_object" "glue_artifacts" {
   server_side_encryption = "aws:kms"
   bucket_key_enabled     = true
 }
+
+#------------------------------------------------------------------------------
+# Glue DB
+#------------------------------------------------------------------------------
+
+module "glue_db_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "gld"
+  purpose     = join("", [var.project_prefix, "_", "gluedb"])
+}
+
+resource "aws_glue_catalog_database" "dedup_process_glue_db" {
+  name         = module.glue_db_naming.name
+  location_uri = "s3://${module.s3_data_bucket.bucket_id}/"
+  tags         = module.glue_db_naming.tags
+}
+
+#------------------------------------------------------------------------------
+# Glue Security Configuration
+#------------------------------------------------------------------------------
+
+module "glue_secconfig_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "gls"
+  purpose     = join("", [var.project_prefix, "-", "gluesecurityconfig"])
+}
+
+resource "aws_glue_security_configuration" "glue_security_config" {
+  name = module.glue_secconfig_naming.name
+  encryption_configuration {
+    cloudwatch_encryption {
+      cloudwatch_encryption_mode = "SSE-KMS"
+      kms_key_arn                = module.glue_enc_key.key_arn
+    }
+    job_bookmarks_encryption {
+      job_bookmarks_encryption_mode = "CSE-KMS"
+      kms_key_arn                   = module.glue_enc_key.key_arn
+    }
+    s3_encryption {
+      s3_encryption_mode = "SSE-S3"
+    }
+  }
+}
