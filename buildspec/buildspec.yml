@@ -17,6 +17,6 @@ phases:
       - "echo Build started on `date`"
       - "aws sts get-caller-identity"
       - mkdir ${HOME}/.pip
-      - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
       - JF_FILE_PARSED=$(sed -e 's/^"//' -e 's/"$//' -e 's/\\n/\n/g' <<<"${JF_PIP_FILE}")
+      - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
       - cat ${HOME}/.pip/pip.conf
