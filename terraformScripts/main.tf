@@ -8,24 +8,24 @@ provider "aws" {
 
 provider "archive" {}
 
-# data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current" {}
 
-# locals {
-#   lambda_runtime = "python3.10"
-#   lambda_handler = "lambda_function.lambda_handler"
-# }
+locals {
+  lambda_runtime = "python3.10"
+  lambda_handler = "lambda_function.lambda_handler"
+}
 
-# data "aws_region" "current" {}
+data "aws_region" "current" {}
 
-# module "base_naming" {
-#   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   app_group = var.project_app_group
-#   env       = var.environment
-#   ledger    = var.project_ledger
-#   site      = var.site
-#   tier      = var.tier
-#   zone      = var.zone
-# }
+module "base_naming" {
+  source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  app_group = var.project_app_group
+  env       = var.environment
+  ledger    = var.project_ledger
+  site      = var.site
+  tier      = var.tier
+  zone      = var.zone
+}
 
 # #------------------------------------------------------------------------------
 # # KMS Keys for the S3 Buckets and Glue
