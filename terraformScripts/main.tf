@@ -388,3 +388,118 @@ resource "aws_lambda_function" "lambda_config_loader" {
     }
   }
 }
+
+#------------------------------------------------------------------------------
+# Step function definition
+#------------------------------------------------------------------------------
+
+module "sfn_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "etlsfn"])
+}
+resource "aws_iam_role" "sfn_role" {
+  name = module.sfn_role_naming.name
+  tags = module.sfn_role_naming.tags
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Sid    = "SfnAssumeRole"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+module "etl_sfn_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "stm"
+  purpose     = join("", [var.project_prefix, "-", "etlsfn"])
+}
+
+resource "aws_sfn_state_machine" "sfn_state_machine" {
+  name     = module.etl_sfn_naming.name
+  tags     = module.etl_sfn_naming.tags
+  role_arn = aws_iam_role.sfn_role.arn
+  type     = "STANDARD"
+
+  definition = <<EOF
+{
+  "StartAt": "load-ingest-conf",
+  "States": {
+    "load-ingest-conf": {
+      "Next": "ingest-job-mapping",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ClientExecutionTimeoutException",
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": ${var.lambda_retry_interval},
+          "MaxAttempts": ${var.lambda_retry_max_attempts},
+          "BackoffRate": ${var.lambda_retry_backoff_rate}
+        }
+      ],
+      "Type": "Task",
+      "OutputPath": "$.Payload",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${aws_lambda_function.lambda_config_loader.arn}",
+        "Payload.$": "$"
+      }
+    },
+    "ingest-job-mapping": {
+      "Type": "Map",
+      "ResultPath": null,
+      "End": true,
+      "Iterator": {
+        "StartAt": "ingest-job",
+        "States": {
+          "ingest-job": {
+            "End": true,
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "IntervalSeconds": ${var.glue_retry_interval},
+                "MaxAttempts": ${var.glue_retry_max_attempts},
+                "BackoffRate": ${var.glue_retry_backoff_rate}
+              }
+            ],
+            "Type": "Task",
+            "Resource": "arn:aws:states:::glue:startJobRun.sync",
+            "Parameters": {
+              "JobName": "${aws_glue_job.ingest_job.id}",
+              "Arguments": {
+                "--target.$": "$.target",
+                "--target_prefixes.$": "$.target_prefixes",
+                "--catalog_table.$": "$.catalog_table",
+                "--catalog_database.$": "$.catalog_database",
+                "--connection_type.$": "$.connection_type",
+                "--options.$": "$.options"
+              },
+              "Timeout": ${var.glue_timeout},
+              "NotificationProperty": {
+                "NotifyDelayAfter": 5
+              }
+            }
+          }
+        }
+      },
+      "ItemsPath": "$.tables",
+      "MaxConcurrency": ${var.glue_max_concurrent_runs}
+    }
+  }
+}
+EOF
+}

@@ -113,6 +113,24 @@ module "lambda_config_loader_naming" {
   purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
 }
 
+#----------------------------------
+# Sfn names
+#----------------------------------
+
+module "sfn_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "etlsfn"])
+}
+
+module "etl_sfn_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "stm"
+  purpose     = join("", [var.project_prefix, "-", "etlsfn"])
+}
+
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -155,10 +173,10 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["kms:DeleteAlias"]
     resources = [
-    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
+      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
     "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"]
     sid = "kmsaliaspermissions"
   }
@@ -171,9 +189,9 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 
   statement {
-    effect    = "Allow"
-    actions   = [
-      "iam:PassRole", 
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
       "iam:CreateRole",
       "iam:TagRole",
       "iam:GetRole",
@@ -183,12 +201,13 @@ data "aws_iam_policy_document" "dev_deploy" {
       "iam:ListInstanceProfilesForRole",
       "iam:DeleteRole",
       "iam:DeletePolicy"
-      ]
+    ]
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}"
-      ]
-    sid       = "iam"
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}"
+    ]
+    sid = "iam"
   }
 
   statement {
@@ -199,23 +218,23 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 
   statement {
-    effect = "Allow"
-    actions = ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups"]
+    effect    = "Allow"
+    actions   = ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups"]
     resources = ["*"]
-    sid = "ec2describe"
+    sid       = "ec2describe"
   }
 
   statement {
     effect = "Allow"
     actions = [
-      "ec2:DeleteSecurityGroup", 
-      "ec2:CreateSecurityGroup", 
+      "ec2:DeleteSecurityGroup",
+      "ec2:CreateSecurityGroup",
       "ec2:ModifySecurityGroupRules",
       "ec2:UpdateSecurityGroupRuleDescriptionIngress",
       "ec2:UpdateSecurityGroupRuleDescriptionEgress",
       "ec2:RevokeSecurityGroupIngress",
       "ec2:RevokeSecurityGroupEgress"
-      ]
+    ]
     resources = [
       "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/${module.glue_connection_sg_naming.name}"
     ]
@@ -270,6 +289,14 @@ data "aws_iam_policy_document" "dev_deploy2" {
     actions = ["lambda:*"]
     resources = [
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_config_loader_naming.name}"
+    ]
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["states:*"]
+    resources = [
+      "arn:aws:states:${var.region}:${var.aws_account_number_env}:stateMachine:${module.etl_sfn_naming.name}"
     ]
   }
 
