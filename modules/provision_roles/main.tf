@@ -292,15 +292,15 @@ data "aws_iam_policy_document" "dev_deploy" {
     sid       = "ec2describe"
   }
 
-  statement {
-    effect    = "Allow"
-    actions   = [
-      "ec2:DeleteNetworkInterface",
-      "ec2:DetachNetworkInterface"
-      ]
-    resources = ["*"]
-    sid       = "ec2eni"
-  }
+  # statement {
+  #   effect    = "Allow"
+  #   actions   = [
+  #     "ec2:DeleteNetworkInterface",
+  #     "ec2:DetachNetworkInterface"
+  #     ]
+  #   resources = ["*"]
+  #   sid       = "ec2eni"
+  # }
 
   statement {
     effect = "Allow"
