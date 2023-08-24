@@ -1,10 +1,10 @@
-# provider "aws" {
-#   region = var.region[var.site]
-#   assume_role {
-#     role_arn     = var.role_arn
-#     session_name = "oidh"
-#   }
-# }
+provider "aws" {
+  region = var.region[var.site]
+  assume_role {
+    role_arn     = var.role_arn
+    session_name = "oidh"
+  }
+}
 
 # data "aws_caller_identity" "current" {}
 
