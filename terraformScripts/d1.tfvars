@@ -7,6 +7,14 @@ s3_bucket_tmp_expiration_days     = 15
 s3_bucket_objects_expiration_days = 180
 s3_bucket_objects_transition_days = 30
 
+# Lambda parameters
+lambda_reserved_concurrent_executions = 10
+lambda_timeout                        = 300
+lambda_memory_size                    = 256
+lambda_retry_max_attempts             = 3
+lambda_retry_interval                 = 1
+lambda_retry_backoff_rate             = 2
+
 # Glue parameters
 glue_max_concurrent_runs         = 4
 glue_timeout                     = 60
