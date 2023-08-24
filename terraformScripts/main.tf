@@ -534,7 +534,6 @@ resource "aws_iam_role" "crontrigger_role" {
 }
 
 # Cron trigger
-
 module "cron_trigger_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -554,4 +553,192 @@ resource "aws_cloudwatch_event_target" "etl_sfn" {
   target_id = "StartStateMachine"
   arn       = aws_sfn_state_machine.sfn_state_machine.arn
   role_arn  = aws_iam_role.crontrigger_role.arn
+}
+
+#------------------------------------------------------------------------------
+# Permissions
+#------------------------------------------------------------------------------
+
+# Glue job policies
+data "aws_iam_policy_document" "glue_ingest_job_policy" {
+
+  statement {
+    sid    = "s3readandwrite"
+    effect = "Allow"
+    actions = [
+      "s3:Abort*",
+      "s3:DeleteObject*",
+      "s3:GetBucket*",
+      "s3:GetObject*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:PutObjectLegalHold",
+      "s3:PutObjectRetention",
+      "s3:PutObjectTagging",
+      "s3:PutObjectVersionTagging"
+    ]
+    resources = [module.s3_data_bucket.bucket_arn,
+      "${module.s3_data_bucket.bucket_arn}/*",
+      module.s3_glue_artifacts_bucket.bucket_arn,
+    "${module.s3_glue_artifacts_bucket.bucket_arn}/*"]
+  }
+
+  statement {
+    sid = "loggroupmanagement"
+    effect = "Allow"
+    actions = ["logs:AssociateKmsKey"]
+    resources = ["arn:aws:logs:${var.region[var.site]}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/jobs/*"]
+  }
+}
+
+module "glue_ingest_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "glueingestpolicy"])
+}
+resource "aws_iam_policy" "glue_ingest_policy" {
+  name        = module.glue_ingest_policy_naming.name
+  tags        = module.glue_ingest_policy_naming.tags
+  description = "IAM Policy for the Glue ingest job"
+  policy      = data.aws_iam_policy_document.glue_ingest_job_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "glue_policy_attachement" {
+  role       = aws_iam_role.ingest_glue_job_role.name
+  policy_arn = aws_iam_policy.glue_ingest_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "glue_service_policy_attachement" {
+  role       = aws_iam_role.ingest_glue_job_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+}
+
+# Read and write access for the data kms key
+resource "aws_kms_grant" "grant_read_data" {
+  key_id            = module.data_key.key_id
+  grantee_principal = aws_iam_role.ingest_glue_job_role.arn
+  operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
+}
+
+resource "aws_kms_grant" "grant_read_glue_artifacts" {
+  key_id            = module.glue_enc_key.key_id
+  grantee_principal = aws_iam_role.ingest_glue_job_role.arn
+  operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
+}
+
+# Lambda config loader policies
+data "aws_iam_policy_document" "lambda_config_loader_policy" {
+  statement {
+    sid    = "s3readandwrite"
+    effect = "Allow"
+    actions = [
+      "s3:GetBucket*",
+      "s3:GetObject*",
+      "s3:List*"
+    ]
+    resources = [module.s3_artifacts_bucket.bucket_arn,
+    "${module.s3_artifacts_bucket.bucket_arn}/*"]
+  }
+}
+
+module "lambda_config_loader_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloaderpolicy"])
+}
+resource "aws_iam_policy" "lambda_config_loader_policy" {
+  name        = module.lambda_config_loader_policy_naming.name
+  tags        = module.lambda_config_loader_policy_naming.tags
+  description = "IAM Policy for the Lambda configuration loader function"
+  policy      = data.aws_iam_policy_document.lambda_config_loader_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_config_loader_policy_attachement" {
+  role       = aws_iam_role.lambda_config_loader_role.name
+  policy_arn = aws_iam_policy.lambda_config_loader_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic_exec_policy_attachement" {
+  role       = aws_iam_role.lambda_config_loader_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Read and write access for the data kms key
+resource "aws_kms_grant" "grant_read_data_ingest" {
+  key_id            = module.data_key.key_id
+  grantee_principal = aws_iam_role.lambda_config_loader_role.arn
+  operations        = ["Decrypt"]
+}
+
+# Step function policies
+
+data "aws_iam_policy_document" "etl_sfn_policy" {
+  statement {
+    sid     = "lambdaexec"
+    effect  = "Allow"
+    actions = ["lambda:InvokeFunction"]
+    resources = [aws_lambda_function.lambda_config_loader.arn,
+    "${aws_lambda_function.lambda_config_loader.arn}:*"]
+  }
+
+  statement {
+    sid    = "glueexec"
+    effect = "Allow"
+    actions = [
+      "glue:BatchStopJobRun",
+      "glue:GetJobRun",
+      "glue:GetJobRuns",
+      "glue:StartJobRun"
+    ]
+    resources = [aws_glue_job.ingest_job.arn]
+  }
+}
+
+module "elt_sfn_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "etlsfnpolicy"])
+}
+resource "aws_iam_policy" "etl_sfn_policy" {
+  name        = module.elt_sfn_policy_naming.name
+  tags        = module.elt_sfn_policy_naming.tags
+  description = "IAM Policy for the orchestration Step Function"
+  policy      = data.aws_iam_policy_document.etl_sfn_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "etl_sfn_policy_attachement" {
+  role       = aws_iam_role.sfn_role.name
+  policy_arn = aws_iam_policy.etl_sfn_policy.arn
+}
+
+# Cron trigger policies
+
+data "aws_iam_policy_document" "cron_trigger_policy" {
+  statement {
+    sid       = "stfexecaccess"
+    effect    = "Allow"
+    actions   = ["states:StartExecution"]
+    resources = [aws_sfn_state_machine.sfn_state_machine.arn]
+  }
+}
+
+module "cron_trigger_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "crontriggerpolicy"])
+}
+resource "aws_iam_policy" "cron_trigger_policy" {
+  name        = module.cron_trigger_policy_naming.name
+  tags        = module.cron_trigger_policy_naming.tags
+  description = "IAM Policy for the EventBridge cron trigger of the dedupe process etl"
+  policy      = data.aws_iam_policy_document.cron_trigger_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "cron_trigger_policy_attachement" {
+  role       = aws_iam_role.crontrigger_role.name
+  policy_arn = aws_iam_policy.cron_trigger_policy.arn
 }
