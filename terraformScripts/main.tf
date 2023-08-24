@@ -357,7 +357,7 @@ resource "aws_iam_role" "lambda_config_loader_role" {
   })
 }
 
-data "archive_file" "lambda_config_loader_script" {
+data "archive_file" "lambda_config_loader_code" {
   type        = "zip"
   source_file = "../src/lambda/functions/config-loader/lambda_function.py"
   output_path = "../src/lambda/functions/config-loader/lambda_function.zip"
@@ -374,11 +374,11 @@ resource "aws_lambda_function" "lambda_config_loader" {
   function_name                  = module.lambda_config_loader_naming.name
   tags                           = module.lambda_config_loader_naming.tags
   description                    = "Configuration loader for the OIDH dedup process"
-  filename                       = data.archive_file.lambda_config_loader_script.output_path
+  filename                       = data.archive_file.lambda_config_loader_code.output_path
   role                           = aws_iam_role.lambda_config_loader_role.arn
   handler                        = local.lambda_handler
   runtime                        = local.lambda_runtime
-  source_code_hash               = data.archive_file.lambda_config_loader_script.output_base64sha256
+  source_code_hash               = data.archive_file.lambda_config_loader_code.output_base64sha256
   memory_size                    = var.lambda_memory_size
   timeout                        = var.lambda_timeout
   reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
