@@ -154,7 +154,7 @@ data "aws_iam_policy_document" "dev_deploy" {
 
   statement {
     effect    = "Allow"
-    actions   = ["iam:PassRole"]
+    actions   = ["iam:PassRole", "iam:CreateRole"]
     resources = ["arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}"]
     sid       = "iampassrole"
   }
