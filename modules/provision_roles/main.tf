@@ -74,6 +74,19 @@ module "glue_db_naming" {
   purpose     = join("", [var.project_prefix, "_", "gluedb"])
 }
 
+module "glue_connection_sg_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "sgp"
+  purpose     = join("", [var.project_prefix, "-", "ingestjobconnectionsg"])
+}
+
+module "glue_ingest_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "ingestjobrole"])
+}
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -133,9 +146,40 @@ data "aws_iam_policy_document" "dev_deploy" {
 
   statement {
     effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}"]
+    sid       = "iampassrole"
+  }
+
+  statement {
+    effect    = "Allow"
     actions   = ["iam:CreateServiceLinkedRole"]
     resources = ["*"]
     sid       = "iampermissions"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups"]
+    resources = ["*"]
+    sid = "ec2describe"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DeleteSecurityGroup", 
+      "ec2:CreateSecurityGroup", 
+      "ec2:ModifySecurityGroupRules",
+      "ec2:UpdateSecurityGroupRuleDescriptionIngress",
+      "ec2:UpdateSecurityGroupRuleDescriptionEgress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupEgress"
+      ]
+    resources = [
+      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/${module.glue_connection_sg_naming.name}"
+    ]
+    sid = "ec2sgcreate"
   }
 
   statement {
@@ -171,7 +215,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ssm:GetParametersByPath"
     ]
     resources = [
-      "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift"
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift"
     ]
   }
 }
@@ -227,7 +272,6 @@ data "aws_iam_policy_document" "dev_deploy2" {
     effect    = "Allow"
     resources = ["*"]
   }
-
 }
 
 # ------------------------------------------------------------------------------

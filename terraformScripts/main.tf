@@ -253,3 +253,31 @@ resource "aws_glue_connection" "redshift_connection" {
     security_group_id_list = [aws_security_group.glue_connection_sg.id]
   }
 }
+
+#------------------------------------------------------------------------------
+# Glue Ingest Job Role
+#------------------------------------------------------------------------------
+module "glue_ingest_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "ingestjobrole"])
+}
+
+resource "aws_iam_role" "ingest_glue_job_role" {
+  name = module.glue_ingest_job_role_naming.name
+  tags = module.glue_ingest_job_role_naming.tags
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Sid    = "GlueAssumeRole"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+}

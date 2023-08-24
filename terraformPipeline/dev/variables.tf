@@ -71,7 +71,7 @@ variable "jfrog_repository_name" {
 
 variable "project_app_group" {
   description = "This is Bright's specified value"
-  default     = "ds"
+  default     = "oidh"
 }
 
 variable "project_ledger" {
