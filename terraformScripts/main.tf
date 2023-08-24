@@ -281,3 +281,46 @@ resource "aws_iam_role" "ingest_glue_job_role" {
     ]
   })
 }
+
+#------------------------------------------------------------------------------
+# Glue Ingest Job
+#------------------------------------------------------------------------------
+
+module "glue_ingest_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
+resource "aws_glue_job" "ingest_job" {
+  name                   = module.glue_ingest_job_naming.name
+  tags                   = module.glue_ingest_job_naming.tags
+  role_arn               = aws_iam_role.ingest_glue_job_role.arn
+  glue_version           = "4.0"
+  worker_type            = var.glue_worker_type
+  timeout                = var.glue_timeout
+  security_configuration = aws_glue_security_configuration.glue_security_config.id
+  number_of_workers      = var.glue_number_of_workers
+  connections            = [aws_glue_connection.redshift_connection.name]
+  default_arguments = {
+    "--enable-continuous-cloudwatch-log" = "true"
+    "--enable-job-insights"              = "true"
+    "--enable-metrics"                   = "true"
+    "--enable-auto-scaling"              = "true"
+    "--job-bookmark-option"              = "job-bookmark-disable"
+    "--enable-glue-datacatalog"          = "true"
+    "--conf"                             = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    "--class"                            = "GlueApp"
+    "--extra-jars" = join(",", ["s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}",
+    "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-storage-2.3.0.jar"].id}"])
+    "--extra-py-files" = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}"
+  }
+  command {
+    name            = "glueetl"
+    script_location = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["scripts/ingest_job.py"].id}"
+  }
+  execution_property {
+    max_concurrent_runs = var.glue_max_concurrent_runs
+  }
+}

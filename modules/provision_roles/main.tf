@@ -87,6 +87,14 @@ module "glue_ingest_job_role_naming" {
   type        = "iro"
   purpose     = join("", [var.project_prefix, "-", "ingestjobrole"])
 }
+
+module "glue_ingest_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -270,7 +278,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:GetJob"
     ]
     effect    = "Allow"
-    resources = ["*"]
+    resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}"]
   }
 }
 
