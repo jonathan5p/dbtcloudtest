@@ -161,7 +161,10 @@ data "aws_iam_policy_document" "dev_deploy" {
       "iam:GetRole",
       "iam:ListRolePolicies",
       "iam:ListAttachedRolePolicies",
-      "iam:AttachRolePolicy"
+      "iam:AttachRolePolicy",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRole",
+      "iam:DeletePolicy"
       ]
     resources = ["arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}"]
     sid       = "iampassrole"
@@ -283,7 +286,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:DeleteJob",
       "glue:CreateJob",
       "glue:UpdateJob",
-      "glue:GetJob"
+      "glue:GetJob",
+      "glue:GetTags"
     ]
     effect    = "Allow"
     resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}"]
