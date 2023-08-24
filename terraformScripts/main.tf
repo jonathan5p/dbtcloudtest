@@ -326,3 +326,65 @@ resource "aws_glue_job" "ingest_job" {
     max_concurrent_runs = var.glue_max_concurrent_runs
   }
 }
+
+#------------------------------------------------------------------------------
+# Ingest job config loader
+#------------------------------------------------------------------------------
+
+module "lambda_config_loader_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
+}
+resource "aws_iam_role" "lambda_config_loader_role" {
+  name = module.lambda_config_loader_role_naming.name
+  tags = module.lambda_config_loader_role_naming.tags
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Sid    = "LambdaAssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+data "archive_file" "lambda_config_loader_script" {
+  type        = "zip"
+  source_file = "../src/lambda/config-loader/lambda_function.py"
+  output_path = "../src/lambda/config-loader/lambda_function.zip"
+}
+
+module "lambda_config_loader_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
+}
+
+resource "aws_lambda_function" "lambda_config_loader" {
+  function_name                  = module.lambda_config_loader_naming.name
+  tags                           = module.lambda_config_loader_naming.tags
+  description                    = "Configuration loader for the OIDH dedup process"
+  filename                       = data.archive_file.lambda_config_loader_script.output_path
+  role                           = aws_iam_role.lambda_config_loader_role.arn
+  handler                        = local.lambda_handler
+  runtime                        = local.lambda_runtime
+  source_code_hash               = data.archive_file.lambda_config_loader_script.output_base64sha256
+  memory_size                    = var.lambda_memory_size
+  timeout                        = var.lambda_timeout
+  reserved_concurrent_executions = var.lambda_reserved_concurrent_executions
+
+  environment {
+    variables = {
+      ARTIFACTS_BUCKET = module.s3_artifacts_bucket.bucket_id
+      ETL_CONFIG_KEY   = "config/ingest_config.json"
+    }
+  }
+}

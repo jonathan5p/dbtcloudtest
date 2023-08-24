@@ -95,6 +95,24 @@ module "glue_ingest_job_naming" {
   purpose     = join("", [var.project_prefix, "-", "ingestjob"])
 }
 
+#----------------------------------
+# Lambda names
+#----------------------------------
+
+module "lambda_config_loader_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
+}
+
+module "lambda_config_loader_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
+}
+
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -166,8 +184,11 @@ data "aws_iam_policy_document" "dev_deploy" {
       "iam:DeleteRole",
       "iam:DeletePolicy"
       ]
-    resources = ["arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}"]
-    sid       = "iampassrole"
+    resources = [
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}"
+      ]
+    sid       = "iam"
   }
 
   statement {
@@ -244,6 +265,13 @@ data "aws_iam_policy_document" "dev_deploy" {
 # ETL Policies
 # ------------------------------------------------------------------------------
 data "aws_iam_policy_document" "dev_deploy2" {
+  statement {
+    effect  = "Allow"
+    actions = ["lambda:*"]
+    resources = [
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_config_loader_naming.name}"
+    ]
+  }
 
   statement {
     actions = [
