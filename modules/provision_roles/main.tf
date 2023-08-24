@@ -131,6 +131,13 @@ module "etl_sfn_naming" {
   purpose     = join("", [var.project_prefix, "-", "etlsfn"])
 }
 
+module "cron_trigger_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwr"
+  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+}
+
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -300,6 +307,14 @@ data "aws_iam_policy_document" "dev_deploy2" {
     ]
   }
 
+  statement {
+    effect  = "Allow"
+    actions = ["events:*"]
+    resources = [
+      "arn:aws:events:${var.region}:${var.aws_account_number_env}:rule/${module.cron_trigger_naming.name}"
+    ]
+  }
+  
   statement {
     actions = [
       "glue:GetDatabase",
