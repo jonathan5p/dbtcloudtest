@@ -25,15 +25,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption" {
 resource "aws_s3_bucket_ownership_controls" "s3_ownership" {
   bucket = aws_s3_bucket.s3_bucket.id
   rule {
-    object_ownership = "BucketOwnerPreferred"
+    object_ownership = "BucketOwnerEnforced"
   }
-}
-
-resource "aws_s3_bucket_acl" "private_acl" {
-  depends_on = [aws_s3_bucket_ownership_controls.s3_ownership]
-
-  bucket = aws_s3_bucket.s3_bucket.id
-  acl    = "private"
 }
 
 data "aws_iam_policy_document" "security_policy" {
@@ -51,7 +44,7 @@ data "aws_iam_policy_document" "security_policy" {
       "${aws_s3_bucket.s3_bucket.arn}/*",
     ]
     condition {
-      test     = "ForAnyValue:StringNotLikeIfExists"
+      test     = "ForAnyValue:StringNotEquals"
       variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
       values   = ["${var.s3_bucket_key_arn}"]
     }

@@ -130,6 +130,7 @@ resource "aws_s3_object" "artifacts" {
   key                    = each.value
   source                 = "../src/artifacts/${each.value}"
   server_side_encryption = "aws:kms"
+  kms_key_id = module.data_key.key_arn
   bucket_key_enabled     = true
 }
 
@@ -139,6 +140,7 @@ resource "aws_s3_object" "glue_artifacts" {
   key                    = each.value
   source                 = "../src/glue/${each.value}"
   server_side_encryption = "aws:kms"
+  kms_key_id = module.glue_enc_key.key_arn
   bucket_key_enabled     = true
 }
 
