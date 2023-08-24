@@ -131,6 +131,13 @@ module "etl_sfn_naming" {
   purpose     = join("", [var.project_prefix, "-", "etlsfn"])
 }
 
+module "trigger_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+}
+
 module "cron_trigger_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -212,7 +219,8 @@ data "aws_iam_policy_document" "dev_deploy" {
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}"
     ]
     sid = "iam"
   }
@@ -314,7 +322,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:events:${var.region}:${var.aws_account_number_env}:rule/${module.cron_trigger_naming.name}"
     ]
   }
-  
+
   statement {
     actions = [
       "glue:GetDatabase",
