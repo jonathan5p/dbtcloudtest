@@ -171,7 +171,7 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ssm:GetParametersByPath"
     ]
     resources = [
-      "*"
+      "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift"
     ]
   }
 }
@@ -191,11 +191,14 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:CreateConnection",
       "glue:DeleteConnection",
       "glue:GetConnection",
-      "glue:UpdateConnection"
+      "glue:UpdateConnection",
+      "glue:GetTags"
     ]
     effect = "Allow"
     resources = [
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:database/${module.glue_db_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:userDefinedFunction/${module.glue_db_naming.name}/*",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:table/${module.glue_db_naming.name}/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection/*",

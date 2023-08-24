@@ -61,3 +61,8 @@ variable "s3_bucket_objects_expiration_days" {
 variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
 }
+
+variable "glue_redshift_conn_subnet_id" {
+  description = "Subnet id used to access the Redshift cluster"
+  default     = ""
+}
