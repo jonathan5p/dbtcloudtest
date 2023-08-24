@@ -212,7 +212,9 @@ data "aws_iam_policy_document" "dev_deploy" {
       "kms:GetKeyRotationStatus",
       "kms:ListResourceTags",
       "kms:DeleteAlias",
-      "kms:CreateGrant"
+      "kms:CreateGrant",
+      "kms:ListGrants",
+      "kms:RevokeGrant"
     ]
     resources = [
     "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
@@ -246,8 +248,7 @@ data "aws_iam_policy_document" "dev_deploy" {
       "iam:ListAttachedRolePolicies",
       "iam:AttachRolePolicy",
       "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRole",
-      "iam:DeletePolicy"
+      "iam:DeleteRole"
     ]
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
@@ -261,7 +262,13 @@ data "aws_iam_policy_document" "dev_deploy" {
   statement {
     effect = "Allow"
     actions = [
-      "iam:CreatePolicy"
+      "iam:CreatePolicy",
+      "iam:TagPolicy",
+      "iam:DeletePolicy",
+      "iam:GetPolicy",
+      "iam:GetPolicyVersion",
+      "iam:ListPolicyVersions"
+
     ]
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ingest_policy_naming.name}",
