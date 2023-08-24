@@ -503,3 +503,55 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
 }
 EOF
 }
+
+#------------------------------------------------------------------------------
+# ETL cron trigger
+#------------------------------------------------------------------------------
+
+# Cron trigger execution role
+module "trigger_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+}
+resource "aws_iam_role" "crontrigger_role" {
+  name = module.trigger_role_naming.name
+  tags = module.trigger_role_naming.tags
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Sid    = "CronTriggerAssumeRole"
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# Cron trigger
+
+module "cron_trigger_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwr"
+  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+}
+
+resource "aws_cloudwatch_event_rule" "cron_trigger" {
+  name                = module.cron_trigger_naming.name
+  tags                = module.cron_trigger_naming.tags
+  is_enabled          = true
+  schedule_expression = var.cron_schedule
+}
+
+resource "aws_cloudwatch_event_target" "etl_sfn" {
+  rule      = aws_cloudwatch_event_rule.cron_trigger.name
+  target_id = "StartStateMachine"
+  arn       = aws_sfn_state_machine.sfn_state_machine.arn
+  role_arn  = aws_iam_role.crontrigger_role.arn
+}
