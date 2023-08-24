@@ -1,10 +1,10 @@
-# provider "aws" {
-#   region = var.region[var.site]
-#   assume_role {
-#     role_arn     = var.role_arn
-#     session_name = "oidh"
-#   }
-# }
+provider "aws" {
+  region = var.region[var.site]
+  assume_role {
+    role_arn     = var.role_arn
+    session_name = "oidh"
+  }
+}
 
 # data "aws_caller_identity" "current" {}
 
@@ -355,11 +355,11 @@
 #   })
 # }
 
-data "archive_file" "lambda_config_loader_script" {
-  type        = "zip"
-  source_file = "../src/lambda/functions/config-loader/lambda_function.py"
-  output_path = "../src/lambda/functions/config-loader/lambda_function.zip"
-}
+# data "archive_file" "lambda_config_loader_script" {
+#   type        = "zip"
+#   source_file = "../src/lambda/functions/config-loader/lambda_function.py"
+#   output_path = "../src/lambda/functions/config-loader/lambda_function.zip"
+# }
 
 # module "lambda_config_loader_naming" {
 #   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
