@@ -74,13 +74,6 @@ module "glue_db_naming" {
   purpose     = join("", [var.project_prefix, "_", "gluedb"])
 }
 
-module "glue_connection_sg_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "sgp"
-  purpose     = join("", [var.project_prefix, "-", "ingestjobconnectionsg"])
-}
-
 module "glue_ingest_job_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -248,7 +241,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "iam:ListAttachedRolePolicies",
       "iam:AttachRolePolicy",
       "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRole"
+      "iam:DeleteRole",
+      "iam:DetachRolePolicy"
     ]
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
@@ -288,9 +282,24 @@ data "aws_iam_policy_document" "dev_deploy" {
 
   statement {
     effect    = "Allow"
-    actions   = ["ec2:DescribeSubnets", "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups"]
+    actions   = [
+      "ec2:DescribeSubnets", 
+      "ec2:DescribeVpcs", 
+      "ec2:DescribeSecurityGroups", 
+      "ec2:DescribeNetworkInterfaces",
+      ]
     resources = ["*"]
     sid       = "ec2describe"
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = [
+      "ec2:DeleteNetworkInterface",
+      "ec2:DetachNetworkInterface"
+      ]
+    resources = ["*"]
+    sid       = "ec2eni"
   }
 
   statement {
@@ -305,7 +314,7 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ec2:RevokeSecurityGroupEgress"
     ]
     resources = [
-      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/${module.glue_connection_sg_naming.name}"
+      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/*"
     ]
     sid = "ec2sgcreate"
   }
