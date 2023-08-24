@@ -311,10 +311,14 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ec2:UpdateSecurityGroupRuleDescriptionIngress",
       "ec2:UpdateSecurityGroupRuleDescriptionEgress",
       "ec2:RevokeSecurityGroupIngress",
-      "ec2:RevokeSecurityGroupEgress"
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:CreateTags"
     ]
     resources = [
-      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/*"
+      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/*",
+      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:vpc/*"
     ]
     sid = "ec2sgcreate"
   }
