@@ -62,6 +62,40 @@ variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
 }
 
+variable "glue_max_concurrent_runs" {
+  description = "Glue maximum concurrent running jobs for all jobs deployed"
+  default     = 4
+}
+
+variable "glue_timeout" {
+  description = "Glue timeout for all jobs deployed"
+  default     = 60
+}
+
+variable "glue_worker_type" {
+  description = "Glue wokertype for all jobs deployed"
+  default     = "G.1X"
+}
+
+variable "glue_number_of_workers" {
+  description = "Glue maximum number of workers"
+  default     = 4
+}
+
+variable "glue_retry_max_attempts" {
+  description = "Glue retry attempts for all jobs deployed"
+  default     = 0
+}
+
+variable "glue_retry_interval" {
+  description = "Glue retry interval for all jobs deployed"
+  default     = 2
+}
+variable "glue_retry_backoff_rate" {
+  description = "Glue backoff rate for all jobs deployed"
+  default     = 2
+}
+
 variable "glue_redshift_conn_subnet_id" {
   description = "Subnet id used to access the Redshift cluster"
   default     = ""
