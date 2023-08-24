@@ -145,6 +145,38 @@ module "cron_trigger_naming" {
   purpose     = join("", [var.project_prefix, "-", "crontrigger"])
 }
 
+#----------------------------------
+# Policy names
+#----------------------------------
+
+module "glue_ingest_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "glueingestpolicy"])
+}
+
+module "lambda_config_loader_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloaderpolicy"])
+}
+
+module "elt_sfn_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "etlsfnpolicy"])
+}
+
+module "cron_trigger_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "crontriggerpolicy"])
+}
+
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -179,7 +211,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "kms:GetKeyPolicy",
       "kms:GetKeyRotationStatus",
       "kms:ListResourceTags",
-      "kms:DeleteAlias"
+      "kms:DeleteAlias",
+      "kms:CreateGrant"
     ]
     resources = [
     "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
@@ -222,7 +255,21 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}"
     ]
-    sid = "iam"
+    sid = "iamroles"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:CreatePolicy"
+    ]
+    resources = [
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ingest_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}"
+    ]
+    sid = "iampolicies"
   }
 
   statement {
