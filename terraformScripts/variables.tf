@@ -134,3 +134,9 @@ variable "glue_redshift_conn_subnet_id" {
   description = "Subnet id used to access the Redshift cluster"
   default     = ""
 }
+
+# Event bridge cron trigger
+variable "cron_schedule" {
+  description = "Cron expresion applied to the EvenBridge scheduled rule"
+  default     = "cron(0 23 * * ? *)"
+}
