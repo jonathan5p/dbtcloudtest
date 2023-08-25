@@ -131,8 +131,9 @@ resource "aws_s3_object" "artifacts" {
   for_each               = fileset("../src/artifacts/", "**")
   key                    = each.value
   source                 = "../src/artifacts/${each.value}"
-  server_side_encryption = "aws:kms"
-  kms_key_id = module.data_key.key_arn
+  server_side_encryption = "AES256"
+  etag = filemd5("../src/artifacts/${each.value}")
+  #kms_key_id = module.data_key.key_arn
   bucket_key_enabled     = true
 }
 
@@ -141,8 +142,9 @@ resource "aws_s3_object" "glue_artifacts" {
   for_each               = fileset("../src/glue/", "**")
   key                    = each.value
   source                 = "../src/glue/${each.value}"
-  server_side_encryption = "aws:kms"
-  kms_key_id = module.glue_enc_key.key_arn
+  server_side_encryption = "AES256"
+  etag = filemd5("../src/glue/${each.value}")
+  #kms_key_id = module.glue_enc_key.key_arn
   bucket_key_enabled     = true
 }
 
