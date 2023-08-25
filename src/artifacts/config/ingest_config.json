@@ -2,13 +2,13 @@
   "agent_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bmls_agent_latest_view",
+    "catalog_table": "bright_raw_agent_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_gluedb",
     "connection_type": "redshift",
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
-        "dbtable": "public.bmls_agent_latest_view",
+        "dbtable": "public.bright_raw_agent_latest",
         "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
@@ -19,20 +19,20 @@
         "compression": "snappy",
         "merge_key": "membermlsid",
         "precombine_keys": "modificationtimestamp",
-        "update_condition":"target.datetimeinsertedtoredshift > source.datetimeinsertedtoredshift"
+        "update_condition":"source.modificationtimestamp > target.modificationtimestamp"
       }
     }
   },
   "office_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bmls_office_latest_view",
+    "catalog_table": "bright_raw_office_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_gluedb",
     "connection_type": "redshift",
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
-        "dbtable": "public.bmls_office_latest_view",
+        "dbtable": "public.bright_raw_office_latest",
         "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
@@ -43,7 +43,7 @@
         "compression": "snappy",
         "merge_key": "officemlsid",
         "precombine_keys": "modificationtimestamp",
-        "update_condition": "target.datetimeinsertedtoredshift > source.datetimeinsertedtoredshift"
+        "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
       }
     }
   }
