@@ -359,8 +359,8 @@ resource "aws_iam_role" "lambda_config_loader_role" {
 
 data "archive_file" "lambda_config_loader_script" {
   type        = "zip"
-  source_file = "${path.module}/../src/lambda/functions/config-loader/lambda_function.py"
-  output_path = "${path.module}/../src/lambda/functions/config-loader/lambda_function.zip"
+  source_file = "../src/lambda/config-loader/lambda_function.py"
+  output_path = "../src/lambda/config-loader/lambda_function.zip"
 }
 
 module "lambda_config_loader_naming" {
