@@ -19,7 +19,7 @@
         "compression": "snappy",
         "merge_key": "membermlsid",
         "precombine_keys": "modificationtimestamp",
-        "update_condition":"source.modificationtimestamp > target.modificationtimestamp"
+        "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
       }
     }
   },
