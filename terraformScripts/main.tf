@@ -860,7 +860,7 @@ resource "aws_kms_grant" "grant_read_data_ingest" {
   operations        = ["Decrypt"]
 }
 
-#### Lambda config loader policies ####
+#### Lambda enrich caar data policies ####
 data "aws_iam_policy_document" "lambda_enrich_caar_policy" {
   statement {
     sid    = "s3readandwrite"

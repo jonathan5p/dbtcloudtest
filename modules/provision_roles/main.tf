@@ -106,6 +106,27 @@ module "lambda_config_loader_naming" {
   purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
 }
 
+module "lambda_enrich_caar_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "lambdaenrichcaar"])
+}
+
+module "lambda_caar_enrich_agent_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "lambdacaarenrichagent"])
+}
+
+module "lambda_caar_enrich_office_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "lambdacaarenrichoffice"])
+}
+
 #----------------------------------
 # Sfn names
 #----------------------------------
@@ -168,6 +189,13 @@ module "cron_trigger_policy_naming" {
   base_object = module.base_naming
   type        = "ipl"
   purpose     = join("", [var.project_prefix, "-", "crontriggerpolicy"])
+}
+
+module "lambda_enrich_caar_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "lambdaenrichcaarpolicy"])
 }
 
 # ------------------------------------------------------------------------------
@@ -248,7 +276,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_role_naming.name}"
     ]
     sid = "iamroles"
   }
@@ -268,7 +297,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ingest_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_caar_policy_naming.name}"
     ]
     sid = "iampolicies"
   }
@@ -291,16 +321,6 @@ data "aws_iam_policy_document" "dev_deploy" {
     resources = ["*"]
     sid       = "ec2describe"
   }
-
-  # statement {
-  #   effect    = "Allow"
-  #   actions   = [
-  #     "ec2:DeleteNetworkInterface",
-  #     "ec2:DetachNetworkInterface"
-  #     ]
-  #   resources = ["*"]
-  #   sid       = "ec2eni"
-  # }
 
   statement {
     effect = "Allow"
@@ -370,7 +390,13 @@ data "aws_iam_policy_document" "dev_deploy2" {
     effect  = "Allow"
     actions = ["lambda:*"]
     resources = [
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_config_loader_naming.name}"
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_config_loader_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_caar_enrich_agent_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_caar_enrich_office_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy:*",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy",
+      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310:*",
+      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310",
     ]
   }
 
