@@ -64,12 +64,13 @@ variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
 }
 
+# Lambda config loader parameters
+
 variable "lambda_reserved_concurrent_executions" {
   description = "Lambda reserved concurrency for all functions deployed"
   default     = null
 }
 
-# Lambda parameters
 variable "lambda_timeout" {
   description = "Lambda timeout for all functions deployed"
   default     = 300
@@ -91,6 +92,48 @@ variable "lambda_retry_interval" {
 }
 
 variable "lambda_retry_backoff_rate" {
+  description = "Lambda backoff rate for all functions deployed in the step function"
+  default     = 2
+}
+
+# Lambda enrich caar data parameters
+
+variable "lambda_ec_agent_table_name" {
+  description = "Name of the agent table registered in S3"
+  default     = "bright_raw_agent_latest"
+}
+
+variable "lambda_ec_office_table_name" {
+  description = "Name of the office table registered in S3"
+  default     = "bright_raw_office_latest"
+}
+
+variable "lambda_ec_reserved_concurrent_executions" {
+  description = "Lambda reserved concurrency for all functions deployed"
+  default     = null
+}
+
+variable "lambda_ec_timeout" {
+  description = "Lambda timeout for all functions deployed"
+  default     = 900
+}
+
+variable "lambda_ec_memory_size" {
+  description = "Lambda memory size for all functions deployed"
+  default     = 2048
+}
+
+variable "lambda_ec_retry_max_attempts" {
+  description = "Lambda retry attempts for all functions deployed in the step function"
+  default     = 0
+}
+
+variable "lambda_ec_retry_interval" {
+  description = "Lambda retry interval for all functions deployed in the step function"
+  default     = 2
+}
+
+variable "lambda_ec_retry_backoff_rate" {
   description = "Lambda backoff rate for all functions deployed in the step function"
   default     = 2
 }
