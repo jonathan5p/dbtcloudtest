@@ -25,10 +25,6 @@ variable "dev_deployment_role" {
   default = {}
 }
 
-#variable "dynamo_state_backend" {
-#  default = {}
-#}
-
 variable "enable_codepipeline_notification" {
   default = {}
 }
@@ -70,6 +66,30 @@ variable "environment_variable_codeprovision" {
       value = string
   }))
   default = []
+}
+
+variable "iam_role_cbd_build_arn" {
+    default = ""
+}
+
+variable "iam_role_cbd_build_name" {
+    default = ""
+}
+
+variable "iam_role_cbd_provision_arn" {
+    default = ""
+}
+
+variable "iam_role_cbd_provision_name" {
+    default = ""
+}
+
+variable "iam_role_cpl_arn" {
+    default = ""
+}
+
+variable "iam_role_cpl_name" {
+    default = ""
 }
 
 variable "image" {
@@ -141,50 +161,4 @@ variable "type" {
 
 variable "zone" {
   default = {}
-}
-
-
-
-#variable "create_code_bucket" {
-#    default = true
-#    type    = bool
-#}
-
-#variable "s3_code_bucket_arn" {
-#    default = ""
-#    type    = string
-#}
-
-#variable "s3_code_bucket" {
-#    default = ""
-#    type = string
-#}
-
-#variable "create_iam_roles" {
-#    default = true
-#    type    = bool
-#}
-
-variable "iam_role_cbd_build_arn" {
-    default = ""
-}
-
-variable "iam_role_cbd_build_name" {
-    default = ""
-}
-
-variable "iam_role_cbd_provision_arn" {
-    default = ""
-}
-
-variable "iam_role_cbd_provision_name" {
-    default = ""
-}
-
-variable "iam_role_cpl_arn" {
-    default = ""
-}
-
-variable "iam_role_cpl_name" {
-    default = ""
 }
