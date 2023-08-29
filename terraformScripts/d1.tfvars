@@ -25,7 +25,6 @@ glue_number_of_workers           = 10
 glue_retry_max_attempts          = 3
 glue_retry_interval              = 2
 glue_retry_backoff_rate          = 2
-glue_redshift_conn_subnet_id     = "subnet-0112c4c44ce9649c2"
 
 # Eventbridge trigger parameters
 cron_schedule = "cron(0 23 * * ? *)"

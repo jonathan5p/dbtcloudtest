@@ -195,8 +195,24 @@ resource "aws_glue_security_configuration" "glue_security_config" {
 # Redshift Credentials
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameters_by_path" "redshift_credentials" {
-  path = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift"
+data "aws_ssm_parameter" "redshift_conn_user" {
+  path = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
+}
+
+data "aws_ssm_parameter" "redshift_conn_pass" {
+  path = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
+}
+
+data "aws_ssm_parameter" "redshift_conn_jdbc_url" {
+  path = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/jdbc_url"
+}
+
+data "aws_ssm_parameter" "redshift_conn_subnetid" {
+  path = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/subnetid"
+}
+
+data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
+  path = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/securitygroupid"
 }
 
 #------------------------------------------------------------------------------
@@ -204,35 +220,7 @@ data "aws_ssm_parameters_by_path" "redshift_credentials" {
 #------------------------------------------------------------------------------
 
 data "aws_subnet" "connection_subnet" {
-  id = var.glue_redshift_conn_subnet_id
-}
-
-module "glue_connection_sg_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "sgp"
-  purpose     = join("", [var.project_prefix, "-", "ingestjobconnectionsg"])
-}
-
-resource "aws_security_group" "glue_connection_sg" {
-  name        = module.glue_connection_sg_naming.name
-  tags        = module.glue_connection_sg_naming.tags
-  vpc_id      = data.aws_subnet.connection_subnet.vpc_id
-  description = "Security group used by the OIDH dedup process glue connection"
-  ingress {
-    description = "Self-referencing all tcp"
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    self        = true
-  }
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+  id = data.aws_ssm_parameter.redshift_conn_subnetid.value
 }
 
 module "glue_ingest_conn_naming" {
@@ -247,14 +235,14 @@ resource "aws_glue_connection" "redshift_connection" {
   name            = module.glue_ingest_conn_naming.name
   tags            = module.glue_ingest_conn_naming.tags
   connection_properties = {
-    JDBC_CONNECTION_URL = data.aws_ssm_parameters_by_path.redshift_credentials.values[0]
-    PASSWORD            = data.aws_ssm_parameters_by_path.redshift_credentials.values[1]
-    USERNAME            = data.aws_ssm_parameters_by_path.redshift_credentials.values[2]
+    JDBC_CONNECTION_URL = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
+    PASSWORD            = data.aws_ssm_parameter.redshift_conn_password.value
+    USERNAME            = data.aws_ssm_parameter.redshift_conn_username.value
   }
   physical_connection_requirements {
     availability_zone      = data.aws_subnet.connection_subnet.availability_zone
     subnet_id              = data.aws_subnet.connection_subnet.id
-    security_group_id_list = [aws_security_group.glue_connection_sg.id]
+    security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
   }
 }
 
