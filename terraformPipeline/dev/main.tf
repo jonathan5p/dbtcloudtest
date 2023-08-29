@@ -36,7 +36,6 @@ module "provision_roles" {
 }
 
 module "codepipeline" {
-  #source    = "../../modules/codepipeline_data"
   source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//codepipeline_data?ref=v0.0.0"
 
   providers = {
