@@ -25,7 +25,6 @@ module "base_naming" {
   zone      = var.zone
 }
 
-
 #------------------------------------------------------------------------------
 # KMS Keys for the S3 Buckets and Glue
 #------------------------------------------------------------------------------
@@ -197,23 +196,23 @@ resource "aws_glue_security_configuration" "glue_security_config" {
 #------------------------------------------------------------------------------
 
 data "aws_ssm_parameter" "redshift_conn_user" {
-  path = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
+  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
 }
 
 data "aws_ssm_parameter" "redshift_conn_pass" {
-  path = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
+  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
 }
 
 data "aws_ssm_parameter" "redshift_conn_jdbc_url" {
-  path = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/jdbc_url"
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/jdbc_url"
 }
 
 data "aws_ssm_parameter" "redshift_conn_subnetid" {
-  path = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/subnetid"
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/subnetid"
 }
 
 data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
-  path = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/securitygroupid"
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/securitygroupid"
 }
 
 #------------------------------------------------------------------------------
