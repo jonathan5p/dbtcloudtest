@@ -195,11 +195,11 @@ resource "aws_glue_security_configuration" "glue_security_config" {
 # Redshift Credentials
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "redshift_conn_user" {
+data "aws_ssm_parameter" "redshift_conn_username" {
   name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
 }
 
-data "aws_ssm_parameter" "redshift_conn_pass" {
+data "aws_ssm_parameter" "redshift_conn_password" {
   name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
 }
 
