@@ -982,7 +982,7 @@ resource "aws_iam_role_policy_attachment" "staging_glue_crawler_policy_attacheme
   policy_arn = aws_iam_policy.staging_glue_crawler_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_basic_exec_policy_attachement_caar" {
+resource "aws_iam_role_policy_attachment" "staging_glue_crawler_service_policy_attachement" {
   role       = aws_iam_role.staging_crawler_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
