@@ -316,7 +316,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "iam:DeletePolicy",
       "iam:GetPolicy",
       "iam:GetPolicyVersion",
-      "iam:ListPolicyVersions"
+      "iam:ListPolicyVersions",
+      "iam:CreatePolicyVersion"
 
     ]
     resources = [
