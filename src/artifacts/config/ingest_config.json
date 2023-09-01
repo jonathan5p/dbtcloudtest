@@ -12,7 +12,6 @@
         "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
-      "read_options": {},
       "write_options": {
         "partitions": "",
         "write_mode": "incremental",
@@ -36,7 +35,6 @@
         "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
-      "read_options": {},
       "write_options": {
         "partitions": "",
         "write_mode": "incremental",
