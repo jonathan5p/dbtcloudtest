@@ -98,12 +98,22 @@ variable "lambda_retry_backoff_rate" {
 
 # Lambda enrich caar data parameters
 
-variable "lambda_ec_agent_table_name" {
+variable "lambda_ec_agent_source_table_name" {
+  description = "Name of the agent table registered in the S3 Raw layer"
+  default     = "bright_raw_agent_latest"
+}
+
+variable "lambda_ec_agent_target_table_name" {
   description = "Name of the agent table registered in the S3 Staging layer"
   default     = "bright_staging_agent_latest"
 }
 
-variable "lambda_ec_office_table_name" {
+variable "lambda_ec_office_source_table_name" {
+  description = "Name of the office table registered in the S3 Raw layer"
+  default     = "bright_staging_office_latest"
+}
+
+variable "lambda_ec_office_target_table_name" {
   description = "Name of the office table registered in the S3 Staging layer"
   default     = "bright_staging_office_latest"
 }

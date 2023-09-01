@@ -14,7 +14,7 @@
       },
       "write_options": {
         "partitions": "",
-        "write_mode": "incremental",
+        "write_mode": "full",
         "compression": "snappy",
         "merge_key": "membermlsid",
         "precombine_keys": "modificationtimestamp",
@@ -37,7 +37,7 @@
       },
       "write_options": {
         "partitions": "",
-        "write_mode": "incremental",
+        "write_mode": "full",
         "compression": "snappy",
         "merge_key": "officemlsid",
         "precombine_keys": "modificationtimestamp",

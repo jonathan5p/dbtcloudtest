@@ -478,6 +478,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:DeleteCrawler",
       "glue:UpdateCrawler",
       "glue:CreateCrawler",
+      "glue:GetTags"
     ]
     effect    = "Allow"
     resources = [
