@@ -26,17 +26,14 @@ spark = glueContext.spark_session
 job = Job(glueContext)
 job.init(f"{args['JOB_NAME']}-{args['catalog_database']}-{args['catalog_table']}", args)
 
-read_options = json.loads(args["options"]).get("read_options")
-write_options = json.loads(args["options"]).get("write_options")
-conn_ops = json.loads(args["options"]).get("connection_options")
+write_options = json.loads(args["options"]).get("write_options",{})
+conn_ops = json.loads(args["options"]).get("connection_options",{})
 merge_key=write_options.get("merge_key")
 s3_target_path = f"s3://{args.get('target')}/{args.get('target_prefixes')}/{args.get('catalog_database')}/{args.get('catalog_table')}/"
 
 input_df = glueContext.create_dynamic_frame_from_options(
     connection_type=args.get("connection_type"),
-    format=read_options.get("read_format"),
     connection_options=conn_ops,
-    format_options=read_options,
     transformation_ctx=f"{args['catalog_database']}-{args['catalog_table']}",
 ).toDF()
 

@@ -504,6 +504,56 @@ resource "aws_lambda_function" "lambda_caar_enrich_office" {
 }
 
 #------------------------------------------------------------------------------
+# Glue Crawler for Staging
+#------------------------------------------------------------------------------
+
+module "crawler_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+}
+resource "aws_iam_role" "staging_crawler_role" {
+  name = module.staging_crawler_role_naming.name
+  tags = module.staging_crawler_role_naming.tags
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Sid    = "GlueAssumeRole"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+module "staging_crawler_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glr"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+}
+resource "aws_glue_crawler" "stagin_crawler" {
+  database_name = aws_glue_catalog_database.dedup_process_glue_db.name
+  name          = module.staging_crawler_naming.name
+  tags          = module.staging_crawler_naming.tags
+  role          = aws_iam_role.staging_crawler_role.arn
+
+  delta_target {
+    write_manifest = false
+    create_native_delta_table = true
+    delta_tables = [
+    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_table_name}/",
+    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_table_name}/"
+    ]
+  }
+}
+
+#------------------------------------------------------------------------------
 # Step function definition
 #------------------------------------------------------------------------------
 
@@ -898,6 +948,50 @@ resource "aws_kms_grant" "grant_read_write_data_enrich_caar" {
   key_id            = module.data_key.key_id
   grantee_principal = aws_iam_role.lambda_enrich_caar_role.arn
   operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
+}
+
+#### Staging Glue crawler policies ####
+data "aws_iam_policy_document" "staging_glue_crawler_policy" {
+  statement {
+    sid    = "s3readandwrite"
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject"
+    ]
+    resources = [module.s3_data_bucket.bucket_arn,
+    "${module.s3_data_bucket.bucket_arn}/*"]
+  }
+}
+
+module "staging_glue_crawler_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawlerpolicy"])
+}
+resource "aws_iam_policy" "staging_glue_crawler_policy" {
+  name        = module.staging_glue_crawler_policy_naming.name
+  tags        = module.staging_glue_crawler_policy_naming.tags
+  description = "IAM Policy for the Glue crawler that registers the staging tables"
+  policy      = data.aws_iam_policy_document.staging_glue_crawler_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "staging_glue_crawler_policy_attachement" {
+  role       = aws_iam_role.staging_crawler_role.name
+  policy_arn = aws_iam_policy.staging_glue_crawler_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_basic_exec_policy_attachement_caar" {
+  role       = aws_iam_role.staging_crawler_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+}
+
+# Read and write access for the data kms key
+resource "aws_kms_grant" "grant_read_write_data_staging_crawler" {
+  key_id            = module.data_key.key_id
+  grantee_principal = aws_iam_role.staging_crawler_role.arn
+  operations        = ["Decrypt", "GenerateDataKey"]
 }
 
 #### Step function policies ####
