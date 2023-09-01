@@ -537,7 +537,7 @@ module "staging_crawler_naming" {
   type        = "glr"
   purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
 }
-resource "aws_glue_crawler" "stagin_crawler" {
+resource "aws_glue_crawler" "staging_crawler" {
   database_name = aws_glue_catalog_database.dedup_process_glue_db.name
   name          = module.staging_crawler_naming.name
   tags          = module.staging_crawler_naming.tags
