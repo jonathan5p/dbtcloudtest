@@ -455,8 +455,8 @@ resource "aws_lambda_function" "lambda_caar_enrich_agent" {
 
   environment {
     variables = {
-      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_table_name}/"
-      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_table_name}/"
+      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_source_table_name}/"
+      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_target_table_name}/"
     }
   }
 }
@@ -497,8 +497,8 @@ resource "aws_lambda_function" "lambda_caar_enrich_office" {
 
   environment {
     variables = {
-      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_table_name}/"
-      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_table_name}/"
+      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_source_table_name}/"
+      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_target_table_name}/"
     }
   }
 }
@@ -547,8 +547,8 @@ resource "aws_glue_crawler" "staging_crawler" {
     write_manifest = false
     create_native_delta_table = true
     delta_tables = [
-    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_table_name}/",
-    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_table_name}/"
+    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_target_table_name}/",
+    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_target_table_name}/"
     ]
   }
 }
