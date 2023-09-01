@@ -128,6 +128,24 @@ module "lambda_caar_enrich_office_naming" {
 }
 
 #----------------------------------
+# Staging Glue Crawler names
+#----------------------------------
+
+module "crawler_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+}
+
+module "staging_crawler_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glr"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+}
+
+#----------------------------------
 # Sfn names
 #----------------------------------
 
@@ -196,6 +214,13 @@ module "lambda_enrich_caar_policy_naming" {
   base_object = module.base_naming
   type        = "ipl"
   purpose     = join("", [var.project_prefix, "-", "lambdaenrichcaarpolicy"])
+}
+
+module "staging_glue_crawler_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawlerpolicy"])
 }
 
 # ------------------------------------------------------------------------------
@@ -277,7 +302,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_role_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.crawler_role_naming.name}",
     ]
     sid = "iamroles"
   }
@@ -298,7 +324,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_caar_policy_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_caar_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.staging_glue_crawler_policy_naming.name}"
     ]
     sid = "iampolicies"
   }
@@ -443,6 +470,19 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection"
     ]
+  }
+
+  statement {
+    actions = [
+      "glue:GetCrawler",
+      "glue:DeleteCrawler",
+      "glue:UpdateCrawler",
+      "glue:CreateCrawler",
+    ]
+    effect    = "Allow"
+    resources = [
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/${module.staging_crawler_naming.name}"
+      ]
   }
 
   statement {
