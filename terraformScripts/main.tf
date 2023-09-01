@@ -739,7 +739,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
               "Type": "Task",
               "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
               "Parameters": {
-                  "Name":${module.staging_crawler_naming.name}
+                  "Name":"${module.staging_crawler_naming.name}"
               }
           }
       }
