@@ -507,7 +507,7 @@ resource "aws_lambda_function" "lambda_caar_enrich_office" {
 # Glue Crawler for Staging
 #------------------------------------------------------------------------------
 
-module "crawler_role_naming" {
+module "staging_crawler_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
