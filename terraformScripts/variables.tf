@@ -110,7 +110,7 @@ variable "lambda_ec_agent_target_table_name" {
 
 variable "lambda_ec_office_source_table_name" {
   description = "Name of the office table registered in the S3 Raw layer"
-  default     = "bright_staging_office_latest"
+  default     = "bright_raw_office_latest"
 }
 
 variable "lambda_ec_office_target_table_name" {
