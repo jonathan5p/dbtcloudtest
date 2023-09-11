@@ -1107,7 +1107,7 @@ resource "aws_ecr_repository" "app_sync" {
 }
 
 resource "aws_ssm_parameter" "repository_url" {
-  name  = "/parameter/${var.site}/${var.environment_devops}/${var.project_app_group}/bright_ecs_tasks_repository_url"
+  name  = "/parameter/${var.site}/${var.environment_devops}/${var.project_app_group}/ecs_task_push_repository_url"
   type  = "String"
   value = aws_ecr_repository.app_sync.repository_url
 }
