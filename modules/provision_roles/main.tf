@@ -408,7 +408,34 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
       "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift",
       "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift"
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ssm:DeleteParameter",
+      "ssm:PutParameter",
+      "ssm:ListTagsForResource",
+      "ssm:AddTagsToResource"
+    ]
+    resources = [
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:CreateRepository",
+      "ecr:DescribeRepositories",
+      "ecr:GetRepositoryCatalogData",
+      "ecr:DeleteRepository",
+    ]
+    resources = [
+      "arn:aws:ecr::${var.aws_account_number_env}:repository/${var.project_app_group}-*"
     ]
   }
 }

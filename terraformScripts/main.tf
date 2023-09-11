@@ -1088,3 +1088,26 @@ resource "aws_iam_role_policy_attachment" "cron_trigger_policy_attachement" {
   role       = aws_iam_role.crontrigger_role.name
   policy_arn = aws_iam_policy.cron_trigger_policy.arn
 }
+
+#------------------------------------------------------------------------------
+# ECS Configuration
+#------------------------------------------------------------------------------
+
+module "ecr_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ecr"
+  purpose     =  join("", [var.project_app_group, "-alayapush"])
+}
+
+resource "aws_ecr_repository" "app_sync" {
+  name = module.ecr_naming.name
+  image_tag_mutability = "IMMUTABLE"
+  tags = module.ecr_naming.tags
+}
+
+resource "aws_ssm_parameter" "repository_url" {
+  name  = "/parameter/${var.site}/${var.environment_devops}/${var.project_app_group}/bright_ecs_tasks_repository_url"
+  type  = "String"
+  value = aws_ecr_repository.app_sync.repository_url
+}
