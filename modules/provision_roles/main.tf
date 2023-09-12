@@ -429,6 +429,16 @@ data "aws_iam_policy_document" "dev_deploy" {
   statement {
     effect = "Allow"
     actions = [
+      "ssm:DescribeParameters"
+    ]
+    resources = [
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:*"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
       "ecr:CreateRepository",
       "ecr:DescribeRepositories",
       "ecr:GetRepositoryCatalogData",
