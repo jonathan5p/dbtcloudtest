@@ -1111,3 +1111,160 @@ resource "aws_ssm_parameter" "repository_url" {
   type  = "String"
   value = aws_ecr_repository.app_sync.repository_url
 }
+
+module "ecs_task_cloudwatch_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwg"
+  purpose     =  join("", [var.project_prefix, "-" ,"alayapush"])
+}
+
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name = module.ecs_task_cloudwatch_naming.name
+  retention_in_days = var.retention_days_ecs_alaya_logs
+  tags = module.ecs_task_cloudwatch_naming.tags
+}
+
+module "ipl_ecs_task_naming"  {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type = "ipl"
+  purpose = join("", [var.project_prefix, "-",  "oidhtaskpolicy"])
+}
+
+resource "aws_iam_policy" "policy_ecs" {
+  name   = module.ipl_ecs_task_naming.name
+  policy = data.aws_iam_policy_document.policy_ecs.json
+}
+
+data "aws_iam_policy_document" "policy_ecs" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetBucketAcl",
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:DeleteObject"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/*",
+      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/"
+    ]
+  }
+
+  statement {
+    actions = [
+      "glue:GetTable",
+      "glue:BatchCreatePartition",
+      "glue:UpdateTable",
+      "glue:CreateTable"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:CreateLogGroup"
+    ]
+    effect = "Allow"
+    resources = [ 
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "assume_ecs_task" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = [
+        "ecs-tasks.amazonaws.com",
+        "ecs.amazonaws.com"
+      ]
+    }
+  }
+}
+
+module "iro_ecs_task_naming" {
+  source    = "../modules/bright_naming_conventions"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     =  join("", [var.project_prefix, "-", "oidhtaskrole"])
+}
+
+resource "aws_iam_role" "ecs_task" {
+  name               = module.iro_ecs_task_naming.name
+  assume_role_policy = data.aws_iam_policy_document.assume_ecs_task.json
+  tags               = module.iro_ecs_task_naming.tags
+}
+
+resource "aws_iam_role_policy_attachment" "dev_deployment" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = aws_iam_policy.policy_ecs.arn
+}
+
+
+module "ect_task_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ect"
+  purpose     =  join("", [var.project_prefix, "-" ,"-oidhalayapush"])
+}
+
+
+resource "aws_ecs_task_definition" "task_ecs" {
+  family = module.ect_task_naming.name
+  container_definitions = jsonencode([
+    {
+      name      = "oidh-push"
+      image = "${aws_ecr_repository.app_sync.repository_url}:latest"
+      essential = true
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-region        = data.aws_region.current.name
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+  }])
+
+  cpu                      = var.ecs_task_alaya_cpu
+  memory                   = var.ecs_task_alaya_memory
+  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.ecs_execution_role}"
+  network_mode             = "awsvpc"
+  task_role_arn            =  aws_iam_role.ecs_task.arn
+  requires_compatibilities = ["FARGATE"]
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+  }
+}

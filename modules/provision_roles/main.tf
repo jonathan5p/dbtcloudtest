@@ -146,6 +146,25 @@ module "staging_crawler_naming" {
 }
 
 #----------------------------------
+# ECS Role & Policy
+#----------------------------------
+
+module "iro_ecs_task_naming" {
+  source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     =  join("", [var.project_prefix, "-", "oidhtaskrole"])
+}
+
+module "ipl_ecs_task_naming"  {
+  source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type = "ipl"
+  purpose = join("", [var.project_prefix, "-",  "oidhtaskpolicy"])
+}
+
+
+#----------------------------------
 # Sfn names
 #----------------------------------
 
@@ -263,7 +282,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "kms:RevokeGrant"
     ]
     resources = [
-    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"]
+      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"
+    ]
     sid = "kmspermissions"
   }
 
@@ -272,7 +292,8 @@ data "aws_iam_policy_document" "dev_deploy" {
     actions = ["kms:DeleteAlias"]
     resources = [
       "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
-    "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"]
+      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"
+    ]
     sid = "kmsaliaspermissions"
   }
 
@@ -304,8 +325,23 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.crawler_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${var.ecs_execution_role}"
     ]
     sid = "iamroles"
+  }
+
+  statement {
+    actions = [
+      "ecs:RegisterTaskDefinition",
+      "ecs:DescribeTaskDefinition",
+      "ecs:DeregisterTaskDefinition"
+    ]
+    effect = "Allow"
+    resources = [
+      "*"
+    ]
+    sid = "ecstask"
   }
 
   statement {
@@ -326,7 +362,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_caar_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.staging_glue_crawler_policy_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.staging_glue_crawler_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_ecs_task_naming.name}"
     ]
     sid = "iampolicies"
   }
@@ -396,6 +433,21 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 
   statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:PutRetentionPolicy",
+      "logs:ListTagsLogGroup",
+      "logs:DeleteLogGroup",
+      "logs:TagResource"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:logs:${var.region}:${var.aws_account_number_env}:log-group:*:log-stream:*"
+    ]
+    sid = "cloudwatchlogcreation"
+  }
+
+  statement {
     effect = "Allow"
     actions = [
       "ssm:GetParameter",
@@ -447,6 +499,7 @@ data "aws_iam_policy_document" "dev_deploy" {
     resources = [
       "arn:aws:ecr::${var.aws_account_number_env}:repository/${var.project_app_group}-*"
     ]
+    sid = "ecrrepocreation"
   }
 }
 
