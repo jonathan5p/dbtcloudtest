@@ -150,17 +150,17 @@ module "staging_crawler_naming" {
 #----------------------------------
 
 module "iro_ecs_task_naming" {
-  source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     =  join("", [var.project_prefix, "-", "oidhtaskrole"])
+  purpose     = join("", [var.project_prefix, "-", "oidhtaskrole"])
 }
 
-module "ipl_ecs_task_naming"  {
-  source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+module "ipl_ecs_task_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
-  type = "ipl"
-  purpose = join("", [var.project_prefix, "-",  "oidhtaskpolicy"])
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "oidhtaskpolicy"])
 }
 
 
@@ -376,13 +376,13 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 
   statement {
-    effect    = "Allow"
-    actions   = [
-      "ec2:DescribeSubnets", 
-      "ec2:DescribeVpcs", 
-      "ec2:DescribeSecurityGroups", 
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeSubnets",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSecurityGroups",
       "ec2:DescribeNetworkInterfaces",
-      ]
+    ]
     resources = ["*"]
     sid       = "ec2describe"
   }
@@ -571,10 +571,10 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:CreateCrawler",
       "glue:GetTags"
     ]
-    effect    = "Allow"
+    effect = "Allow"
     resources = [
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/${module.staging_crawler_naming.name}"
-      ]
+    ]
   }
 
   statement {

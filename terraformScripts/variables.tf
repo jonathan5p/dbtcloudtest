@@ -192,20 +192,20 @@ variable "cron_schedule" {
 # ECS parameters
 variable "ecs_execution_role" {
   description = "Linked role for ECS"
-  default = "ecsTaskExecutionRole"
+  default     = "ecsTaskExecutionRole"
 }
 
 variable "ecs_task_alaya_cpu" {
   description = "CPU for ecs task pust to Alaya"
-  default = 2048
+  default     = 2048
 }
 
 variable "ecs_task_alaya_memory" {
   description = "Memory for ecs task pust to Alaya"
-  default = 4096
+  default     = 4096
 }
 
 variable "retention_days_ecs_alaya_logs" {
   decription = "Retention days for logs in cloudwatch"
-  default = 30
+  default    = 30
 }

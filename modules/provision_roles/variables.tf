@@ -8,7 +8,7 @@ variable "aws_account_number_env" {
 
 variable "ecs_execution_role" {
   description = "Linked role for ECS"
-  default = "ecsTaskExecutionRole"
+  default     = "ecsTaskExecutionRole"
 }
 
 variable "environment" {
