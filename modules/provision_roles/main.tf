@@ -163,6 +163,13 @@ module "ipl_ecs_task_naming" {
   purpose     = join("", [var.project_prefix, "-", "taskpolicy"])
 }
 
+module "ecr_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ecr"
+  purpose     = join("", [var.project_app_group, "-alayapush"])
+}
+
 
 #----------------------------------
 # Sfn names
@@ -495,9 +502,11 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ecr:DescribeRepositories",
       "ecr:GetRepositoryCatalogData",
       "ecr:DeleteRepository",
+      "ecr:TagResource",
+      "ecr:ListTagsForResource"
     ]
     resources = [
-      "arn:aws:ecr::${var.aws_account_number_env}:repository/${var.project_app_group}-*"
+      "arn:aws:ecr:${var.region}:${var.aws_account_number_env}:repository/${module.ecr_naming.name}"
     ]
     sid = "ecrrepocreation"
   }
