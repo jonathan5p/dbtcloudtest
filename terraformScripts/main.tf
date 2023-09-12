@@ -1129,7 +1129,7 @@ module "ipl_ecs_task_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "oidhtaskpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "taskpolicy"])
 }
 
 resource "aws_iam_policy" "policy_ecs" {
@@ -1217,7 +1217,7 @@ module "iro_ecs_task_naming" {
   source      = "../modules/bright_naming_conventions"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "oidhtaskrole"])
+  purpose     = join("", [var.project_prefix, "-", "taskrole"])
 }
 
 resource "aws_iam_role" "ecs_task" {
@@ -1236,7 +1236,7 @@ module "ect_task_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ect"
-  purpose     = join("", [var.project_prefix, "-", "-oidhalayapush"])
+  purpose     = join("", [var.project_prefix, "-", "-alayapush"])
 }
 
 
