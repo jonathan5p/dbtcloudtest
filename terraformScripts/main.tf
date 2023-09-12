@@ -1214,7 +1214,7 @@ data "aws_iam_policy_document" "assume_ecs_task" {
 }
 
 module "iro_ecs_task_naming" {
-  source      = "../modules/bright_naming_conventions"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
   purpose     = join("", [var.project_prefix, "-", "taskrole"])
