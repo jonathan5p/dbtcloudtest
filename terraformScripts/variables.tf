@@ -188,3 +188,24 @@ variable "cron_schedule" {
   description = "Cron expresion applied to the EvenBridge scheduled rule"
   default     = "cron(0 23 * * ? *)"
 }
+
+# ECS parameters
+variable "ecs_execution_role" {
+  description = "Linked role for ECS"
+  default     = "ecsTaskExecutionRole"
+}
+
+variable "ecs_task_alaya_cpu" {
+  description = "CPU for ecs task pust to Alaya"
+  default     = 2048
+}
+
+variable "ecs_task_alaya_memory" {
+  description = "Memory for ecs task pust to Alaya"
+  default     = 4096
+}
+
+variable "retention_days_ecs_alaya_logs" {
+  decription = "Retention days for logs in cloudwatch"
+  default    = 30
+}
