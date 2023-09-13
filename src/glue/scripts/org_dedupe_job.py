@@ -215,6 +215,20 @@ if __name__ == "__main__":
     org_df = dedup_office_df.union(dedup_team_df)
 
     # Write data to S3
+    dedup_office_df.write.mode("overwrite").format("parquet").option(
+        "path",
+        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_office_cluster_df/",
+    ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
+        f"{args['glue_db']}.splink_office_cluster_df"
+    )
+
+    dedup_team_df.write.mode("overwrite").format("parquet").option(
+        "path",
+        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_team_cluster_df/",
+    ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
+        f"{args['glue_db']}.splink_team_cluster_df"
+    )
+
     org_df.write.mode("overwrite").format("parquet").option(
         "path",
         f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/organizations/",

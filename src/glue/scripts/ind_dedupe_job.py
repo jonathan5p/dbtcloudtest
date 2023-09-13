@@ -4,7 +4,6 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, SparkSession
 from awsglue.context import GlueContext
-from awsglue.dynamicframe import DynamicFrame
 from awsglue.job import Job
 from splink.spark.linker import SparkLinker
 import pyspark.pandas as ps
@@ -135,18 +134,25 @@ if __name__ == "__main__":
     office_df.createOrReplaceTempView("office_df")
 
     # Run splink model over office and team data
-    dedup_office_df = deduplicate_entity(
+    dedup_agent_df = deduplicate_entity(
         entity="agent",
         spark_df=clean_df,
         spark=spark,
         splink_model_path="/tmp/agent_splink_model.json",
     )
-    dedup_office_df.createOrReplaceTempView("clusters_df")
+    dedup_agent_df.createOrReplaceTempView("clusters_df")
 
     # Generate individuals table
     individuals_df = spark.sql(sql_map_query)
 
     # Write data to S3
+    dedup_agent_df.write.mode("overwrite").format("parquet").option(
+        "path",
+        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_agent_cluster_df/",
+    ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
+        f"{args['glue_db']}.splink_agent_cluster_df"
+    )
+
     individuals_df.write.mode("overwrite").format("parquet").option(
         "path",
         f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/individuals/",
