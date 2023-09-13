@@ -24,7 +24,8 @@ class GluePythonSampleTest:
 
     def run(self):
 
-        df = self.spark.read.format("parquet").load("sample_data/raw_data/team.parquet")
+        df = self.spark.read.format("parquet").load("/home/glue_user/workspace/tests/sample_data/consume_data/clean_team.parquet")
+
         df.printSchema()
         print(df.show(5))
         print(df.count())

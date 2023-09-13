@@ -38,3 +38,7 @@ terraform.rc
 .vscode
 *.zip
 src/lambda/layers/*
+
+# Ignore test files
+tests/.pytest*/
+tests/tmp/

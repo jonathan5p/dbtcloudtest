@@ -124,3 +124,5 @@ if __name__ == '__main__':
         .option("overwriteSchema", "true")\
         .option("compression", "snappy")\
         .saveAsTable(f"{args['glue_db']}.clean_splink_team_data")
+    
+    job.commit()

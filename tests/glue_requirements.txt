@@ -1,0 +1,3 @@
+git+https://github.com/BrightMLS/DataHub.Clean.git
+splink==3.9.2
+delta-spark==2.3.0
