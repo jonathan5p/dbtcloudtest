@@ -40,6 +40,6 @@ terraform.rc
 src/lambda/layers/*
 
 # Ignore test files
-*__pycache__
+**/__pycache__
 tests/.pytest*/
 tests/tmp/
