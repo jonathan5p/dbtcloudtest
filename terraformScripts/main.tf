@@ -9,6 +9,7 @@ provider "aws" {
 provider "archive" {}
 
 data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
 locals {
   lambda_runtime = "python3.10"
@@ -385,13 +386,13 @@ resource "aws_lambda_function" "lambda_config_loader" {
 
 data "archive_file" "lambda_delta_geopy_layer" {
   type        = "zip"
-  source_dir = "../src/lambda/layers/delta_geopy/"
+  source_dir  = "../src/lambda/layers/delta_geopy/"
   output_path = "../src/lambda/layers/delta_geopy.zip"
 }
 
 resource "aws_lambda_layer_version" "delta_geopy_layer" {
-  filename   = data.archive_file.lambda_delta_geopy_layer.output_path
-  layer_name = "delta_geopy"
+  filename            = data.archive_file.lambda_delta_geopy_layer.output_path
+  layer_name          = "delta_geopy"
   compatible_runtimes = ["python3.10"]
 }
 
@@ -451,7 +452,7 @@ resource "aws_lambda_function" "lambda_caar_enrich_agent" {
   layers = [
     "arn:aws:lambda:${var.region[var.site]}:336392948345:layer:AWSSDKPandas-Python310:4",
     aws_lambda_layer_version.delta_geopy_layer.arn
-    ]
+  ]
 
   environment {
     variables = {
@@ -493,7 +494,7 @@ resource "aws_lambda_function" "lambda_caar_enrich_office" {
   layers = [
     "arn:aws:lambda:${var.region[var.site]}:336392948345:layer:AWSSDKPandas-Python310:4",
     aws_lambda_layer_version.delta_geopy_layer.arn
-    ]
+  ]
 
   environment {
     variables = {
@@ -544,11 +545,11 @@ resource "aws_glue_crawler" "staging_crawler" {
   role          = aws_iam_role.staging_crawler_role.arn
 
   delta_target {
-    write_manifest = false
+    write_manifest            = false
     create_native_delta_table = true
     delta_tables = [
-    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_target_table_name}/",
-    "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_target_table_name}/"
+      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_target_table_name}/",
+      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_target_table_name}/"
     ]
   }
 }
@@ -589,10 +590,10 @@ module "etl_sfn_naming" {
 }
 
 resource "aws_sfn_state_machine" "sfn_state_machine" {
-  name     = module.etl_sfn_naming.name
-  tags     = module.etl_sfn_naming.tags
-  role_arn = aws_iam_role.sfn_role.arn
-  type     = "STANDARD"
+  name       = module.etl_sfn_naming.name
+  tags       = module.etl_sfn_naming.tags
+  role_arn   = aws_iam_role.sfn_role.arn
+  type       = "STANDARD"
   definition = <<EOF
   {
       "StartAt": "load-ingest-conf",
@@ -1024,7 +1025,7 @@ data "aws_iam_policy_document" "etl_sfn_policy" {
       aws_lambda_function.lambda_caar_enrich_office.arn,
       "${aws_lambda_function.lambda_caar_enrich_office.arn}:*",
       aws_lambda_function.lambda_caar_enrich_agent.arn,
-    "${aws_lambda_function.lambda_caar_enrich_agent.arn}:*"
+      "${aws_lambda_function.lambda_caar_enrich_agent.arn}:*"
     ]
   }
 
@@ -1087,4 +1088,184 @@ resource "aws_iam_policy" "cron_trigger_policy" {
 resource "aws_iam_role_policy_attachment" "cron_trigger_policy_attachement" {
   role       = aws_iam_role.crontrigger_role.name
   policy_arn = aws_iam_policy.cron_trigger_policy.arn
+}
+
+#------------------------------------------------------------------------------
+# ECS Configuration
+#------------------------------------------------------------------------------
+
+module "ecr_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ecr"
+  purpose     = join("", [var.project_app_group, "-alayapush"])
+}
+
+resource "aws_ecr_repository" "app_sync" {
+  name                 = module.ecr_naming.name
+  image_tag_mutability = "MUTABLE"
+  tags                 = module.ecr_naming.tags
+}
+
+resource "aws_ssm_parameter" "repository_url" {
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/ecs_task_push_repository_url"
+  type  = "String"
+  value = aws_ecr_repository.app_sync.repository_url
+}
+
+module "ecs_task_cloudwatch_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwg"
+  purpose     = join("", [var.project_prefix, "-", "alayapush"])
+}
+
+resource "aws_cloudwatch_log_group" "ecs_logs" {
+  name              = module.ecs_task_cloudwatch_naming.name
+  retention_in_days = var.retention_days_ecs_alaya_logs
+  tags              = module.ecs_task_cloudwatch_naming.tags
+}
+
+module "ipl_ecs_task_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "taskpolicy"])
+}
+
+resource "aws_iam_policy" "policy_ecs" {
+  name   = module.ipl_ecs_task_naming.name
+  policy = data.aws_iam_policy_document.policy_ecs.json
+}
+
+data "aws_iam_policy_document" "policy_ecs" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetBucketAcl",
+      "s3:ListBucket",
+      "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:DeleteObject"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/*",
+      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/"
+    ]
+  }
+
+  statement {
+    actions = [
+      "glue:GetTable",
+      "glue:BatchCreatePartition",
+      "glue:UpdateTable",
+      "glue:CreateTable"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:CreateLogGroup"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:*"
+    ]
+  }
+
+  statement {
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "assume_ecs_task" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type = "Service"
+      identifiers = [
+        "ecs-tasks.amazonaws.com",
+        "ecs.amazonaws.com"
+      ]
+    }
+  }
+}
+
+module "iro_ecs_task_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "taskrole"])
+}
+
+resource "aws_iam_role" "ecs_task" {
+  name               = module.iro_ecs_task_naming.name
+  assume_role_policy = data.aws_iam_policy_document.assume_ecs_task.json
+  tags               = module.iro_ecs_task_naming.tags
+}
+
+resource "aws_iam_role_policy_attachment" "dev_deployment" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = aws_iam_policy.policy_ecs.arn
+}
+
+
+module "ect_task_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ect"
+  purpose     = join("", [var.project_prefix, "-", "-alayapush"])
+}
+
+
+resource "aws_ecs_task_definition" "task_ecs" {
+  family = module.ect_task_naming.name
+  container_definitions = jsonencode([
+    {
+      name      = "oidh-push"
+      image     = "${aws_ecr_repository.app_sync.repository_url}:latest"
+      essential = true
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-region        = data.aws_region.current.name
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+  }])
+
+  cpu                      = var.ecs_task_alaya_cpu
+  memory                   = var.ecs_task_alaya_memory
+  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.ecs_execution_role}"
+  network_mode             = "awsvpc"
+  task_role_arn            = aws_iam_role.ecs_task.arn
+  requires_compatibilities = ["FARGATE"]
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+  }
 }
