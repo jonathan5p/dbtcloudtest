@@ -1103,7 +1103,7 @@ module "ecr_naming" {
 
 resource "aws_ecr_repository" "app_sync" {
   name                 = module.ecr_naming.name
-  image_tag_mutability = "IMMUTABLE"
+  image_tag_mutability = "MUTABLE"
   tags                 = module.ecr_naming.tags
 }
 
