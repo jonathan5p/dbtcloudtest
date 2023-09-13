@@ -503,7 +503,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ecr:GetRepositoryCatalogData",
       "ecr:DeleteRepository",
       "ecr:TagResource",
-      "ecr:ListTagsForResource"
+      "ecr:ListTagsForResource",
+      "ecr:PutImageTagMutability"
     ]
     resources = [
       "arn:aws:ecr:${var.region}:${var.aws_account_number_env}:repository/${module.ecr_naming.name}"
