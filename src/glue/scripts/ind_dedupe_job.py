@@ -62,7 +62,7 @@ LEFT JOIN office_df as off_df ON cs_df.officemlsid = off_df.officemlsid
 """
 
 
-# Helper function to run splink model over offices and teams data
+# Helper function to run splink model over a dataframe
 def deduplicate_entity(
     entity: str,
     spark: SparkSession,

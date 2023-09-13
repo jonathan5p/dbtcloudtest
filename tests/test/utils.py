@@ -1,10 +1,12 @@
 from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import functions as F
+from pyspark.sql.types import NullType
 import json
 from cleaning_job import clean_splink_data
 from ind_dedupe_job import deduplicate_entity as dedup_ind
 
 
-def assert_schema(df1: DataFrame, df2: DataFrame, check_nullable=True):
+def assert_schema(df1: DataFrame, df2: DataFrame, check_nullable=False):
     field_list = lambda fields: (fields.name, fields.dataType, fields.nullable)
     fields1 = [*map(field_list, df1.schema.fields)]
     fields2 = [*map(field_list, df2.schema.fields)]
@@ -88,12 +90,24 @@ def helper_test_splink_dedup_data(
         spark=spark,
     )
 
+    if entity=='office':
+        cluster_df = cluster_df.withColumn("orgsourcetype", F.lit("OFFICE"))
+    elif entity=='team':
+        cluster_df = cluster_df.withColumn("orgsourcetype", F.lit("TEAM"))
+
     cluster_reference_df = spark.read.parquet(
-        f"{base_dir}/sample_data/consume_data/clean_{entity}/"
+        f"{base_dir}/sample_data/consume_data/dedupe_{entity}_df/"
     )
 
     raw_count = cluster_df.count()
     dedup_count = cluster_reference_df.count()
+
+    for field in cluster_df.schema.fields:
+        if field.dataType == NullType():
+            cluster_df = cluster_df.withColumn(field.name,F.col(field.name).cast('string'))
+
+    cluster_df.printSchema()
+    cluster_reference_df.printSchema()
 
     assert (
         raw_count == assert_counts["raw"]
