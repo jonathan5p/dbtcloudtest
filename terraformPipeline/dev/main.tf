@@ -36,7 +36,7 @@ module "provision_roles" {
 }
 
 module "codepipeline" {
-  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//codepipeline_data?ref=v0.0.0"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//codepipeline_data?ref=v0.0.2"
 
   providers = {
     aws = aws.code
@@ -47,6 +47,7 @@ module "codepipeline" {
   code_source_branch                    = var.code_source_branch
   codestar_github_connection            = var.codestar_github_connection
   compute_type                          = var.compute_type
+  create_s3_bucket                      = var.create_s3_bucket
   datapipeline_name                     = var.datapipeline_name
   dev_deployment_role                   = module.provision_roles.provision_role_arn
   enable_codepipeline_notification      = var.enable_codepipeline_notification
@@ -92,7 +93,7 @@ module "codepipeline" {
   project_app_group           = var.project_app_group
   project_ledger              = var.project_ledger
   project_prefix              = var.project_prefix
-
+  s3_bucket_name              = var.s3_bucket_name
   site                              = var.site
   sns_arn_codepipeline_notification = var.sns_arn_codepipeline_notification
   source_owner                      = var.source_owner
