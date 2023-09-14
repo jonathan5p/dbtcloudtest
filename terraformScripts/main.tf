@@ -348,8 +348,8 @@ resource "aws_iam_role" "lambda_config_loader_role" {
 
 data "archive_file" "lambda_config_loader_script" {
   type        = "zip"
-  source_file = "../src/lambda/config-loader/lambda_function.py"
-  output_path = "../src/lambda/config-loader/lambda_function.zip"
+  source_file = "../src/lambda/config_loader/lambda_function.py"
+  output_path = "../src/lambda/config_loader/lambda_function.zip"
 }
 
 module "lambda_config_loader_naming" {
@@ -426,8 +426,8 @@ resource "aws_iam_role" "lambda_enrich_caar_role" {
 
 data "archive_file" "lambda_caar_enrich_agent_script" {
   type        = "zip"
-  source_file = "../src/lambda/caar-enrich-agent-data/lambda_function.py"
-  output_path = "../src/lambda/caar-enrich-agent-data/lambda_function.zip"
+  source_file = "../src/lambda/caar_enrich_agent_data/lambda_function.py"
+  output_path = "../src/lambda/caar_enrich_agent_data/lambda_function.zip"
 }
 
 module "lambda_caar_enrich_agent_naming" {
@@ -468,8 +468,8 @@ resource "aws_lambda_function" "lambda_caar_enrich_agent" {
 
 data "archive_file" "lambda_caar_enrich_office_script" {
   type        = "zip"
-  source_file = "../src/lambda/caar-enrich-office-data/lambda_function.py"
-  output_path = "../src/lambda/caar-enrich-office-data/lambda_function.zip"
+  source_file = "../src/lambda/caar_enrich_office_data/lambda_function.py"
+  output_path = "../src/lambda/caar_enrich_office_data/lambda_function.zip"
 }
 
 module "lambda_caar_enrich_office_naming" {

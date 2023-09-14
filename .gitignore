@@ -36,6 +36,7 @@ terraform.rc
 
 # Ignore vscode, any zip files and lambda layers
 .vscode
+*.venv
 *.zip
 src/lambda/layers/*
 
