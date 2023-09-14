@@ -1098,7 +1098,7 @@ module "ecr_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ecr"
-  purpose     = join("", [var.project_app_group, "-alayapush"])
+  purpose     = join("", [var.project_prefix, "-alayapush"])
 }
 
 resource "aws_ecr_repository" "app_sync" {
@@ -1237,7 +1237,7 @@ module "ect_task_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ect"
-  purpose     = join("", [var.project_prefix, "-", "-alayapush"])
+  purpose     = join("", [var.project_prefix, "-", "alayapush"])
 }
 
 
@@ -1260,7 +1260,7 @@ resource "aws_ecs_task_definition" "task_ecs" {
 
   cpu                      = var.ecs_task_alaya_cpu
   memory                   = var.ecs_task_alaya_memory
-  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.ecs_execution_role}"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   network_mode             = "awsvpc"
   task_role_arn            = aws_iam_role.ecs_task.arn
   requires_compatibilities = ["FARGATE"]
@@ -1268,4 +1268,30 @@ resource "aws_ecs_task_definition" "task_ecs" {
   runtime_platform {
     operating_system_family = "LINUX"
   }
+}
+
+data "aws_iam_policy_document" "ecs_task_execution_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = [
+        "ecs-tasks.amazonaws.com"
+      ]
+    }
+  }
+}
+
+module "iro_ecs_task_execution_naming" {
+  source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     =  join("", [var.project_prefix, "-", "alayapushexecution"])
+}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = module.iro_ecs_task_execution_naming.name
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
+  tags               = module.iro_ecs_task_execution_naming.tags
 }

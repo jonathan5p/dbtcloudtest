@@ -190,11 +190,6 @@ variable "cron_schedule" {
 }
 
 # ECS parameters
-variable "ecs_execution_role" {
-  description = "Linked role for ECS"
-  default     = "ecsTaskExecutionRole"
-}
-
 variable "ecs_task_alaya_cpu" {
   description = "CPU for ecs task pust to Alaya"
   default     = 2048

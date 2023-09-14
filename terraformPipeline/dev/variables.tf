@@ -35,6 +35,11 @@ variable "compute_type" {
   default     = "BUILD_GENERAL1_MEDIUM"
 }
 
+variable "create_s3_bucket" {
+  default = false
+  type = bool
+}
+
 variable "datapipeline_name" {
   description = "Name of the pipeline to be deployied"
   default     = "datapipeline_cicd_oidh"
@@ -92,6 +97,11 @@ variable "region" {
     "auw1" = "us-west-1"
     "auw2" = "us-west-2"
   }
+}
+
+variable "s3_bucket_name" {
+  default = ""
+  type = string
 }
 
 variable "site" {
