@@ -106,9 +106,6 @@ def helper_test_splink_dedup_data(
         if field.dataType == NullType():
             cluster_df = cluster_df.withColumn(field.name,F.col(field.name).cast('string'))
 
-    cluster_df.printSchema()
-    cluster_reference_df.printSchema()
-
     assert (
         raw_count == assert_counts["raw"]
     ), f"raw {entity} df count expected to be {assert_counts['raw']}, got: {raw_count}"
