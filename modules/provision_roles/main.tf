@@ -167,7 +167,7 @@ module "ecr_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ecr"
-  purpose     = join("", [var.project_prefix, "-alayapush"])
+  purpose     = join("", [var.project_prefix, "-" ,"alayapush"])
 }
 
 module "iro_ecs_task_execution_naming" {
@@ -340,8 +340,7 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.crawler_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_execution_naming.name}",
-      "*"
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_execution_naming.name}"
       #"arn:aws:iam::${var.aws_account_number_env}:role/${var.ecs_execution_role}"
     ]
     sid = "iamroles"
