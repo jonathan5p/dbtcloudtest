@@ -12,12 +12,14 @@ import sys
 import uuid
 import pathlib
 
-sys.path.append("/home/glue_user/workspace/src/glue/scripts")
+base_dir = pathlib.Path(__file__).parent.parent.resolve()
+
+sys.path.append(f"{base_dir}/../src/glue/scripts")
+
+print(f"{base_dir}/src/glue/scripts")
 
 from utils import *
 from ingest_job import unique_by_merge_key, full_load, incremental_load
-
-base_dir = pathlib.Path(__file__).parent.parent.resolve()
 
 
 @pytest.fixture(scope="module", autouse=True)

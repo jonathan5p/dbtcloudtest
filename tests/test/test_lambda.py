@@ -9,7 +9,7 @@ from geopy.extra.rate_limiter import RateLimiter
 
 os.environ["TEST"] = "true"
 base_dir = pathlib.Path(__file__).parent.parent.parent.resolve()
-sys.path.append(f"{base_dir}/src/lambda/")
+sys.path.append(f"{base_dir}/../src/lambda/")
 
 from config_loader.lambda_function import prepare_sf_input
 from caar_enrich_office_data.lambda_function import set_delta_df, get_geo_info
@@ -22,7 +22,7 @@ def test_sf_input():
     """
 
     tables_list = json.load(
-        open(f"{base_dir}/tests/sample_configs/artifacts/ingest_config.json")
+        open(f"{base_dir}/sample_configs/artifacts/ingest_config.json")
     )
     sf_input = prepare_sf_input(tables_list)
 
@@ -74,12 +74,12 @@ def test_set_delta_df():
     in the OIDH caar_enrich_office_data ingest job works as expected.
     """
 
-    local_path = f"{base_dir}/tests/sample_data/raw_data/bright_raw_office_latest/"
+    local_path = f"{base_dir}/sample_data/raw_data/bright_raw_office_latest/"
 
     local_df = DeltaTable(local_path).to_pandas()
     delta_df = set_delta_df(local_df)
 
-    reference_path = f"{base_dir}/tests/sample_data/staging_data/office/"
+    reference_path = f"{base_dir}/sample_data/staging_data/office/"
     reference_df = pd.read_parquet(reference_path)
 
     assert (
