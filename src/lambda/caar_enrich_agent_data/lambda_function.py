@@ -4,14 +4,14 @@ import time
 import logging
 import os
 
-
-# Env variables
-s3_source_path = os.environ["S3_SOURCE_PATH"]
-s3_target_path = os.environ["S3_TARGET_PATH"]
-
 # Logger initialization
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+if os.environ.get("TEST") is None:
+    # Env variables
+    s3_source_path = os.environ["S3_SOURCE_PATH"]
+    s3_target_path = os.environ["S3_TARGET_PATH"]
 
 uoi_mapper = {"BRIGHT_CAAR":"A00001567", "Other":"M00000309"}
 

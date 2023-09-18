@@ -36,5 +36,13 @@ terraform.rc
 
 # Ignore vscode, any zip files and lambda layers
 .vscode
+*.venv
 *.zip
 src/lambda/layers/*
+
+# Ignore test files
+**/__pycache__
+tests/.pytest*/
+tests/tmp/
+tests/sample_data/
+tests/sample_configs/

@@ -1,0 +1,4 @@
+geopy==2.4.0
+deltalake==0.10.1
+awswrangler==3.3.0
+pytest
