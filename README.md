@@ -28,5 +28,5 @@ docker run -it -v ~/.aws:/home/glue_user/.aws -v $WORKSPACE_LOCATION:/home/glue_
 Lambda tests are way easier! You just need to install the ***lambda_requirements.txt*** file in your local python env and then run 
 
 ```bash
-python3 -m pytest test/test_lambda.py.
+python3 -m pytest test/test_lambda.py
 ```
