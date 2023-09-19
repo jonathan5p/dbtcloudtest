@@ -742,7 +742,7 @@ module "cron_trigger_naming" {
 resource "aws_cloudwatch_event_rule" "cron_trigger" {
   name                = module.cron_trigger_naming.name
   tags                = module.cron_trigger_naming.tags
-  is_enabled          = true
+  is_enabled          = var.cron_trigger_enabled
   schedule_expression = var.cron_schedule
 }
 
