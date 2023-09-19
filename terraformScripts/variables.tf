@@ -202,5 +202,5 @@ variable "ecs_task_alaya_memory" {
 
 variable "retention_days_ecs_alaya_logs" {
   description = "Retention days for logs in cloudwatch"
-  default    = 30
+  default     = 30
 }
