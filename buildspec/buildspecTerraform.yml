@@ -21,7 +21,6 @@ phases:
   build:
     commands:
       - mkdir -p src/lambda/layers/delta_geopy/python
-      - pip install --target src/lambda/layers/delta_geopy/python --no-deps --platform manylinux2014_x86_64 deltalake==0.10.1 geopy==2.4.0 --upgrade
       - cd terraformScripts
       - |
         sed -i "s/\${bucket_backend}/${bucket_backend}/" ${TF_VAR_environment}_backend.conf
