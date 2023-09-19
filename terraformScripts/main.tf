@@ -248,74 +248,28 @@ resource "aws_glue_connection" "redshift_connection" {
 }
 
 #------------------------------------------------------------------------------
-# Glue Ingest Job Role
-#------------------------------------------------------------------------------
-module "glue_ingest_job_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "ingestjobrole"])
-}
-
-resource "aws_iam_role" "ingest_glue_job_role" {
-  name = module.glue_ingest_job_role_naming.name
-  tags = module.glue_ingest_job_role_naming.tags
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = ["sts:AssumeRole"]
-        Effect = "Allow"
-        Sid    = "GlueAssumeRole"
-        Principal = {
-          Service = "glue.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-#------------------------------------------------------------------------------
 # Glue Ingest Job
 #------------------------------------------------------------------------------
 
-module "glue_ingest_job_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "glj"
-  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
-}
-
-resource "aws_glue_job" "ingest_job" {
-  name                   = module.glue_ingest_job_naming.name
-  tags                   = module.glue_ingest_job_naming.tags
-  role_arn               = aws_iam_role.ingest_glue_job_role.arn
-  glue_version           = "4.0"
-  worker_type            = var.glue_worker_type
-  timeout                = var.glue_timeout
-  security_configuration = aws_glue_security_configuration.glue_security_config.id
-  number_of_workers      = var.glue_number_of_workers
-  connections            = [aws_glue_connection.redshift_connection.name]
-  default_arguments = {
-    "--enable-continuous-cloudwatch-log" = "true"
-    "--enable-job-insights"              = "true"
-    "--enable-metrics"                   = "true"
-    "--enable-auto-scaling"              = "true"
-    "--job-bookmark-option"              = "job-bookmark-disable"
-    "--enable-glue-datacatalog"          = "true"
-    "--conf"                             = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog",
-    "--class"                            = "GlueApp"
-    "--extra-jars" = join(",", ["s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}",
-    "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-storage-2.3.0.jar"].id}"])
-    "--extra-py-files" = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}"
-  }
-  command {
-    name            = "glueetl"
-    script_location = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["scripts/ingest_job.py"].id}"
-  }
-  execution_property {
-    max_concurrent_runs = var.glue_max_concurrent_runs
-  }
+module "ingest_job" {
+  source              = "../modules/glue"
+  base_naming         = module.base_naming
+  project_prefix      = var.project_prefix
+  purpose             = "ingestjob"
+  max_concurrent_runs = var.glue_max_concurrent_runs
+  timeout             = var.glue_timeout
+  worker_type         = var.glue_worker_type
+  number_of_workers   = var.glue_number_of_workers
+  retry_max_attempts  = var.glue_retry_max_attempts
+  retry_interval      = var.glue_retry_interval
+  retry_backoff_rate  = var.glue_retry_backoff_rate
+  security_config_id  = aws_glue_security_configuration.glue_security_config.id
+  connections         = [aws_glue_connection.redshift_connection.name]
+  script_location     = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["scripts/ingest_job.py"].id}"
+  job_conf            = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+  extra_jars = join(",", ["s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}",
+  "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-storage-2.3.0.jar"].id}"])
+  extra_py_files = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}"
 }
 
 #------------------------------------------------------------------------------
@@ -384,14 +338,14 @@ resource "aws_lambda_function" "lambda_config_loader" {
 # Caar deltalake+geopy layer
 #------------------------------------------------------------------------------
 
-data "archive_file" "lambda_delta_geopy_layer" {
-  type        = "zip"
-  source_dir  = "../src/lambda/layers/delta_geopy/"
-  output_path = "../src/lambda/layers/delta_geopy.zip"
-}
+# data "archive_file" "lambda_delta_geopy_layer" {
+#   type        = "zip"
+#   source_dir  = "../src/lambda/layers/delta_geopy/"
+#   output_path = "../src/lambda/layers/delta_geopy.zip"
+# }
 
 resource "aws_lambda_layer_version" "delta_geopy_layer" {
-  filename            = data.archive_file.lambda_delta_geopy_layer.output_path
+  filename            = "../src/lambda/layers/delta_geopy.zip"
   layer_name          = "delta_geopy"
   compatible_runtimes = ["python3.10"]
 }
@@ -643,7 +597,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
                           "Type": "Task",
                           "Resource": "arn:aws:states:::glue:startJobRun.sync",
                           "Parameters": {
-                              "JobName": "${aws_glue_job.ingest_job.id}",
+                              "JobName": "${module.ingest_job.job_id}",
                               "Arguments": {
                                   "--target.$": "$.target",
                                   "--target_prefixes.$": "$.target_prefixes",
@@ -849,25 +803,25 @@ resource "aws_iam_policy" "glue_ingest_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "glue_policy_attachement" {
-  role       = aws_iam_role.ingest_glue_job_role.name
+  role       = module.ingest_job.role_name
   policy_arn = aws_iam_policy.glue_ingest_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service_policy_attachement" {
-  role       = aws_iam_role.ingest_glue_job_role.name
+  role       = module.ingest_job.role_name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 # Read and write access for the data kms key
 resource "aws_kms_grant" "grant_read_data" {
   key_id            = module.data_key.key_id
-  grantee_principal = aws_iam_role.ingest_glue_job_role.arn
+  grantee_principal = module.ingest_job.role_arn
   operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
 }
 
 resource "aws_kms_grant" "grant_read_glue_artifacts" {
   key_id            = module.glue_enc_key.key_id
-  grantee_principal = aws_iam_role.ingest_glue_job_role.arn
+  grantee_principal = module.ingest_job.role_arn
   operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
 }
 
@@ -1039,7 +993,7 @@ data "aws_iam_policy_document" "etl_sfn_policy" {
       "glue:StartJobRun",
       "glue:StartCrawler"
     ]
-    resources = [aws_glue_job.ingest_job.arn, aws_glue_crawler.staging_crawler.arn]
+    resources = [module.ingest_job.job_arn, aws_glue_crawler.staging_crawler.arn]
   }
 }
 
@@ -1274,7 +1228,7 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
   statement {
     actions = ["sts:AssumeRole"]
     principals {
-      type        = "Service"
+      type = "Service"
       identifiers = [
         "ecs-tasks.amazonaws.com"
       ]
@@ -1283,15 +1237,15 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
 }
 
 module "iro_ecs_task_execution_naming" {
-  source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     =  join("", [var.project_prefix, "-", "alayapushexecution"])
+  purpose     = join("", [var.project_prefix, "-", "alayapushexecution"])
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = module.iro_ecs_task_execution_naming.name
-  assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
+  name                = module.iro_ecs_task_execution_naming.name
+  assume_role_policy  = data.aws_iam_policy_document.ecs_task_execution_role.json
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
-  tags               = module.iro_ecs_task_execution_naming.tags
+  tags                = module.iro_ecs_task_execution_naming.tags
 }

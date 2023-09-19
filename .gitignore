@@ -34,11 +34,12 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Ignore vscode, any zip files and lambda layers
+# Ignore vscode, any zip files, lambda layers and .DS_Store
 .vscode
 *.venv
 *.zip
 src/lambda/layers/*
+**.DS_Store
 
 # Ignore test files
 **/__pycache__
