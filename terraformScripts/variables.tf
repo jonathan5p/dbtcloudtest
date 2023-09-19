@@ -184,6 +184,11 @@ variable "glue_retry_backoff_rate" {
 }
 
 # Event bridge cron trigger
+variable "cron_trigger_enabled"{
+  description = "Boolean variable to activate/deactivate the etl cron trigger"
+  default = false
+}
+
 variable "cron_schedule" {
   description = "Cron expresion applied to the EvenBridge scheduled rule"
   default     = "cron(0 23 * * ? *)"
