@@ -18,8 +18,6 @@ team_sql_map_query = """
     SELECT 
         dtf.dlid as bdmporgkey,
         dof.uniqueorgid as orgsourceresouoi,
-        '' as orgglobalidentifier,
-        '' as orglinkedglobalidentifier ,
         dtf.cluster_id as orghubid,
         CASE WHEN dtf.subsystemlocale in ('BRIGHT_CAAR')
         THEN 'CAAR'
@@ -71,8 +69,6 @@ office_sql_map_query = """
     SELECT 
         dedup_office_df.dlid as bdmporgkey,
         dedup_office_df.uniqueorgid as orgsourceresouoi,
-        '' as orgglobalidentifier,
-        '' as orglinkedglobalidentifier,
         dedup_office_df.cluster_id as orghubid,
         CASE WHEN dedup_office_df.subsystemlocale in ('BRIGHT_CAAR')
         THEN 'CAAR'
@@ -104,7 +100,7 @@ office_sql_map_query = """
         dedup_office_df.dateterminated as orglicenseexpirationdate,
         dedup_office_df.nationalassociationid as orgnrdsid,
         dedup_office_df.mainname as orgparentorgname,
-        dedup_office_df.mainmlsid as or gparentorgsourcerecordid,
+        dedup_office_df.mainmlsid as orgparentorgsourcerecordid,
         dedup_office_df.mainkey as orgparentorgsourcerecordkey,
         dedup_office_df.brokermlsid as orgindividualbrokerid,
         dedup_office_df.brokerkey as orgindividualbrokerkey,
@@ -186,20 +182,21 @@ def deduplicate_entity(
 
 
 def generate_globalids_and_native_records(
-    source_df: DataFrame, county_list: list, order_key: str = "orgglobalidentifier"
+    source_df: DataFrame, county_list: list, order_key: str = "orghubid"
 ):
+    null_global_ids_df = source_df.filter(source_df.orgglobalidentifier.isNull())
+    not_null_global_ids_df = source_df.filter(source_df.orgglobalidentifier.isNotNull())
+
     windowSpec = Window.orderBy(F.col(order_key).desc())
 
-    global_id_df = source_df.withColumn(
+    filled_global_ids_df = null_global_ids_df.withColumn(
         "orgglobalidentifier",
-        F.when(
-            F.col("orgglobalidentifier").isNull(),
-            F.concat(F.lit("ORG"), F.lpad(F.row_number().over(windowSpec), 8, "0")),
-        ).otherwise(F.col("orgglobalidentifier")),
-    ).orderBy("orghubid", ascending=False)
+        F.concat(F.lit("ORG"), F.lpad(F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0")),
+    )
 
-    print("-----------Global Ids----------")
-    print(global_id_df.select("orghubid", merge_key, "orgglobalidentifier").show())
+    global_id_df = not_null_global_ids_df.union(filled_global_ids_df).orderBy(
+        "orghubid", ascending=False
+    )
 
     check_pairs = F.udf(
         lambda pair: True if pair in county_list else False, BooleanType()
@@ -210,27 +207,6 @@ def generate_globalids_and_native_records(
         check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))),
     )
     bright_participants_df.createOrReplaceTempView("bright_participants_df")
-
-    print("-----------Bright Participants----------")
-    print(
-        bright_participants_df.select("orghubid", "orgglobalidentifier")
-        .groupBy("orghubid")
-        .agg(F.count("orgglobalidentifier").alias("conteo"))
-        .filter(F.col("conteo") > 1)
-        .show()
-    )
-    print(bright_participants_df.count())
-    print(bright_participants_df.select(F.countDistinct("orghubid")).show())
-    print(
-        bright_participants_df.select(
-            "orghubid",
-            merge_key,
-            "orgglobalidentifier",
-            "orgcounty",
-            "orgstate",
-            "orgisbrightparticipant",
-        ).show(40)
-    )
 
     output_df = spark.sql(native_records_query)
 
@@ -268,12 +244,12 @@ if __name__ == "__main__":
     # Read clean office and team data
     splink_clean_office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = (
-        spark.read.format("parquet").load(splink_clean_office_data_s3_path).limit(1000)
+        spark.read.format("parquet").load(splink_clean_office_data_s3_path)
     )
 
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
     team_df = (
-        spark.read.format("parquet").load(splink_clean_team_data_s3_path).limit(1000)
+        spark.read.format("parquet").load(splink_clean_team_data_s3_path)
     )
 
     office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
@@ -405,11 +381,11 @@ if __name__ == "__main__":
 
     spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.organizations DROP PARTITIONS;")
 
-    # Write data to the Aurora PostgreSQL database
-    # organizations_df.write.format("jdbc").mode("overwrite").option(
-    #    "url", jdbcurl
-    # ).option("user", username).option("password", password).option(
-    #    "dbtable", args["aurora_table"]
-    # ).save()
+    #Write data to the Aurora PostgreSQL database
+    organizations_df.write.format("jdbc").mode("overwrite").option(
+       "url", jdbcurl
+    ).option("user", username).option("password", password).option(
+       "dbtable", args["aurora_table"]
+    ).save()
 
     job.commit()

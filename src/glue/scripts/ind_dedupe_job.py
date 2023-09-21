@@ -129,18 +129,22 @@ def deduplicate_entity(
 
 
 def generate_globalids_and_native_records(
-    source_df: DataFrame, county_list: list, order_key: str = "indglobalidentifier"
+    source_df: DataFrame, county_list: list, order_key: str = "indhubid"
 ):
+    null_global_ids_df = source_df.filter(source_df.orgglobalidentifier.isNull())
+    not_null_global_ids_df = source_df.filter(source_df.orgglobalidentifier.isNotNull())
+
     windowSpec = Window.orderBy(F.col(order_key).desc())
 
-    global_id_df = source_df.withColumn(
+    filled_global_ids_df = null_global_ids_df.withColumn(
         "indglobalidentifier",
-        F.when(
-            F.col("indglobalidentifier").isNull(),
-            F.concat(F.lit("IND"), F.lpad(F.row_number().over(windowSpec), 8, "0")),
-        ).otherwise(F.col("indglobalidentifier")),
-    ).orderBy("indhubid", ascending=False)
+        F.concat(F.lit("IND"), F.lpad(F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0")),
+    )
 
+    global_id_df = not_null_global_ids_df.union(filled_global_ids_df).orderBy(
+        "indhubid", ascending=False
+    )
+    
     check_pairs = F.udf(
         lambda pair: True if pair in county_list else False, BooleanType()
     )
