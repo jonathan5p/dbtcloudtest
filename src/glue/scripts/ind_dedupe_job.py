@@ -151,9 +151,9 @@ def generate_globalids_and_native_records(
     )
     bright_participants_df.createOrReplaceTempView("bright_participants_df")
 
-    output_df = spark.sql(native_records_query)
+    individuals_df = spark.sql(native_records_query)
 
-    return output_df
+    return individuals_df
 
 
 if __name__ == "__main__":
@@ -273,8 +273,7 @@ if __name__ == "__main__":
     ).option(
         "overwriteSchema", "true"
     ).option(
-        "maxRecordsPerFile",
-        args.get("max_records_per_file", args.get("max_records_per_file", 1000)),
+        "maxRecordsPerFile", args.get("max_records_per_file", 1000)
     ).option(
         "compression", "snappy"
     ).partitionBy(
@@ -282,6 +281,8 @@ if __name__ == "__main__":
     ).saveAsTable(
         f"{args['glue_db']}.individuals"
     )
+    
+    spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.individuals DROP PARTITIONS;")
 
     # Write data to the Aurora PostgreSQL database
 

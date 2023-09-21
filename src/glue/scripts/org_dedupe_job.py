@@ -7,7 +7,7 @@ from pyspark.sql.types import BooleanType
 import pyspark.sql.functions as F
 from awsglue.context import GlueContext
 from awsglue.job import Job
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from splink.spark.linker import SparkLinker
 import pyspark.pandas as ps
 import boto3
@@ -268,12 +268,12 @@ if __name__ == "__main__":
     # Read clean office and team data
     splink_clean_office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = (
-        spark.read.format("delta").load(splink_clean_office_data_s3_path).limit(1000)
+        spark.read.format("parquet").load(splink_clean_office_data_s3_path).limit(1000)
     )
 
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
     team_df = (
-        spark.read.format("delta").load(splink_clean_team_data_s3_path).limit(1000)
+        spark.read.format("parquet").load(splink_clean_team_data_s3_path).limit(1000)
     )
 
     office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
@@ -402,6 +402,8 @@ if __name__ == "__main__":
     ).saveAsTable(
         f"{args['glue_db']}.organizations"
     )
+
+    spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.organizations DROP PARTITIONS;")
 
     # Write data to the Aurora PostgreSQL database
     # organizations_df.write.format("jdbc").mode("overwrite").option(
