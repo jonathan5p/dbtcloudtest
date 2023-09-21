@@ -100,7 +100,7 @@ def get_previous_county_data(source_table: pd.DataFrame):
     output_table = source_table
 
     try:
-        target_table = wr.s3.read_deltalake(path=s3_target_path)
+        target_table = wr.s3.read_deltalake(path=s3_target_path).set_index("dlid")
         filter_df = target_table.loc[
             (
                 (target_table["officesubsystemlocale"] == "BRIGHT_CAAR")
@@ -112,7 +112,7 @@ def get_previous_county_data(source_table: pd.DataFrame):
         output_table.loc[filter_df.index, ["officecounty"]] = filter_df.officecounty
 
     except Exception as e:
-        logger.error("Exception getting previous county data: \n" + e)
+        logger.error("Exception getting previous county data: \n" + str(e))
 
     return output_table
 

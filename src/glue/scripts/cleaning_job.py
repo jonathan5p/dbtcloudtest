@@ -105,21 +105,21 @@ if __name__ == '__main__':
 
     # Write the clean data to S3
     clean_agent_df.write.mode("overwrite")\
-        .format("parquet")\
+        .format("delta")\
         .option("path", f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/clean_splink_agent_data/")\
         .option("overwriteSchema", "true")\
         .option("compression", "snappy")\
         .saveAsTable(f"{args['glue_db']}.clean_splink_agent_data")
         
     clean_office_df.write.mode("overwrite")\
-        .format("parquet")\
+        .format("delta")\
         .option("path", f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/clean_splink_office_data/")\
         .option("overwriteSchema", "true")\
         .option("compression", "snappy")\
         .saveAsTable(f"{args['glue_db']}.clean_splink_office_data")
         
     clean_team_df.write.mode("overwrite")\
-        .format("parquet")\
+        .format("delta")\
         .option("path", f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/clean_splink_team_data/")\
         .option("overwriteSchema", "true")\
         .option("compression", "snappy")\

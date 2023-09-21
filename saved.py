@@ -147,13 +147,13 @@ def generate_globalids_and_native_records(
 
     bright_participants_df = global_id_df.withColumn(
         "indisbrightparticipant",
-        check_pairs(F.array(F.col("indaddresscounty"), F.col("indaddressstate"))),
+        check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))),
     )
     bright_participants_df.createOrReplaceTempView("bright_participants_df")
 
-    output_df = spark.sql(native_records_query)
+    individuals_df = spark.sql(native_records_query)
 
-    return output_df
+    return individuals_df
 
 
 if __name__ == "__main__":
@@ -266,15 +266,17 @@ if __name__ == "__main__":
     )
 
     individuals_df.withColumn(
-        "dlbatchinsertionts_utc", F.date_trunc("second", F.current_timestamp())
+        "dlbatchinsertionts_utc",
+        F.date_format(
+            F.date_trunc("second", F.current_timestamp()), "yyyy-MM-dd HH:mm:ss"
+        ),
     ).write.mode("append").format("parquet").option(
         "path",
         f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/individuals/",
     ).option(
         "overwriteSchema", "true"
     ).option(
-        "maxRecordsPerFile",
-        args.get("max_records_per_file", args.get("max_records_per_file", 1000)),
+        "maxRecordsPerFile", args.get("max_records_per_file", 1000)
     ).option(
         "compression", "snappy"
     ).partitionBy(
