@@ -78,7 +78,7 @@ WITH native_records AS(
 )
 SELECT bdf.*,
        CASE WHEN 
-       native_records.indglobalidentifier = bdf.indglobalidentifier
+       native_records.indglobalidentifier = bdf.indglobalidentifier OR bdf.indhubid IS NULL
        THEN  ' '
        ELSE COALESCE(native_records.indglobalidentifier, '') END as indlinkedglobalidentifier
 FROM bright_participants_df as bdf 
@@ -88,6 +88,16 @@ ORDER BY bdf.indhubid DESC
 
 # Define merge_key var as primary key of the individuals table
 merge_key = "bdmpindkey"
+
+# Native record agent valid types for deduping
+agent_types = [
+    "Broker",
+    "Office Manager",
+    "Appraiser",
+    "Personal Assistant",
+    "Staff",
+    "Agent",
+]
 
 
 # Helper function to run splink model over a dataframe
@@ -138,13 +148,18 @@ def generate_globalids_and_native_records(
 
     filled_global_ids_df = null_global_ids_df.withColumn(
         "indglobalidentifier",
-        F.concat(F.lit("IND"), F.lpad(F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0")),
+        F.concat(
+            F.lit("IND"),
+            F.lpad(
+                F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0"
+            ),
+        ),
     )
 
     global_id_df = not_null_global_ids_df.union(filled_global_ids_df).orderBy(
         "indhubid", ascending=False
     )
-    
+
     check_pairs = F.udf(
         lambda pair: True if pair in county_list else False, BooleanType()
     )
@@ -189,8 +204,12 @@ if __name__ == "__main__":
 
     # Read clean agent data and enrich office data
     splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
-    clean_df = spark.read.format("parquet").load(splink_clean_data_s3_path).limit(10000)
+    clean_df = spark.read.format("parquet").load(splink_clean_data_s3_path)
     clean_df.createOrReplaceTempView("clean_df")
+
+    # Filter agents
+    dedup_records = clean_df.filter(F.col("type").isin(agent_types))
+    not_dedup_records = clean_df.join(dedup_records, on="dlid", how="leftanti")
 
     office_data_s3_path = f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = spark.read.format("delta").load(office_data_s3_path)
@@ -199,11 +218,12 @@ if __name__ == "__main__":
     # Run splink model over office and team data
     dedup_agent_df = deduplicate_entity(
         entity="agent",
-        spark_df=clean_df,
+        spark_df=dedup_records,
         spark=spark,
         splink_model_path="/tmp/agent_splink_model.json",
     )
-    dedup_agent_df.createOrReplaceTempView("clusters_df")
+    clusters_df = dedup_agent_df.join(not_dedup_records, on="dlid", how="fullouter")
+    clusters_df.createOrReplaceTempView("clusters_df")
 
     # Get Aurora DB credentials
     username = ssm.get_parameter(
@@ -285,7 +305,7 @@ if __name__ == "__main__":
     ).saveAsTable(
         f"{args['glue_db']}.individuals"
     )
-    
+
     spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.individuals DROP PARTITIONS;")
 
     # Write data to the Aurora PostgreSQL database

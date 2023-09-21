@@ -131,7 +131,7 @@ WITH native_records AS(
 )
 SELECT bdf.*,
        CASE WHEN 
-       native_records.orgglobalidentifier = bdf.orgglobalidentifier
+       native_records.orgglobalidentifier = bdf.orgglobalidentifier OR bdf.orghubid IS NULL
        THEN  ' '
        ELSE COALESCE(native_records.orgglobalidentifier, '') END as orglinkedglobalidentifier
 FROM bright_participants_df as bdf 
@@ -141,6 +141,17 @@ ORDER BY bdf.orghubid DESC
 
 # Define merge_key var as primary key of the organizations table
 merge_key = "bdmporgkey"
+
+# Native record office valid types for deduping
+office_types = [
+    "APPRAISER",
+    "RESIDENTIAL",
+    "ASSOCIATION",
+    "COMMERCIAL",
+    "MLS",
+    "PROPERTY MANAGEMENT",
+    "CORPORATE",
+]
 
 
 # Helper function to run splink model over a dataframe
@@ -191,7 +202,12 @@ def generate_globalids_and_native_records(
 
     filled_global_ids_df = null_global_ids_df.withColumn(
         "orgglobalidentifier",
-        F.concat(F.lit("ORG"), F.lpad(F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0")),
+        F.concat(
+            F.lit("ORG"),
+            F.lpad(
+                F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0"
+            ),
+        ),
     )
 
     global_id_df = not_null_global_ids_df.union(filled_global_ids_df).orderBy(
@@ -248,21 +264,24 @@ if __name__ == "__main__":
     )
 
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
-    team_df = (
-        spark.read.format("parquet").load(splink_clean_team_data_s3_path)
-    )
+    team_df = spark.read.format("parquet").load(splink_clean_team_data_s3_path)
 
     office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
+    # Filter agents
+    dedup_records = office_df.filter(F.col("type").isin(office_types))
+    not_dedup_records = office_df.join(dedup_records, on="dlid", how="leftanti")
+
     # Run splink model over office and team data
     dedup_office_df = deduplicate_entity(
         entity="office",
-        spark_df=office_df,
+        spark_df=dedup_records,
         spark=spark,
         splink_model_path="/tmp/office_splink_model.json",
     )
-    dedup_office_df.createOrReplaceTempView("dedup_office_df")
+    clusters_df = dedup_office_df.join(not_dedup_records, on="dlid", how="fullouter")
+    clusters_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
         entity="team",
@@ -336,17 +355,6 @@ if __name__ == "__main__":
         org_changes_df, county_list
     )
 
-    print("-----------Organizations DF----------")
-    print(
-        organizations_df.select(
-            "orghubid",
-            merge_key,
-            "orgglobalidentifier",
-            "orgcounty",
-            "orgstate",
-            "orgisbrightparticipant",
-        ).show(40)
-    )
     # Write data to S3
     dedup_office_df.write.mode("overwrite").format("parquet").option(
         "path",
