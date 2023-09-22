@@ -222,7 +222,12 @@ if __name__ == "__main__":
         spark=spark,
         splink_model_path="/tmp/agent_splink_model.json",
     )
-    clusters_df = dedup_agent_df.join(not_dedup_records, on="dlid", how="fullouter")
+    dedup_agent_df.printSchema()
+
+    for column in set(dedup_agent_df.columns) - set(not_dedup_records.columns):
+        not_dedup_records = dedup_agent_df.withColumn(column, F.lit(None))
+
+    clusters_df = dedup_agent_df.union(not_dedup_records)
     clusters_df.createOrReplaceTempView("clusters_df")
 
     # Get Aurora DB credentials

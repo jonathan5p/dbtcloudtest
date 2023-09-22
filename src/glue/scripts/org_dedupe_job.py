@@ -280,7 +280,11 @@ if __name__ == "__main__":
         spark=spark,
         splink_model_path="/tmp/office_splink_model.json",
     )
-    clusters_df = dedup_office_df.join(not_dedup_records, on="dlid", how="fullouter")
+    
+    for column in set(dedup_office_df.columns) - set(not_dedup_records.columns):
+        not_dedup_records = dedup_office_df.withColumn(column, F.lit(None))
+
+    clusters_df = dedup_office_df.union(not_dedup_records)
     clusters_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
