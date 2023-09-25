@@ -99,7 +99,7 @@ resource "aws_s3_bucket_notification" "register" {
   queue {
     queue_arn = module.sqs.sqs_register_queue_arn
     events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/individuals"
+    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/individuals_test"
     filter_suffix = ".parquet"
   }
 
@@ -113,7 +113,7 @@ resource "aws_s3_bucket_notification" "register" {
   queue {
     queue_arn = module.sqs.sqs_register_queue_arn
     events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/organizations"
+    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/organizations_test"
     filter_suffix = ".parquet"
   }
 
