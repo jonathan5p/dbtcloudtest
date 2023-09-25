@@ -1,6 +1,6 @@
 aws_shared_credential_file_path  = "~/.aws/credentials"
 aws_profile_code                 = "bright_devops"
-aws_profile_dev                  = "bright_datascience_queryadmin"
+aws_profile_dev                  = "bright_dev"
 zone                             = "z1"
 environment_devops               = "c1"
 environment_dev                  = "d1"

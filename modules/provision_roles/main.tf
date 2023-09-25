@@ -335,6 +335,21 @@ module "sfm_alayasync_naming" {
   purpose     = join("", [var.project_prefix, "-", "alayasync"])
 }
 
+# cloudwatch alarms #
+module "cwa_alaya_sync_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwa"
+  purpose     = join("", [var.project_prefix, "-", "alayasync"])
+}
+
+module "cwa_alaya_sync_register_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwa"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncregister"])
+}
+
 #----------------------------------
 # Sfn names
 #----------------------------------
@@ -855,6 +870,21 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:dynamodb:${var.region}:${var.aws_account_number_env}:table/${module.dynamodb_sources_naming.name}"
     ]
     sid = "dynamosync"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "cloudwatch:PutMetricAlarm",
+      "cloudwatch:DescribeAlarms",
+      "cloudwatch:ListTagsForResource",
+      "cloudwatch:DeleteAlarms"
+    ]
+    resources = [
+      "arn:aws:cloudwatch:${var.region}:${var.aws_account_number_env}:alarm:${module.cwa_alaya_sync_naming.name}",
+      "arn:aws:cloudwatch:${var.region}:${var.aws_account_number_env}:alarm:${module.cwa_alaya_sync_register_naming.name}"
+    ]
+    sid = "cloudwatchalarms"
   }
 }
 # ------------------------------------------------------------------------------

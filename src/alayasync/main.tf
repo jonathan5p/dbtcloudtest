@@ -124,3 +124,63 @@ resource "aws_s3_bucket_notification" "register" {
     filter_suffix       = ".log"
   }
 }
+
+module "base_naming" {
+  source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  app_group = var.project_app_group
+  env       = var.environment
+  ledger    = var.project_ledger
+  site      = var.site
+  tier      = var.tier
+  zone      = var.zone
+}
+
+module "cwa_alaya_sync_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwa"
+  purpose     = join("", [var.project_prefix, "-", "alayasync"])
+}
+
+resource "aws_cloudwatch_metric_alarm" "sfn" {
+  alarm_name                = module.cwa_alaya_sync_naming.name
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = 1
+  metric_name               = "ExecutionsFailed"
+  namespace                 = "AWS/States"
+  period                    = 60
+  statistic                 = "Average"
+  threshold                 = 0
+  alarm_description         = "Monitors failed executions for AlayaSync step function"
+  treat_missing_data        = "ignore"
+  insufficient_data_actions = []
+  tags                      = module.cwa_alaya_sync_naming.tags
+  dimensions = {
+    StateMachineArn=module.step_functions.sfn_alaya_sync_arn
+  }
+}
+
+module "cwa_alaya_sync_register_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "cwa"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncregister"])
+}
+
+resource "aws_cloudwatch_metric_alarm" "register" {
+  alarm_name                = module.cwa_alaya_sync_register_naming.name
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = 1
+  metric_name               = "ApproximateNumberOfMessagesVisible"
+  namespace                 = "AWS/SQS"
+  period                    = 60
+  statistic                 = "Average"
+  threshold                 = 0
+  alarm_description         = "Monitors Failed registration processes for AlayaSync"
+  treat_missing_data        = "ignore"
+  insufficient_data_actions = []
+  tags                      = module.cwa_alaya_sync_register_naming.tags
+  dimensions = {
+    QueueName=module.sqs.sqs_names.registration
+  }
+}
