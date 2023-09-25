@@ -832,7 +832,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "sqs:getqueueattributes",
       "sqs:deletequeue",
       "sqs:tagqueue",
-      "sqs:setqueueattributes"
+      "sqs:setqueueattributes",
+      "sqs:listqueuetags"
     ]
     resources = [
       "arn:aws:sqs:${var.region}:${var.aws_account_number_env}:${module.sqs_register_data_naming.name}",

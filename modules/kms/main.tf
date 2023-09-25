@@ -41,7 +41,8 @@ data "aws_iam_policy_document" "key_policy" {
     actions = [
       "kms:Encrypt",
       "kms:GenerateDataKey*",
-      "kms:ReEncrypt*"
+      "kms:ReEncrypt*",
+      "kms:Decrypt"
     ]
     resources = ["*"]
     sid       = "s3"
