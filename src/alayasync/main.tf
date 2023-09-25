@@ -1,0 +1,126 @@
+module "sqs" {
+    source = "./sqs"
+
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    queue_name          = "alayasyncregister"
+    tier                = var.tier
+    zone                = var.zone
+
+    project_objects     = var.project_objects
+}
+
+module "dynamo" {
+    source = "./dynamo"
+
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    table_name          = "alayasync"  
+    tier                = var.tier
+    zone                = var.zone
+
+    project_objects     = var.project_objects
+
+}
+
+module "lambdas" {
+    source = "./lambda"
+    
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    zone                = var.zone
+
+    project_objects     = merge(var.project_objects, 
+    {
+        "dynamo_table_register" = "${module.dynamo.table_naming.name}"
+    })
+}
+
+module "step_functions" {
+    source = "./stepfunction"
+
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    zone                = var.zone
+
+    policy_variables    = merge(var.project_objects,module.lambdas.functions_mapping)
+}
+
+module "lambdas_execution" {
+    source = "./lambda_execution"
+    
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    zone                = var.zone
+
+    project_objects     = merge(var.project_objects, 
+    {
+        "dynamo_table_register" = "${module.dynamo.table_naming.name}",
+        "sfn_alaya_sync" = "${module.step_functions.sfn_alaya_sync_arn}"
+    })
+}
+
+resource "aws_lambda_event_source_mapping" "register" {
+  event_source_arn = module.sqs.sqs_register_queue_arn
+  function_name    = module.lambdas.functions_mapping.register_lambda
+  batch_size       = 1
+  enabled          = true
+}
+
+resource "aws_lambda_permission" "allow_events" {
+  statement_id  = "AllowExecutionFromS3BucketToLambda"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambdas_execution.functions_mapping.execution_lambda
+  principal     = "s3.amazonaws.com"
+  source_arn    = var.project_objects.bucket_arn
+}
+
+resource "aws_s3_bucket_notification" "register" {
+  bucket = var.project_objects.bucket_id
+
+  queue {
+    queue_arn = module.sqs.sqs_register_queue_arn
+    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/individuals"
+    filter_suffix = ".parquet"
+  }
+
+  lambda_function {
+    lambda_function_arn = module.lambdas_execution.functions_mapping.execution_lambda
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "consume_data/resultData/individuals_executions/"
+    filter_suffix       = ".log"
+  }
+
+  queue {
+    queue_arn = module.sqs.sqs_register_queue_arn
+    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/organizations"
+    filter_suffix = ".parquet"
+  }
+
+  lambda_function {
+    lambda_function_arn = module.lambdas_execution.functions_mapping.execution_lambda
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "consume_data/resultData/organizations_executions/"
+    filter_suffix       = ".log"
+  }
+}

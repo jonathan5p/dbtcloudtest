@@ -1,0 +1,92 @@
+{
+  "Comment": "Using Map state in Distributed mode",
+  "StartAt": "Scheduling",
+  "States": {
+    "Scheduling": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${schedule_lambda}",
+        "Payload.$": "$"
+      },
+      "Next": "Process data",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailBranch_1_1"
+        }
+      ]
+    },
+    "Process data": {
+      "Type": "Map",
+      "ToleratedFailurePercentage": 100,
+      "MaxConcurrency": 2,
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Sending to Alaya",
+        "States": {
+          "Sending to Alaya": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+              "Payload.$": "$",
+              "FunctionName": "${processing_lambda}"
+            },
+            "End": true
+          }
+        }
+      },
+      "Label": "Processdata",
+      "Next": "Gathering results",
+      "ResultWriter": {
+        "Resource": "arn:aws:states:::s3:putObject",
+        "Parameters": {
+          "Bucket": "${bucket_id}",
+          "Prefix": "consume_data/resultData/individuals"
+        }
+      },
+      "ItemSelector": {
+        "index.$": "$$.Map.Item.Index",
+        "value.$": "$$.Map.Item.Value"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailBranch_1_1"
+        }
+      ]
+    },
+    "Gathering results": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "FunctionName": "${reduce_lambda}",
+        "Payload.$": "$"
+      },
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailBranch_1_1"
+        }
+      ],
+      "End": true
+    },
+    "FailBranch_1_1": {
+      "Type": "Fail",
+      "Cause": "Level_Error",
+      "Error": "Level_Error"
+    }
+  }
+}
