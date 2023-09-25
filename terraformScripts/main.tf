@@ -1249,3 +1249,22 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
   tags                = module.iro_ecs_task_execution_naming.tags
 }
+
+module "alayasync" {
+  source = "../src/alayasync"
+
+  environment         = var.environment  
+  project_app_group   = var.project_app_group
+  project_ledger      = var.project_ledger
+  project_prefix      = var.project_prefix
+  site                = var.site
+  tier                = var.tier
+  zone                = var.zone
+
+  project_objects     = {
+    "bucket_id" : module.s3_data_bucket.bucket_id
+    "bucket_arn": module.s3_data_bucket.bucket_arn
+    "data_key_id" : module.data_key.key_id
+    "data_key_arn" : module.data_key.key_arn
+  }
+}
