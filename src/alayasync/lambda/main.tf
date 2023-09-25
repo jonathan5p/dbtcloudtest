@@ -1,6 +1,7 @@
 module "lambda_alaya_sync_register" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
-    
+    #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    source = "../../modules/lambdas"
+
     environment         = var.environment
     lambda_name         = "alayasyncregister"
     lambda_path         = "../src/alayasync/lambda"
@@ -19,7 +20,8 @@ module "lambda_alaya_sync_register" {
 }
 
 module "lambda_alaya_sync_scheduling" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    source = "../../modules/lambdas"
 
     environment         = var.environment
     lambda_name         = "alayasyncschedule"
@@ -39,7 +41,8 @@ module "lambda_alaya_sync_scheduling" {
 }
 
 module "lambda_alaya_sync_processing" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    source = "../../modules/lambdas"
 
     environment         = var.environment
     lambda_name         = "alayasyncprocessing"
@@ -59,7 +62,8 @@ module "lambda_alaya_sync_processing" {
 }
 
 module "lambda_alaya_sync_reduce" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
+    source = "../../modules/lambdas"
 
     environment         = var.environment
     lambda_name         = "alayasyncreduce"
