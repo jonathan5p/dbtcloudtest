@@ -95,12 +95,37 @@ def get_geo_info(row, geocode):
 
     return output
 
-def set_delta_df(delta_table:pd.DataFrame):
-    
-    delta_table = delta_table.set_index("dlid")
-    start_time = time.time()
+
+def get_previous_county_data(source_table: pd.DataFrame):
+    output_table = source_table
+
+    try:
+        target_table = wr.s3.read_deltalake(path=s3_target_path).set_index("dlid")
+        filter_df = target_table.loc[
+            (
+                (target_table["officesubsystemlocale"] == "BRIGHT_CAAR")
+                & (target_table["officecity"] != "OTHER")
+            ),
+            :,
+        ].copy()
+
+        output_table.loc[filter_df.index, ["officecounty"]] = filter_df.officecounty
+
+    except Exception as e:
+        logger.error("Exception getting previous county data: \n" + str(e))
+
+    return output_table
+
+
+def set_delta_df(source_table: pd.DataFrame):
+    source_table = source_table.set_index("dlid")
+
+    # Get previous county data
+    delta_table = get_previous_county_data(source_table)
 
     # Get valid CAAR data
+    start_time = time.time()
+
     time_delta = datetime.now() - timedelta(hours=23)
     filter_df = delta_table.loc[
         (
@@ -120,7 +145,7 @@ def set_delta_df(delta_table:pd.DataFrame):
         filter_df.loc[:, "geo_info"] = filter_df.apply(
             get_geo_info, geocode=geocode, axis=1
         )
-        filter_df.loc[:, "county"] = filter_df["geo_info"].apply(
+        filter_df.loc[:, "officecounty"] = filter_df["geo_info"].apply(
             lambda x: x.get("county", x.get("city", x.get("town")))
             if x != None
             else None
@@ -138,6 +163,7 @@ def set_delta_df(delta_table:pd.DataFrame):
     )
     delta_table.reset_index(inplace=True)
     return delta_table
+
 
 def lambda_handler(event, context):
     """

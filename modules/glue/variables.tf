@@ -70,3 +70,13 @@ variable "extra_jars" {
 variable "extra_py_files" {
   description = "Glue job extra py files s3 paths"
 }
+
+variable "glue_path" {
+  description = "Glue job extra py files s3 paths"
+}
+
+variable "policy_variables" {
+  type        = map(any)
+  description = "Policy variables for executor policy"
+  default     = {}
+}
