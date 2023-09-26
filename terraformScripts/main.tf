@@ -143,7 +143,7 @@ resource "aws_s3_object" "artifacts" {
 module "gluetest" {
   source = "../src/mainprocess/glue"
 
-  base_naming       = base_naming
+  base_naming       = module.base_naming
   environment       = var.environment
   project_app_group = var.project_app_group
   project_ledger    = var.project_ledger
@@ -194,7 +194,7 @@ module "staging_crawler_naming" {
   purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
 }
 resource "aws_glue_crawler" "staging_crawler" {
-  database_name = module.functions_mapping.gluetest.gluedb_name
+  database_name = module.gluetest.functions_mapping.gluedb_name
   name          = module.staging_crawler_naming.name
   tags          = module.staging_crawler_naming.tags
   role          = aws_iam_role.staging_crawler_role.arn
@@ -203,8 +203,8 @@ resource "aws_glue_crawler" "staging_crawler" {
     write_manifest            = false
     create_native_delta_table = true
     delta_tables = [
-      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_office_target_table_name}/",
-      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_agent_target_table_name}/"
+      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.gluetest.functions_mapping.gluedb_name}/${var.lambda_ec_office_target_table_name}/",
+      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.gluetest.functions_mapping.gluedb_name}/${var.lambda_ec_agent_target_table_name}/"
     ]
   }
 }
@@ -341,8 +341,8 @@ resource "aws_lambda_function" "lambda_caar_enrich_agent" {
 
   environment {
     variables = {
-      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_agent_source_table_name}/"
-      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_agent_target_table_name}/"
+      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${module.gluetest.functions_mapping.gluedb_name}/${var.lambda_ec_agent_source_table_name}/"
+      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.gluetest.functions_mapping.gluedb_name}/${var.lambda_ec_agent_target_table_name}/"
     }
   }
 }
@@ -383,8 +383,8 @@ resource "aws_lambda_function" "lambda_caar_enrich_office" {
 
   environment {
     variables = {
-      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_office_source_table_name}/"
-      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_office_target_table_name}/"
+      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${module.gluetest.functions_mapping.gluedb_name}/${var.lambda_ec_office_source_table_name}/"
+      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.gluetest.functions_mapping.gluedb_name}/${var.lambda_ec_office_target_table_name}/"
     }
   }
 }
