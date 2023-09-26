@@ -338,12 +338,6 @@ resource "aws_lambda_function" "lambda_config_loader" {
 # Caar deltalake+geopy layer
 #------------------------------------------------------------------------------
 
-# data "archive_file" "lambda_delta_geopy_layer" {
-#   type        = "zip"
-#   source_dir  = "../src/lambda/layers/delta_geopy/"
-#   output_path = "../src/lambda/layers/delta_geopy.zip"
-# }
-
 resource "aws_lambda_layer_version" "delta_geopy_layer" {
   filename            = "../src/lambda/layers/delta_geopy.zip"
   layer_name          = "delta_geopy"
