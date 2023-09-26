@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/archive"
       version = "2.4.0"
     }
+    
+    template = {
+      source = "hashicorp/template"
+    }
   }
   backend "s3" {
   }
