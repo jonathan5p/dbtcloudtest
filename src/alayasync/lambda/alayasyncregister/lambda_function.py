@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from boto3.dynamodb.conditions import Key, Attr
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 from datetime import datetime
@@ -17,13 +17,21 @@ dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
 def parse_s3_event(s3_event):
+
+    key_parts = unquote_plus(s3_event['s3']['object']['key']).split('/')
+    database = key_parts[1]
+    table = key_parts[2]
+    batch = key_parts[3].split('=')[1]
+    
     return {
         'bucket': s3_event['s3']['bucket']['name'],
         'key': unquote_plus(s3_event['s3']['object']['key']),
         'size': s3_event['s3']['object']['size'],
         'last_modified_date': s3_event['eventTime'].split('.')[0]+'+00:00',
         'timestamp': int(round(datetime.utcnow().timestamp()*1000, 0)),
-        'batch': unquote_plus(s3_event['s3']['object']['key']).split('/')[3].split('=')[1]
+        'batch': batch,
+        'table': table
+        #'batch': unquote_plus(s3_event['s3']['object']['key']).split('/')[3].split('=')[1]
     }
 
 

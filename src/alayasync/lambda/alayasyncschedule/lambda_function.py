@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from datetime import datetime
 
 logger = logging.getLogger()
@@ -12,9 +12,9 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
-projection_expression = "#i, #t, #p, #b"
+projection_expression = "#i, #t, #p, #b, #tbl"
 index_name = 'scheduling-index'
-expression_attributes_names = {"#i": "id", "#t":"last_modified_date", "#p": "status", "#b": "batch"}
+expression_attributes_names = {"#i": "id", "#t":"last_modified_date", "#p": "status", "#b": "batch", "#tbl": "table"}
 
 query_parameters = {
         'ProjectionExpression': projection_expression,
@@ -50,6 +50,8 @@ def lambda_handler(event, context):
     logger.info(f'Event:{event}')
 
     query_parameters['KeyConditionExpression'] = (Key('batch').eq(event['batch']) & Key('status').eq(event['status']))
+    query_patameters['FilterExpression'] = (Attr('table').eq(event['table']))
+
     records = get_from_dynamo(register_table, query_parameters)
 
     logger.info(f'Response: {records}')
