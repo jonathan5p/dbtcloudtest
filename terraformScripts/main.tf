@@ -1,5 +1,5 @@
 provider "aws" {
-  region = var.region[var.site]
+  region  = var.region[var.site]
   assume_role {
     role_arn     = var.role_arn
     session_name = "oidh"
@@ -136,140 +136,77 @@ resource "aws_s3_object" "artifacts" {
   bucket_key_enabled = true
 }
 
-resource "aws_s3_object" "glue_artifacts" {
-  bucket                 = module.s3_glue_artifacts_bucket.bucket_id
-  for_each               = fileset("../src/glue/", "**")
-  key                    = each.value
-  source                 = "../src/glue/${each.value}"
-  server_side_encryption = "AES256"
-  etag                   = filemd5("../src/glue/${each.value}")
-  #kms_key_id = module.glue_enc_key.key_arn
-  bucket_key_enabled = true
-}
-
 #------------------------------------------------------------------------------
-# Glue DB
+# Glue
 #------------------------------------------------------------------------------
 
-module "glue_db_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "gld"
-  purpose     = join("", [var.project_prefix, "_", "gluedb"])
-}
+module "gluetest" {
+  source = "../src/mainprocess/glue"
 
-resource "aws_glue_catalog_database" "dedup_process_glue_db" {
-  name         = module.glue_db_naming.name
-  location_uri = "s3://${module.s3_data_bucket.bucket_id}/"
-  tags         = module.glue_db_naming.tags
-}
+  base_naming       = base_naming
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
-#------------------------------------------------------------------------------
-# Glue Security Configuration
-#------------------------------------------------------------------------------
-
-module "glue_secconfig_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "gls"
-  purpose     = join("", [var.project_prefix, "-", "gluesecurityconfig"])
-}
-
-resource "aws_glue_security_configuration" "glue_security_config" {
-  name = module.glue_secconfig_naming.name
-  encryption_configuration {
-    cloudwatch_encryption {
-      cloudwatch_encryption_mode = "SSE-KMS"
-      kms_key_arn                = module.glue_enc_key.key_arn
-    }
-    job_bookmarks_encryption {
-      job_bookmarks_encryption_mode = "CSE-KMS"
-      kms_key_arn                   = module.glue_enc_key.key_arn
-    }
-    s3_encryption {
-      s3_encryption_mode = "SSE-S3"
-    }
+  project_objects = {
+    "glue_bucket" : module.s3_glue_artifacts_bucket
+    "data_bucket" : module.s3_data_bucket
+    "glue_enc_key" : module.glue_enc_key
   }
 }
 
 #------------------------------------------------------------------------------
-# Redshift Credentials
+# Glue Crawler for Staging
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "redshift_conn_username" {
-  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
-}
-
-data "aws_ssm_parameter" "redshift_conn_password" {
-  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
-}
-
-data "aws_ssm_parameter" "redshift_conn_jdbc_url" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/jdbc_url"
-}
-
-data "aws_ssm_parameter" "redshift_conn_subnetid" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/subnetid"
-}
-
-data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/securitygroupid"
-}
-
-#------------------------------------------------------------------------------
-# Glue Connection
-#------------------------------------------------------------------------------
-
-data "aws_subnet" "connection_subnet" {
-  id = data.aws_ssm_parameter.redshift_conn_subnetid.value
-}
-
-module "glue_ingest_conn_naming" {
+module "staging_crawler_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
-  type        = "glx"
-  purpose     = join("", [var.project_prefix, "-", "ingestjobconnection"])
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+}
+resource "aws_iam_role" "staging_crawler_role" {
+  name = module.staging_crawler_role_naming.name
+  tags = module.staging_crawler_role_naming.tags
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = ["sts:AssumeRole"]
+        Effect = "Allow"
+        Sid    = "GlueAssumeRole"
+        Principal = {
+          Service = "glue.amazonaws.com"
+        }
+      }
+    ]
+  })
 }
 
-resource "aws_glue_connection" "redshift_connection" {
-  connection_type = "JDBC"
-  name            = module.glue_ingest_conn_naming.name
-  tags            = module.glue_ingest_conn_naming.tags
-  connection_properties = {
-    JDBC_CONNECTION_URL = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
-    PASSWORD            = data.aws_ssm_parameter.redshift_conn_password.value
-    USERNAME            = data.aws_ssm_parameter.redshift_conn_username.value
-  }
-  physical_connection_requirements {
-    availability_zone      = data.aws_subnet.connection_subnet.availability_zone
-    subnet_id              = data.aws_subnet.connection_subnet.id
-    security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
-  }
+module "staging_crawler_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glr"
+  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
 }
+resource "aws_glue_crawler" "staging_crawler" {
+  database_name = module.functions_mapping.gluetest.gluedb_name
+  name          = module.staging_crawler_naming.name
+  tags          = module.staging_crawler_naming.tags
+  role          = aws_iam_role.staging_crawler_role.arn
 
-#------------------------------------------------------------------------------
-# Glue Ingest Job
-#------------------------------------------------------------------------------
-
-module "ingest_job" {
-  source              = "../modules/glue"
-  base_naming         = module.base_naming
-  project_prefix      = var.project_prefix
-  purpose             = "ingestjob"
-  max_concurrent_runs = var.glue_max_concurrent_runs
-  timeout             = var.glue_timeout
-  worker_type         = var.glue_worker_type
-  number_of_workers   = var.glue_number_of_workers
-  retry_max_attempts  = var.glue_retry_max_attempts
-  retry_interval      = var.glue_retry_interval
-  retry_backoff_rate  = var.glue_retry_backoff_rate
-  security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  connections         = [aws_glue_connection.redshift_connection.name]
-  script_location     = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["scripts/ingest_job.py"].id}"
-  job_conf            = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
-  extra_jars = join(",", ["s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}",
-  "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-storage-2.3.0.jar"].id}"])
-  extra_py_files = "s3://${module.s3_glue_artifacts_bucket.bucket_id}/${aws_s3_object.glue_artifacts["jars/delta-core_2.12-2.3.0.jar"].id}"
+  delta_target {
+    write_manifest            = false
+    create_native_delta_table = true
+    delta_tables = [
+      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_office_target_table_name}/",
+      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_agent_target_table_name}/"
+    ]
+  }
 }
 
 #------------------------------------------------------------------------------
@@ -404,8 +341,8 @@ resource "aws_lambda_function" "lambda_caar_enrich_agent" {
 
   environment {
     variables = {
-      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_source_table_name}/"
-      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_target_table_name}/"
+      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_agent_source_table_name}/"
+      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_agent_target_table_name}/"
     }
   }
 }
@@ -446,59 +383,9 @@ resource "aws_lambda_function" "lambda_caar_enrich_office" {
 
   environment {
     variables = {
-      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_source_table_name}/"
-      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_target_table_name}/"
+      S3_SOURCE_PATH = "s3://${module.s3_data_bucket.bucket_id}/raw_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_office_source_table_name}/"
+      S3_TARGET_PATH = "s3://${module.s3_data_bucket.bucket_id}/staging_data/${module.functions_mapping.gluetest.gluedb_name}/${var.lambda_ec_office_target_table_name}/"
     }
-  }
-}
-
-#------------------------------------------------------------------------------
-# Glue Crawler for Staging
-#------------------------------------------------------------------------------
-
-module "staging_crawler_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
-}
-resource "aws_iam_role" "staging_crawler_role" {
-  name = module.staging_crawler_role_naming.name
-  tags = module.staging_crawler_role_naming.tags
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = ["sts:AssumeRole"]
-        Effect = "Allow"
-        Sid    = "GlueAssumeRole"
-        Principal = {
-          Service = "glue.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-module "staging_crawler_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "glr"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
-}
-resource "aws_glue_crawler" "staging_crawler" {
-  database_name = aws_glue_catalog_database.dedup_process_glue_db.name
-  name          = module.staging_crawler_naming.name
-  tags          = module.staging_crawler_naming.tags
-  role          = aws_iam_role.staging_crawler_role.arn
-
-  delta_target {
-    write_manifest            = false
-    create_native_delta_table = true
-    delta_tables = [
-      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_office_target_table_name}/",
-      "s3://${module.s3_data_bucket.bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.lambda_ec_agent_target_table_name}/"
-    ]
   }
 }
 
@@ -591,7 +478,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
                           "Type": "Task",
                           "Resource": "arn:aws:states:::glue:startJobRun.sync",
                           "Parameters": {
-                              "JobName": "${module.ingest_job.job_id}",
+                              "JobName": "${module.gluetest.functions_mapping.ingestjob.job_id}",
                               "Arguments": {
                                   "--target.$": "$.target",
                                   "--target_prefixes.$": "$.target_prefixes",
@@ -752,70 +639,70 @@ resource "aws_cloudwatch_event_target" "etl_sfn" {
 #------------------------------------------------------------------------------
 
 #### Glue job policies ####
-data "aws_iam_policy_document" "glue_ingest_job_policy" {
+# data "aws_iam_policy_document" "glue_ingest_job_policy" {
 
-  statement {
-    sid    = "s3readandwrite"
-    effect = "Allow"
-    actions = [
-      "s3:Abort*",
-      "s3:DeleteObject*",
-      "s3:GetBucket*",
-      "s3:GetObject*",
-      "s3:List*",
-      "s3:PutObject",
-      "s3:PutObjectLegalHold",
-      "s3:PutObjectRetention",
-      "s3:PutObjectTagging",
-      "s3:PutObjectVersionTagging"
-    ]
-    resources = [module.s3_data_bucket.bucket_arn,
-      "${module.s3_data_bucket.bucket_arn}/*",
-      module.s3_glue_artifacts_bucket.bucket_arn,
-    "${module.s3_glue_artifacts_bucket.bucket_arn}/*"]
-  }
+#   statement {
+#     sid    = "s3readandwrite"
+#     effect = "Allow"
+#     actions = [
+#       "s3:Abort*",
+#       "s3:DeleteObject*",
+#       "s3:GetBucket*",
+#       "s3:GetObject*",
+#       "s3:List*",
+#       "s3:PutObject",
+#       "s3:PutObjectLegalHold",
+#       "s3:PutObjectRetention",
+#       "s3:PutObjectTagging",
+#       "s3:PutObjectVersionTagging"
+#     ]
+#     resources = [module.s3_data_bucket.bucket_arn,
+#       "${module.s3_data_bucket.bucket_arn}/*",
+#       module.s3_glue_artifacts_bucket.bucket_arn,
+#     "${module.s3_glue_artifacts_bucket.bucket_arn}/*"]
+#   }
 
-  statement {
-    sid       = "loggroupmanagement"
-    effect    = "Allow"
-    actions   = ["logs:AssociateKmsKey"]
-    resources = ["arn:aws:logs:${var.region[var.site]}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/jobs/*"]
-  }
-}
+#   statement {
+#     sid       = "loggroupmanagement"
+#     effect    = "Allow"
+#     actions   = ["logs:AssociateKmsKey"]
+#     resources = ["arn:aws:logs:${var.region[var.site]}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/jobs/*"]
+#   }
+# }
 
-module "glue_ingest_policy_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "glueingestpolicy"])
-}
-resource "aws_iam_policy" "glue_ingest_policy" {
-  name        = module.glue_ingest_policy_naming.name
-  tags        = module.glue_ingest_policy_naming.tags
-  description = "IAM Policy for the Glue ingest job"
-  policy      = data.aws_iam_policy_document.glue_ingest_job_policy.json
-}
+# module "glue_ingest_policy_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = module.base_naming
+#   type        = "ipl"
+#   purpose     = join("", [var.project_prefix, "-", "glueingestpolicy"])
+# }
+# resource "aws_iam_policy" "glue_ingest_policy" {
+#   name        = module.glue_ingest_policy_naming.name
+#   tags        = module.glue_ingest_policy_naming.tags
+#   description = "IAM Policy for the Glue ingest job"
+#   policy      = data.aws_iam_policy_document.glue_ingest_job_policy.json
+# }
 
-resource "aws_iam_role_policy_attachment" "glue_policy_attachement" {
-  role       = module.ingest_job.role_name
-  policy_arn = aws_iam_policy.glue_ingest_policy.arn
-}
+# resource "aws_iam_role_policy_attachment" "glue_policy_attachement" {
+#   role       = module.ingest_job.role_name
+#   policy_arn = aws_iam_policy.glue_ingest_policy.arn
+# }
 
-resource "aws_iam_role_policy_attachment" "glue_service_policy_attachement" {
-  role       = module.ingest_job.role_name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
-}
+# resource "aws_iam_role_policy_attachment" "glue_service_policy_attachement" {
+#   role       = module.ingest_job.role_name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+# }
 
 # Read and write access for the data kms key
 resource "aws_kms_grant" "grant_read_data" {
   key_id            = module.data_key.key_id
-  grantee_principal = module.ingest_job.role_arn
+  grantee_principal = module.gluetest.functions_mapping.ingestjob.role_arn
   operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
 }
 
 resource "aws_kms_grant" "grant_read_glue_artifacts" {
   key_id            = module.glue_enc_key.key_id
-  grantee_principal = module.ingest_job.role_arn
+  grantee_principal = module.gluetest.functions_mapping.ingestjob.role_arn
   operations        = ["Encrypt", "Decrypt", "GenerateDataKey"]
 }
 
@@ -987,7 +874,7 @@ data "aws_iam_policy_document" "etl_sfn_policy" {
       "glue:StartJobRun",
       "glue:StartCrawler"
     ]
-    resources = [module.ingest_job.job_arn, aws_glue_crawler.staging_crawler.arn]
+    resources = [module.gluetest.functions_mapping.ingestjob.job_arn, aws_glue_crawler.staging_crawler.arn]
   }
 }
 
@@ -1247,17 +1134,17 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 module "alayasync" {
   source = "../src/alayasync"
 
-  environment         = var.environment  
-  project_app_group   = var.project_app_group
-  project_ledger      = var.project_ledger
-  project_prefix      = var.project_prefix
-  site                = var.site
-  tier                = var.tier
-  zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
-  project_objects     = {
+  project_objects = {
     "bucket_id" : module.s3_data_bucket.bucket_id
-    "bucket_arn": module.s3_data_bucket.bucket_arn
+    "bucket_arn" : module.s3_data_bucket.bucket_arn
     "data_key_id" : module.data_key.key_id
     "data_key_arn" : module.data_key.key_arn
   }
