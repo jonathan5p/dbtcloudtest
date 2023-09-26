@@ -465,7 +465,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "kms:DeleteAlias",
       "kms:CreateGrant",
       "kms:ListGrants",
-      "kms:RevokeGrant"
+      "kms:RevokeGrant",
+      "kms:Decrypt"
     ]
     resources = [
       "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"
@@ -864,7 +865,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "dynamodb:Delete*",
       "dynamodb:Describe*",
       "dynamodb:TagResource",
-      "dynamodb:List*"
+      "dynamodb:List*",
+      "dynamodb:UpdateTimeToLive"
     ]
     resources = [
       "arn:aws:dynamodb:${var.region}:${var.aws_account_number_env}:table/${module.dynamodb_sources_naming.name}"

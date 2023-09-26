@@ -38,6 +38,11 @@ resource "aws_dynamodb_table" "metadata" {
       name = "status"
       type = "S"
     }
+
+    ttl {
+      attribute_name = "ttl"
+      enabled        = true
+    }
   
     global_secondary_index {
       name            = "scheduling-index"
