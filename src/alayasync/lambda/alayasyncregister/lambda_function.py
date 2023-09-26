@@ -2,11 +2,12 @@ import boto3
 import json
 import logging
 import os
+import time
 
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import unquote_plus
 
 logger = logging.getLogger()
@@ -16,13 +17,15 @@ sqs = boto3.resource('sqs')
 dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
+ttl_days = 30 
+
 def parse_s3_event(s3_event):
 
     key_parts = unquote_plus(s3_event['s3']['object']['key']).split('/')
     database = key_parts[1]
     table = key_parts[2]
     batch = key_parts[3].split('=')[1]
-    
+
     return {
         'bucket': s3_event['s3']['bucket']['name'],
         'key': unquote_plus(s3_event['s3']['object']['key']),
@@ -31,7 +34,6 @@ def parse_s3_event(s3_event):
         'timestamp': int(round(datetime.utcnow().timestamp()*1000, 0)),
         'batch': batch,
         'table': table
-        #'batch': unquote_plus(s3_event['s3']['object']['key']).split('/')[3].split('=')[1]
     }
 
 
@@ -61,6 +63,10 @@ def delete_item(table, key):
     else:
         return response
 
+def get_ttl(days):
+
+    return int((datetime.fromtimestamp(int(time.time())) + timedelta(days=days)).timestamp())
+
 
 def lambda_handler(event, context):
 
@@ -75,7 +81,7 @@ def lambda_handler(event, context):
             operation = message['eventName'].split(':')[-1]
 
             logger.info(f"Performing Dynamo {operation} operation")
-            if operation == 'Delete':
+            if 'Delete' in operation:
                 id = 's3://{}/{}'.format(
                     message['s3']['bucket']['name'],
                     unquote_plus(message['s3']['object']['key'])
@@ -85,6 +91,7 @@ def lambda_handler(event, context):
                 item = parse_s3_event(message)
                 item['id'] = f"s3://{item['bucket']}/{item['key']}"
                 item['status'] = 'JUST_ARRIVED'
+                item['ttl'] = get_ttl(ttl_days)
                 
                 put_item(register_table, item, 'id')
 
