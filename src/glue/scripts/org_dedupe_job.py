@@ -260,18 +260,22 @@ if __name__ == "__main__":
     # Read clean office and team data
     splink_clean_office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = (
-        spark.read.format("parquet").load(splink_clean_office_data_s3_path)
+        spark.read.format("parquet").load(splink_clean_office_data_s3_path).limit(1000)
     )
+    print("Office count: ", office_df.count())
 
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
     team_df = spark.read.format("parquet").load(splink_clean_team_data_s3_path)
+    print("Team count: ", team_df.count())
 
     office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     # Filter agents
     dedup_records = office_df.filter(F.col("type").isin(office_types))
+    print("Dedup count: ", dedup_records.count())
     not_dedup_records = office_df.join(dedup_records, on="dlid", how="leftanti")
+    print("Not Dedup count: ", not_dedup_records.count())
 
     # Run splink model over office and team data
     dedup_office_df = deduplicate_entity(
@@ -280,12 +284,20 @@ if __name__ == "__main__":
         spark=spark,
         splink_model_path="/tmp/office_splink_model.json",
     )
-    
-    for column in set(dedup_office_df.columns) - set(not_dedup_records.columns):
-        not_dedup_records = dedup_office_df.withColumn(column, F.lit(None))
+    print("Dedup office count: ", dedup_office_df.count())
 
-    clusters_df = dedup_office_df.union(not_dedup_records)
-    clusters_df.createOrReplaceTempView("dedup_office_df")
+    extra_cols = set(dedup_office_df.columns) - set(not_dedup_records.columns)
+    extra_spark_cols = [
+        F.lit(None).alias(col).cast(dedup_office_df.schema[col].dataType)
+        for col in extra_cols
+    ]
+
+    not_dedup_df = not_dedup_records.select("*",*extra_spark_cols)
+    print("Not Dedup count: ", not_dedup_df.count())
+
+    clusters_df = dedup_office_df.select(*not_dedup_df.columns).union(not_dedup_df)
+    clusters_df.createOrReplaceTempView("clusters_df")
+    print("Clusters count: ", clusters_df.count())
 
     dedup_team_df = deduplicate_entity(
         entity="team",
@@ -314,6 +326,7 @@ if __name__ == "__main__":
 
     # Generate new organizations table
     organization_changes_df = dedup_office_df.union(dedup_team_df)
+    print("Changes count: ", organization_changes_df.count())
     organization_changes_df.createOrReplaceTempView("changes_df")
 
     # Get current organizations table from Aurora
@@ -359,45 +372,47 @@ if __name__ == "__main__":
         org_changes_df, county_list
     )
 
-    # Write data to S3
-    dedup_office_df.write.mode("overwrite").format("parquet").option(
-        "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_office_cluster_df/",
-    ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
-        f"{args['glue_db']}.splink_office_cluster_df"
-    )
+    print("Organizations count: ", organizations_df.count())
 
-    dedup_team_df.write.mode("overwrite").format("parquet").option(
-        "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_team_cluster_df/",
-    ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
-        f"{args['glue_db']}.splink_team_cluster_df"
-    )
+    # # Write data to S3
+    # dedup_office_df.write.mode("overwrite").format("parquet").option(
+    #     "path",
+    #     f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_office_cluster_df/",
+    # ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
+    #     f"{args['glue_db']}.splink_office_cluster_df"
+    # )
 
-    organizations_df.withColumn(
-        "dlbatchinsertionts_utc", F.date_trunc("second", F.current_timestamp())
-    ).write.mode("overwrite").format("parquet").option(
-        "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/organizations/",
-    ).option(
-        "overwriteSchema", "true"
-    ).option(
-        "maxRecordsPerFile", args.get("max_records_per_file", 1000)
-    ).option(
-        "compression", "snappy"
-    ).partitionBy(
-        "dlbatchinsertionts_utc"
-    ).saveAsTable(
-        f"{args['glue_db']}.organizations"
-    )
+    # dedup_team_df.write.mode("overwrite").format("parquet").option(
+    #     "path",
+    #     f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_team_cluster_df/",
+    # ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
+    #     f"{args['glue_db']}.splink_team_cluster_df"
+    # )
 
-    spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.organizations DROP PARTITIONS;")
+    # organizations_df.withColumn(
+    #     "dlbatchinsertionts_utc", F.date_trunc("second", F.current_timestamp())
+    # ).write.mode("overwrite").format("parquet").option(
+    #     "path",
+    #     f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/organizations/",
+    # ).option(
+    #     "overwriteSchema", "true"
+    # ).option(
+    #     "maxRecordsPerFile", args.get("max_records_per_file", 1000)
+    # ).option(
+    #     "compression", "snappy"
+    # ).partitionBy(
+    #     "dlbatchinsertionts_utc"
+    # ).saveAsTable(
+    #     f"{args['glue_db']}.organizations"
+    # )
 
-    #Write data to the Aurora PostgreSQL database
-    organizations_df.write.format("jdbc").mode("overwrite").option(
-       "url", jdbcurl
-    ).option("user", username).option("password", password).option(
-       "dbtable", args["aurora_table"]
-    ).save()
+    # spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.organizations DROP PARTITIONS;")
+
+    # Write data to the Aurora PostgreSQL database
+    # organizations_df.write.format("jdbc").mode("overwrite").option(
+    #   "url", jdbcurl
+    # ).option("user", username).option("password", password).option(
+    #   "dbtable", args["aurora_table"]
+    # ).save()
 
     job.commit()

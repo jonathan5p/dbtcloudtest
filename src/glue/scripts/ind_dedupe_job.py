@@ -16,49 +16,49 @@ import json
 # Generate individuals table query
 sql_map_query = """ 
 SELECT 
-    cs_df.dlid as bdmpindkey,
-    cs_df.mlsid as indsourcerecordid,
-    cs_df.key as indsourcerecordkey,
-    cs_df.officekey as indorgid,
-    cs_df.officemlsid as indorgsourcerecordid,
-    cs_df.cluster_id as indhubid,
-    cs_df.firstname as indfirstname,
-    cs_df.lastname||' '||cs_df.namesuffix  as indlastname,
-    cs_df.middleinitial as indmiddleinitial,
-    cs_df.fullname as indfullname,
-    cs_df.preferredfirstname||' '||cs_df.preferredlastname as indalternatename,
-    upper(cs_df.address) as indstreetaddress,
-    upper(cs_df.city) as indaddresscity,
-    cs_df.stateorprovince as indaddressstate,
-    cs_df.postalcode as indaddresspostalcode,
-    off_df.officecounty as indaddresscounty,
-    CASE WHEN cs_df.country = 'US' 
+    ind_clusters_df.dlid as bdmpindkey,
+    ind_clusters_df.mlsid as indsourcerecordid,
+    ind_clusters_df.key as indsourcerecordkey,
+    ind_clusters_df.officekey as indorgid,
+    ind_clusters_df.officemlsid as indorgsourcerecordid,
+    ind_clusters_df.cluster_id as indhubid,
+    ind_clusters_df.firstname as indfirstname,
+    ind_clusters_df.lastname||' '||ind_clusters_df.namesuffix  as indlastname,
+    ind_clusters_df.middleinitial as indmiddleinitial,
+    ind_clusters_df.fullname as indfullname,
+    ind_clusters_df.preferredfirstname||' '||ind_clusters_df.preferredlastname as indalternatename,
+    upper(ind_clusters_df.address) as indstreetaddress,
+    upper(ind_clusters_df.city) as indaddresscity,
+    ind_clusters_df.stateorprovince as indaddressstate,
+    ind_clusters_df.postalcode as indaddresspostalcode,
+    office_df.officecounty as indaddresscounty,
+    CASE WHEN ind_clusters_df.country = 'US' 
     THEN 'USA' 
-    ELSE upper(cs_df.country) END as indaddresscountry,
-    cs_df.email as indpublicemail,
-    cs_df.privateemail as indprivateemail,
-    cs_df.socialmediawebsiteurlorid as indurl,
-    cs_df.preferredphone as indprimaryphone,
-    cs_df.preferredphoneext as indprimaryphoneext,
-    cs_df.directphone as indsecondaryphone,
-    cs_df.mobilephone as indmobilephone,
-    cs_df.officephone as indofficephone,
-    cs_df.officephoneext as indofficephoneext,
-    cs_df.nationalassociationid as indnrdsid,
-    cs_df.type||' '||cs_df.subtype as indtype,
-    cs_df.status as indstatus,
-    cs_df.joindate as indjoindate,
-    cs_df.terminationdate as indterminateddate,
-    cs_df.dateadded as sourcesystemcreatedtms,
-    cs_df.modificationtimestamp as sourcesystemmodtms,
+    ELSE upper(ind_clusters_df.country) END as indaddresscountry,
+    ind_clusters_df.email as indpublicemail,
+    ind_clusters_df.privateemail as indprivateemail,
+    ind_clusters_df.socialmediawebsiteurlorid as indurl,
+    ind_clusters_df.preferredphone as indprimaryphone,
+    ind_clusters_df.preferredphoneext as indprimaryphoneext,
+    ind_clusters_df.directphone as indsecondaryphone,
+    ind_clusters_df.mobilephone as indmobilephone,
+    ind_clusters_df.officephone as indofficephone,
+    ind_clusters_df.officephoneext as indofficephoneext,
+    ind_clusters_df.nationalassociationid as indnrdsid,
+    ind_clusters_df.type||' '||ind_clusters_df.subtype as indtype,
+    ind_clusters_df.status as indstatus,
+    ind_clusters_df.joindate as indjoindate,
+    ind_clusters_df.terminationdate as indterminateddate,
+    ind_clusters_df.dateadded as sourcesystemcreatedtms,
+    ind_clusters_df.modificationtimestamp as sourcesystemmodtms,
     'OIDH' as indsourcetransport,
-    cs_df.subsystemlocale as indsourcename,
-    cs_df.uniqueorgid as indsourceresouoi,
+    ind_clusters_df.subsystemlocale as indsourcename,
+    ind_clusters_df.uniqueorgid as indsourceresouoi,
     '' as indexpirationdate,
-    cs_df.dlingestionts as indcreatedts,
+    ind_clusters_df.dlingestionts as indcreatedts,
     current_timestamp() as indlastmodifiedts
-FROM clusters_df as cs_df
-LEFT JOIN office_df as off_df ON cs_df.officemlsid = off_df.officemlsid
+FROM ind_clusters_df
+LEFT JOIN office_df ON ind_clusters_df.officemlsid = office_df.officemlsid
 """
 
 # Query that gets native records for each cluster
@@ -72,18 +72,18 @@ WITH native_records AS(
     FROM (  SELECT 
     *,
     ROW_NUMBER() OVER (PARTITION BY indhubid ORDER BY indglobalidentifier ASC) AS row_num
-  FROM bright_participants_df
+  FROM ind_bright_participants
   WHERE indisbrightparticipant)
     WHERE row_num = 1
 )
-SELECT bdf.*,
+SELECT ind_bright_participants.*,
        CASE WHEN 
-       native_records.indglobalidentifier = bdf.indglobalidentifier OR bdf.indhubid IS NULL
+       native_records.indglobalidentifier = ind_bright_participants.indglobalidentifier OR ind_bright_participants.indhubid IS NULL
        THEN  ' '
        ELSE COALESCE(native_records.indglobalidentifier, '') END as indlinkedglobalidentifier
-FROM bright_participants_df as bdf 
-LEFT JOIN native_records ON bdf.indhubid = native_records.indhubid
-ORDER BY bdf.indhubid DESC
+FROM ind_bright_participants 
+LEFT JOIN native_records ON ind_bright_participants.indhubid = native_records.indhubid
+ORDER BY ind_bright_participants.indhubid DESC
 """
 
 # Define merge_key var as primary key of the individuals table
@@ -141,23 +141,36 @@ def deduplicate_entity(
 def generate_globalids_and_native_records(
     source_df: DataFrame, county_list: list, order_key: str = "indhubid"
 ):
-    null_global_ids_df = source_df.filter(source_df.orgglobalidentifier.isNull())
-    not_null_global_ids_df = source_df.filter(source_df.orgglobalidentifier.isNotNull())
+    null_global_ids_df = source_df.where(source_df["indglobalidentifier"].isNull())
+    not_null_count = source_df.where(
+        source_df["indglobalidentifier"].isNotNull()
+    ).count()
 
     windowSpec = Window.orderBy(F.col(order_key).desc())
 
     filled_global_ids_df = null_global_ids_df.withColumn(
-        "indglobalidentifier",
+        "new_indglobalidentifier",
         F.concat(
             F.lit("IND"),
-            F.lpad(
-                F.row_number().over(windowSpec) + not_null_global_ids_df.count(), 8, "0"
-            ),
+            F.lpad(F.row_number().over(windowSpec) + not_null_count, 8, "0"),
         ),
     )
 
-    global_id_df = not_null_global_ids_df.union(filled_global_ids_df).orderBy(
-        "indhubid", ascending=False
+    global_id_df = (
+        source_df.join(
+            filled_global_ids_df,
+            source_df["bdmpindkey"] == filled_global_ids_df["bdmpindkey"],
+            how="leftouter",
+        )
+        .select(source_df["*"], filled_global_ids_df["new_indglobalidentifier"])
+        .withColumn(
+            "indglobalidentifier",
+            F.when(
+                source_df["indglobalidentifier"].isNotNull(),
+                source_df["indglobalidentifier"],
+            ).otherwise(filled_global_ids_df["new_indglobalidentifier"]),
+        )
+        .drop("new_indglobalidentifier")
     )
 
     check_pairs = F.udf(
@@ -168,10 +181,9 @@ def generate_globalids_and_native_records(
         "indisbrightparticipant",
         check_pairs(F.array(F.col("indaddresscounty"), F.col("indaddressstate"))),
     )
-    bright_participants_df.createOrReplaceTempView("bright_participants_df")
+    bright_participants_df.createOrReplaceTempView("ind_bright_participants")
 
     individuals_df = spark.sql(native_records_query)
-
     return individuals_df
 
 
@@ -205,15 +217,13 @@ if __name__ == "__main__":
     # Read clean agent data and enrich office data
     splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
     clean_df = spark.read.format("parquet").load(splink_clean_data_s3_path)
-    clean_df.createOrReplaceTempView("clean_df")
-
-    # Filter agents
-    dedup_records = clean_df.filter(F.col("type").isin(agent_types))
-    not_dedup_records = clean_df.join(dedup_records, on="dlid", how="leftanti")
 
     office_data_s3_path = f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = spark.read.format("delta").load(office_data_s3_path)
     office_df.createOrReplaceTempView("office_df")
+
+    # Filter agents
+    dedup_records = clean_df.where(F.col("type").isin(agent_types))
 
     # Run splink model over office and team data
     dedup_agent_df = deduplicate_entity(
@@ -222,13 +232,13 @@ if __name__ == "__main__":
         spark=spark,
         splink_model_path="/tmp/agent_splink_model.json",
     )
-    dedup_agent_df.printSchema()
 
-    for column in set(dedup_agent_df.columns) - set(not_dedup_records.columns):
-        not_dedup_records = dedup_agent_df.withColumn(column, F.lit(None))
-
-    clusters_df = dedup_agent_df.union(not_dedup_records)
-    clusters_df.createOrReplaceTempView("clusters_df")
+    clusters_df = clean_df.join(
+        dedup_agent_df, clean_df["dlid"] == dedup_agent_df["dlid"], how="leftouter"
+    ).select(
+        clean_df["*"], dedup_agent_df["cluster_id"], dedup_agent_df["tf_postalcode"]
+    )
+    clusters_df.createOrReplaceTempView("ind_clusters_df")
 
     # Get Aurora DB credentials
     username = ssm.get_parameter(
@@ -243,7 +253,6 @@ if __name__ == "__main__":
 
     # Generate new individuals table
     individuals_changes_df = spark.sql(sql_map_query)
-    individuals_changes_df.createOrReplaceTempView("changes_df")
 
     # Get current Individuals table from Aurora
     try:
@@ -256,6 +265,7 @@ if __name__ == "__main__":
             .load()
         )
         cur_ind_df.createOrReplaceTempView("target_df")
+        individuals_changes_df.createOrReplaceTempView("changes_df")
 
         join_query = f"select changes_df.*, target_df.indglobalidentifier from changes_df left join target_df on changes_df.{merge_key}=target_df.{merge_key}"
         ind_changes_df = spark.sql(join_query)
@@ -271,8 +281,8 @@ if __name__ == "__main__":
             print("Aurora Exception: ", str(e))
             raise e
 
-    # Retrieve native record county rules from s3
-    # and generate a county list with all the counties that are Bright Participants
+    # # Retrieve native record county rules from s3
+    # # and generate a county list with all the counties that are Bright Participants
     county_df = ps.read_csv(args["county_info_s3_path"])
 
     bright_participants = county_df.groupby("Bright Participant/Bordering").get_group(
@@ -283,11 +293,11 @@ if __name__ == "__main__":
         + bright_participants[["County Name", "State"]].values.tolist()
     )
 
-    # Generate global ids and final individuals df
+    # # Generate global ids and final individuals df
     individuals_df = generate_globalids_and_native_records(ind_changes_df, county_list)
 
     # Write data to S3
-    dedup_agent_df.write.mode("overwrite").format("parquet").option(
+    clusters_df.write.mode("overwrite").format("parquet").option(
         "path",
         f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_agent_cluster_df/",
     ).option("overwriteSchema", "true").option("compression", "snappy").saveAsTable(
@@ -295,7 +305,10 @@ if __name__ == "__main__":
     )
 
     individuals_df.withColumn(
-        "dlbatchinsertionts_utc", F.date_trunc("second", F.current_timestamp())
+        "dt_utc",
+        F.date_format(
+            F.date_trunc("second", F.current_timestamp()), "yyyy-MM-dd-HH-mm-ss"
+        ).cast("string"),
     ).write.mode("append").format("parquet").option(
         "path",
         f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/individuals/",
@@ -306,7 +319,7 @@ if __name__ == "__main__":
     ).option(
         "compression", "snappy"
     ).partitionBy(
-        "dlbatchinsertionts_utc"
+        "dt_utc"
     ).saveAsTable(
         f"{args['glue_db']}.individuals"
     )
