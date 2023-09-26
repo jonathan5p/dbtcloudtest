@@ -39,7 +39,7 @@ def get_results(results_files: dict, bucket, status):
             input_json = json.loads(item["Input"])
             
             try:
-                cause_json = json.loads(item.get("Cause", '{}'))
+                cause_json = json.loads(item.get("Cause", '{"Cause": ""}'))
             except Exception as e:
                 if type(item.get("Cause", 'Error reading field, check logs')) == str: 
                     error_message = item.get("Cause", 'Error reading field, check logs')
