@@ -4,21 +4,21 @@
 
 resource "aws_s3_object" "glue_jars" {
   bucket                 = var.project_objects.glue_bucket.bucket_id
-  for_each               = fileset("../src/glue/jars", "**")
+  for_each               = fileset("../src/mainprocess/glue/jars", "**")
   key                    = join("/",["jars",each.value])
-  source                 = "../src/glue/jars/${each.value}"
+  source                 = "../src/mainprocess/glue/jars/${each.value}"
   server_side_encryption = "AES256"
-  etag                   = filemd5("../src/glue/jars/${each.value}")
+  etag                   = filemd5("../src/mainprocess/glue/jars/${each.value}")
   bucket_key_enabled = true
 }
 
 resource "aws_s3_object" "glue_scripts" {
   bucket                 = var.project_objects.glue_bucket.bucket_id
-  for_each               = fileset("../src/glue/scripts", "**")
+  for_each               = fileset("../src/mainprocess/glue/scripts", "**")
   key                    = join("/",["scripts",each.value])
-  source                 = "../src/glue/scripts/${each.value}"
+  source                 = "../src/mainprocess/glue/scripts/${each.value}"
   server_side_encryption = "AES256"
-  etag                   = filemd5("../src/glue/scripts/${each.value}")
+  etag                   = filemd5("../src/mainprocess/glue/scripts/${each.value}")
   bucket_key_enabled = true
 }
 
@@ -45,7 +45,7 @@ resource "aws_glue_catalog_database" "dedup_process_glue_db" {
 
 module "glue_secconfig_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
+  base_object = var.base_naming
   type        = "gls"
   purpose     = join("", [var.project_prefix, "-", "gluesecurityconfig"])
 }
@@ -101,7 +101,7 @@ data "aws_subnet" "connection_subnet" {
 
 module "glue_ingest_conn_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
+  base_object = var.base_naming
   type        = "glx"
   purpose     = join("", [var.project_prefix, "-", "ingestjobconnection"])
 }
@@ -141,13 +141,14 @@ module "ingest_job" {
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
   connections         = [aws_glue_connection.redshift_connection.name]
   glue_path = "../src/mainprocess/glue/job_policies"
-  policy_variables = var.project_objects
-
-  script_location     = "s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_scripts["scripts/ingest_job.py"].id}"
+  policy_variables = {"data_bucket_arn": var.project_objects.data_bucket.bucket_arn
+                      "glue_bucket_arn": var.project_objects.glue_bucket.bucket_arn}
+  
+  script_location     = "s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_scripts["ingest_job.py"].id}"
   job_conf            = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
-  extra_jars = join(",", ["s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_jars["jars/delta-core_2.12-2.3.0.jar"].id}",
-  "s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_jars["jars/delta-storage-2.3.0.jar"].id}"])
-  extra_py_files = "s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_jars["jars/delta-core_2.12-2.3.0.jar"].id}"
+  extra_jars = join(",", ["s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
+  "s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
+  extra_py_files = "s3://${var.project_objects.glue_bucket.bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
 }
 
 # #------------------------------------------------------------------------------

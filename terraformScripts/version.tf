@@ -15,6 +15,6 @@ terraform {
       source = "hashicorp/template"
     }
   }
-  backend "s3" {
-  }
+  #backend "s3" {
+  #}
 }
