@@ -50,6 +50,11 @@ module "ipl_glue_policy_naming" {
   purpose     = join("", [var.project_prefix, "-", var.purpose])
 }
 
+resource "aws_iam_role_policy_attachment" "glue_service_policy_attachement" {
+  role       =  aws_iam_role.glue_job_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+}
+
 data "template_file" "policy" {
   template = file("${var.glue_path}/${var.purpose}.json.tpl")
   vars = merge(var.policy_variables, local.local_objects)

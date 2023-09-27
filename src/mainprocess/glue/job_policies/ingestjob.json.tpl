@@ -13,15 +13,15 @@
                 "s3:PutObjectLegalHold",
                 "s3:PutObjectRetention",
                 "s3:PutObjectTagging",
-                "s3:PutObjectVersionTagging"]
-            "Resource": [${data_bucket_arn},
+                "s3:PutObjectVersionTagging"],
+            "Resource": ["${data_bucket_arn}",
                         "${data_bucket_arn}/*",
-                        ${glue_bucket_arn},
+                        "${glue_bucket_arn}",
                         "${glue_bucket_arn}/*"]
         },
         {
             "Effect":"Allow",
-            "Action": ["logs:AssociateKmsKey"]
+            "Action": ["logs:AssociateKmsKey"],
             "Resource": ["arn:aws:logs:${region}:${account_id}:log-group:/aws-glue/jobs/*"]
         }
     ]
