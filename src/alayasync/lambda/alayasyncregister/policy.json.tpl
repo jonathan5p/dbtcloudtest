@@ -10,7 +10,6 @@
         "arn:aws:logs:${region}:${account_id}:*"
       ]
     },
-    
     {
       "Effect": "Allow",
       "Action" : [
