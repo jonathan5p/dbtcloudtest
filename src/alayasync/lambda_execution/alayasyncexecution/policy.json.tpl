@@ -3,6 +3,15 @@
   "Statement" : [
     {
       "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup"
+      ],
+      "Resource": [
+        "arn:aws:logs:${region}:${account_id}:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
       "Action" : [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
