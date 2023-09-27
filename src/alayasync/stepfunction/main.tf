@@ -1,6 +1,7 @@
 module "alaya_sync_sfn" {
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=v0.0.3"
     #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=dev"
-    source = "../../../modules/step_functions"
+    #source = "../../../modules/step_functions"
 
     environment         = var.environment
     sfn_name            = "alayasync"
