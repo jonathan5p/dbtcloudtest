@@ -1,6 +1,5 @@
 module "lambda_alaya_sync_execution" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
-    #source = "../../../modules/lambdas"
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
 
     environment         = var.environment
     lambda_name         = "alayasyncexecution"
