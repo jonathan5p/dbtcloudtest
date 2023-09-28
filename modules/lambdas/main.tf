@@ -88,8 +88,9 @@ resource "aws_lambda_function" "executor" {
   role             = aws_iam_role.lambda.arn
   handler          = local.lambda_handler
   runtime          = local.lambda_runtime
-  memory_size      = 256
-  timeout          = 60
+  memory_size      = var.memory_size
+  timeout          = var.timeout
+  layers           = var.layers
   source_code_hash = data.archive_file.source_code.output_base64sha256
   filename         = data.archive_file.source_code.output_path
   tags             = module.lmb_function_naming.tags

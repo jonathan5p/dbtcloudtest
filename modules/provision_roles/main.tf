@@ -74,6 +74,13 @@ module "glue_db_naming" {
   purpose     = join("", [var.project_prefix, "_", "gluedb"])
 }
 
+module "glue_ingest_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
 module "glue_ingest_job_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -81,11 +88,46 @@ module "glue_ingest_job_role_naming" {
   purpose     = join("", [var.project_prefix, "-", "ingestjobrole"])
 }
 
-module "glue_ingest_job_naming" {
+module "glue_cleaning_job_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "glj"
-  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+  purpose     = join("", [var.project_prefix, "-", "cleaningjob"])
+}
+
+module "glue_cleaning_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "cleaningjobrole"])
+}
+
+module "glue_ind_dedup_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "inddedupjob"])
+}
+
+module "glue_ind_dedup_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "inddedupjobrole"])
+}
+
+module "glue_org_dedup_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
+}
+
+module "glue_org_dedup_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "orgdedupjobrole"])
 }
 
 #----------------------------------
@@ -390,7 +432,28 @@ module "glue_ingest_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "glueingestpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
+module "glue_cleaning_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "cleaningjob"])
+}
+
+module "glue_ind_dedup_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "inddedupjob"])
+}
+
+module "glue_org_dedup_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
 }
 
 module "lambda_config_loader_policy_naming" {
@@ -507,6 +570,9 @@ data "aws_iam_policy_document" "dev_deploy" {
     ]
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_cleaning_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ind_dedup_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_org_dedup_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
@@ -551,6 +617,9 @@ data "aws_iam_policy_document" "dev_deploy" {
     ]
     resources = [
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ingest_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_cleaning_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ind_dedup_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_org_dedup_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
@@ -656,11 +725,10 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ssm:GetParameter"
     ]
     resources = [
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/*"
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment_devops}/codebuild/*"
     ]
   }
 
@@ -797,8 +865,11 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:GetJob",
       "glue:GetTags"
     ]
-    effect    = "Allow"
-    resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}"]
+    effect = "Allow"
+    resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_cleaning_job_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ind_dedup_job_naming.name}",
+    "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}", ]
   }
 }
 
@@ -838,7 +909,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "lambda:GetEventSourceMapping"
     ]
     resources = ["*"]
-    sid = "sourcemappingsync"
+    sid       = "sourcemappingsync"
   }
 
   statement {

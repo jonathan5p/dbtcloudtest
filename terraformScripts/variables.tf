@@ -64,38 +64,6 @@ variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
 }
 
-# Lambda config loader parameters
-
-variable "lambda_reserved_concurrent_executions" {
-  description = "Lambda reserved concurrency for all functions deployed"
-  default     = null
-}
-
-variable "lambda_timeout" {
-  description = "Lambda timeout for all functions deployed"
-  default     = 300
-}
-
-variable "lambda_memory_size" {
-  description = "Lambda memory size for all functions deployed"
-  default     = 256
-}
-
-variable "lambda_retry_max_attempts" {
-  description = "Lambda retry attempts for all functions deployed in the step function"
-  default     = 0
-}
-
-variable "lambda_retry_interval" {
-  description = "Lambda retry interval for all functions deployed in the step function"
-  default     = 2
-}
-
-variable "lambda_retry_backoff_rate" {
-  description = "Lambda backoff rate for all functions deployed in the step function"
-  default     = 2
-}
-
 # Lambda enrich caar data parameters
 
 variable "lambda_ec_agent_source_table_name" {
@@ -116,71 +84,6 @@ variable "lambda_ec_office_source_table_name" {
 variable "lambda_ec_office_target_table_name" {
   description = "Name of the office table registered in the S3 Staging layer"
   default     = "bright_staging_office_latest"
-}
-
-variable "lambda_ec_reserved_concurrent_executions" {
-  description = "Lambda reserved concurrency for all functions deployed"
-  default     = null
-}
-
-variable "lambda_ec_timeout" {
-  description = "Lambda timeout for all functions deployed"
-  default     = 900
-}
-
-variable "lambda_ec_memory_size" {
-  description = "Lambda memory size for all functions deployed"
-  default     = 2048
-}
-
-variable "lambda_ec_retry_max_attempts" {
-  description = "Lambda retry attempts for all functions deployed in the step function"
-  default     = 0
-}
-
-variable "lambda_ec_retry_interval" {
-  description = "Lambda retry interval for all functions deployed in the step function"
-  default     = 2
-}
-
-variable "lambda_ec_retry_backoff_rate" {
-  description = "Lambda backoff rate for all functions deployed in the step function"
-  default     = 2
-}
-
-# Glue parameters
-variable "glue_max_concurrent_runs" {
-  description = "Glue maximum concurrent running jobs for all jobs deployed"
-  default     = 4
-}
-
-variable "glue_timeout" {
-  description = "Glue timeout for all jobs deployed"
-  default     = 60
-}
-
-variable "glue_worker_type" {
-  description = "Glue wokertype for all jobs deployed"
-  default     = "G.1X"
-}
-
-variable "glue_number_of_workers" {
-  description = "Glue maximum number of workers"
-  default     = 4
-}
-
-variable "glue_retry_max_attempts" {
-  description = "Glue retry attempts for all jobs deployed"
-  default     = 0
-}
-
-variable "glue_retry_interval" {
-  description = "Glue retry interval for all jobs deployed"
-  default     = 2
-}
-variable "glue_retry_backoff_rate" {
-  description = "Glue backoff rate for all jobs deployed"
-  default     = 2
 }
 
 # Event bridge cron trigger

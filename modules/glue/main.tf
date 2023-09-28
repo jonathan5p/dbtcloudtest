@@ -9,13 +9,26 @@ locals {
 }
 
 #------------------------------------------------------------------------------
+# Upload Glue Job Script
+#------------------------------------------------------------------------------
+
+resource "aws_s3_object" "glue_script" {
+  bucket                 = var.script_bucket
+  key                    = "scripts/${var.job_name}.py"
+  source                 = "../src/mainprocess/glue/${var.job_name}/${var.job_name}.py"
+  server_side_encryption = "AES256"
+  etag                   = filemd5("../src/mainprocess/glue/${var.job_name}/${var.job_name}.py")
+  bucket_key_enabled     = true
+}
+
+#------------------------------------------------------------------------------
 # Glue Job Role
 #------------------------------------------------------------------------------
 module "glue_job_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", var.purpose, "role"])
+  purpose     = join("", [var.project_prefix, "-", var.job_name, "role"])
 }
 
 resource "aws_iam_role" "glue_job_role" {
@@ -40,24 +53,24 @@ module "iro_glue_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", var.purpose])
+  purpose     = join("", [var.project_prefix, "-", var.job_name])
 }
 
 module "ipl_glue_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", var.purpose])
+  purpose     = join("", [var.project_prefix, "-", var.job_name])
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service_policy_attachement" {
-  role       =  aws_iam_role.glue_job_role.name
+  role       = aws_iam_role.glue_job_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 data "template_file" "policy" {
-  template = file("${var.glue_path}/${var.purpose}.json.tpl")
-  vars = merge(var.policy_variables, local.local_objects)
+  template = file("${var.glue_path}/${var.job_name}/policy.json.tpl")
+  vars     = merge(var.policy_variables, local.local_objects)
 }
 
 resource "aws_iam_policy" "policy" {
@@ -77,7 +90,7 @@ module "glue_job_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "glj"
-  purpose     = join("", [var.project_prefix, "-", var.purpose])
+  purpose     = join("", [var.project_prefix, "-", var.job_name])
 }
 
 resource "aws_glue_job" "glue_job" {
@@ -90,21 +103,18 @@ resource "aws_glue_job" "glue_job" {
   security_configuration = var.security_config_id
   number_of_workers      = var.number_of_workers
   connections            = var.connections
-  default_arguments = {
+  default_arguments = merge({
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-job-insights"              = "true"
     "--enable-metrics"                   = "true"
     "--enable-auto-scaling"              = "true"
-    "--job-bookmark-option"              = "job-bookmark-disable"
     "--enable-glue-datacatalog"          = "true"
-    "--conf"                             = var.job_conf,
     "--class"                            = "GlueApp"
-    "--extra-jars"                       = var.extra_jars
-    "--extra-py-files"                   = var.extra_py_files
-  }
+  }, var.job_arguments)
   command {
     name            = "glueetl"
-    script_location = var.script_location
+    script_location = "s3://${var.script_bucket}/${aws_s3_object.glue_script.id}"
+
   }
   execution_property {
     max_concurrent_runs = var.max_concurrent_runs

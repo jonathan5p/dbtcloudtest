@@ -11,6 +11,19 @@ variable "environment_variables" {
   }
 }
 
+variable "layers" {
+  description = "Lambda layers used by the lambda function"
+  default     = []
+}
+
+variable "memory_size" {
+  default = 256
+}
+
+variable "timeout" {
+  default = 60
+}
+
 variable "lambda_name" {
   default = {}
 }

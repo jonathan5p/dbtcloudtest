@@ -2,12 +2,8 @@ variable "base_naming" {
   default = null
 }
 
-variable "project_prefix"{
-    default = ""
-}
-
-variable "purpose" {
-  description = "Glue job purpose"
+variable "project_prefix" {
+  default = ""
 }
 
 # Glue parameters
@@ -55,20 +51,8 @@ variable "connections" {
   default     = []
 }
 
-variable "script_location" {
-  description = "Glue job script location"
-}
-
-variable "job_conf" {
-  description = "Glue job spark configurations settings"
-}
-
-variable "extra_jars" {
-  description = "Glue job extra jar files s3 paths"
-}
-
-variable "extra_py_files" {
-  description = "Glue job extra py files s3 paths"
+variable "script_bucket" {
+  description = "Name of the bucket where the job script should be upload"
 }
 
 variable "glue_path" {
@@ -76,7 +60,18 @@ variable "glue_path" {
 }
 
 variable "policy_variables" {
-  type        = map(any)
+  type        = map(string)
   description = "Policy variables for executor policy"
+  default     = {}
+}
+
+variable "job_name" {
+  type        = string
+  description = "Glue job name"
+}
+
+variable "job_arguments" {
+  type        = map(string)
+  description = "Glue job arguments"
   default     = {}
 }
