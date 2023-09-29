@@ -1,6 +1,6 @@
 module "stepfunction" {
   #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=dev"
-  source = "../../../modules/step_functions"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=dev"
 
   environment       = var.environment
   sfn_name          = "mainprocess"

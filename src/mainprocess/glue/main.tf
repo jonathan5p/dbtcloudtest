@@ -158,7 +158,7 @@ module "aurora_connection"{
 #------------------------------------------------------------------------------
 
 module "ingest_job" {
-  source              = "../../../modules/glue"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=dev"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
@@ -196,7 +196,7 @@ data "aws_ssm_parameter" "bright_pypi_pipconf" {
 }
 
 module "cleaning_job" {
-  source              = "../../../modules/glue"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=dev"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -237,7 +237,7 @@ locals {
 }
 
 module "ind_dedup_job" {
-  source              = "../../../modules/glue"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=dev"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -281,7 +281,7 @@ locals {
 }
 
 module "org_dedup_job" {
-  source              = "../../../modules/glue"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=dev"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1

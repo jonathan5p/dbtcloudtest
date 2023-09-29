@@ -15,7 +15,7 @@ resource "aws_lambda_layer_version" "delta_geopy_layer" {
 #------------------------------------------------------------------------------
 
 module "lambda_config_loader" {
-  source = "../../../modules/lambdas"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
 
   environment       = var.environment
   lambda_name       = "configloader"
@@ -36,7 +36,7 @@ module "lambda_config_loader" {
 }
 
 module "lambda_staging_agent" {
-  source = "../../../modules/lambdas"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
 
   environment       = var.environment
   lambda_name       = "enrichagent"
@@ -63,7 +63,7 @@ module "lambda_staging_agent" {
 }
 
 module "lambda_staging_office" {
-  source = "../../../modules/lambdas"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=dev"
 
   environment       = var.environment
   lambda_name       = "enrichoffice"
