@@ -1048,6 +1048,14 @@ data "aws_iam_policy_document" "dev_deploy4" {
 # Deployment role policy attachements
 # ------------------------------------------------------------------------------
 
+module "irp_aurora_deployment_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "irp"
+  env         = var.environment
+  purpose     = join("", ["auroradeploy", var.project_prefix])
+}
+
 module "irp_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -1092,6 +1100,11 @@ resource "aws_iam_role" "dev_deployment" {
   tags               = module.iro_dev_deployment_naming.tags
 }
 
+resource "aws_iam_policy" "aurora_deployment" {
+  name   = module.irp_aurora_deployment_naming.name
+  policy = data.aws_iam_policy_document.aurora_deploy.json
+}
+
 resource "aws_iam_policy" "dev_deployment" {
   name   = module.irp_dev_deployment_naming.name
   policy = data.aws_iam_policy_document.dev_deploy.json
@@ -1110,6 +1123,11 @@ resource "aws_iam_policy" "dev_deployment3" {
 resource "aws_iam_policy" "dev_deployment4" {
   name   = module.irp_dev_deployment_naming3.name
   policy = data.aws_iam_policy_document.dev_deploy4.json
+}
+
+resource "aws_iam_role_policy_attachment" "aurora_deployment" {
+  role       = aws_iam_role.dev_deployment.name
+  policy_arn = aws_iam_policy.aurora_deployment.arn
 }
 
 resource "aws_iam_role_policy_attachment" "dev_deployment" {

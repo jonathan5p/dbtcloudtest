@@ -38,7 +38,7 @@ terraform.rc
 .vscode
 *.venv
 *.zip
-src/lambda/layers/*
+!src/mainprocess/lambda/layers/*.zip
 **.DS_Store
 
 # Ignore test files
