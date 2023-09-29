@@ -4,12 +4,8 @@ data "aws_region" "current" {}
 # Aurora Credentials
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "aurora_conn_subnetid" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
-}
-
-data "aws_subnet" "connection_subnet" {
-  id = data.aws_ssm_parameter.aurora_conn_subnetid.value
+data "aws_ssm_parameter" "aurora_vpc_id" {
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/vpcid"
 }
 
 #------------------------------------------------------------------------------
@@ -26,7 +22,7 @@ module "aurora_security_group_naming" {
 resource "aws_security_group" "db_sg" {
   name = module.aurora_security_group_naming.name
   tags = module.aurora_security_group_naming.tags
-  vpc_id = data.aws_subnet.connection_subnet.vpc_id
+  vpc_id = data.aws_ssm_parameter.aurora_vpc_id.value
 
   ingress {
     description     = "Allow traffic from OIDH glue connection"
@@ -41,6 +37,18 @@ resource "aws_security_group" "db_sg" {
 # Aurora Subnet Group
 #------------------------------------------------------------------------------
 
+data "aws_subnets" "db_subnets"{
+  filter{
+    name = "vpc-id"
+    values  = [data.aws_ssm_parameter.aurora_vpc_id.value]
+  }
+
+  filter{
+    name = "tag:Name"
+    values = ["*mtxdatabase"]
+  }
+}
+
 module "aurora_subnet_group_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
@@ -51,7 +59,7 @@ module "aurora_subnet_group_naming" {
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = module.aurora_subnet_group_naming.name
   tags       = module.aurora_subnet_group_naming.tags
-  subnet_ids = [data.aws_ssm_parameter.aurora_conn_subnetid.value]
+  subnet_ids = data.aws_subnets.db_subnets.ids
 }
 
 #------------------------------------------------------------------------------
