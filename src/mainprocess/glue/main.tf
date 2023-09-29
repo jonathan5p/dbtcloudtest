@@ -20,7 +20,7 @@ module "glue_db_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "gld"
-  purpose     = join("", [var.project_prefix, "_", "gluedb"])
+  purpose     = join("", [var.project_prefix, "_", "oidhdb"])
 }
 
 resource "aws_glue_catalog_database" "dedup_process_glue_db" {
@@ -37,7 +37,7 @@ module "glue_secconfig_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "gls"
-  purpose     = join("", [var.project_prefix, "-", "gluesecurityconfig"])
+  purpose     = join("", [var.project_prefix, "-", "securityconfig"])
 }
 
 resource "aws_glue_security_configuration" "glue_security_config" {
@@ -121,6 +121,10 @@ data "aws_ssm_parameter" "aurora_conn_subnetid" {
 # Glue Aurora Connection Security Group
 #------------------------------------------------------------------------------
 
+data "aws_subnet" "connection_subnet" {
+  id = data.aws_ssm_parameter.aurora_conn_subnetid.value
+}
+
 module "conn_sg_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
@@ -131,6 +135,7 @@ module "conn_sg_naming" {
 resource "aws_security_group" "conn_sg" {
   name = module.conn_sg_naming.name
   tags = module.conn_sg_naming.tags
+  vpc_id = data.aws_subnet.connection_subnet.vpc_id
 }
 
 #------------------------------------------------------------------------------
@@ -320,7 +325,7 @@ module "staging_crawler_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
 }
 resource "aws_iam_role" "staging_crawler_role" {
   name = module.staging_crawler_role_naming.name
@@ -344,7 +349,7 @@ module "staging_crawler_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "glr"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
 }
 resource "aws_glue_crawler" "staging_crawler" {
   database_name = aws_glue_catalog_database.dedup_process_glue_db.name
@@ -379,7 +384,7 @@ module "staging_glue_crawler_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawlerpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "stagingcrawlerpolicy"])
 }
 resource "aws_iam_policy" "staging_glue_crawler_policy" {
   name        = module.staging_glue_crawler_policy_naming.name

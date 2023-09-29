@@ -20,7 +20,7 @@ module "trigger_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+  purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 resource "aws_iam_role" "crontrigger_role" {
   name = module.trigger_role_naming.name
@@ -45,7 +45,7 @@ module "cron_trigger_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "cwr"
-  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+  purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 
 resource "aws_cloudwatch_event_rule" "cron_trigger" {
@@ -77,7 +77,7 @@ module "cron_trigger_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+  purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 resource "aws_iam_policy" "cron_trigger_policy" {
   name        = module.cron_trigger_policy_naming.name
