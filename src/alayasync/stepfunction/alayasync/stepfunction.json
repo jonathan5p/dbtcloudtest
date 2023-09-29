@@ -49,7 +49,7 @@
         "Resource": "arn:aws:states:::s3:putObject",
         "Parameters": {
           "Bucket": "${bucket_id}",
-          "Prefix": "consume_data/resultData/individuals"
+          "Prefix": "consume_data/resultData"
         }
       },
       "ItemSelector": {

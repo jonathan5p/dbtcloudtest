@@ -106,7 +106,7 @@ resource "aws_s3_bucket_notification" "register" {
   lambda_function {
     lambda_function_arn = module.lambdas_execution.functions_mapping.execution_lambda
     events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "consume_data/resultData/individuals_executions/"
+    filter_prefix       = "consume_data/resultData/executions/"
     filter_suffix       = ".log"
   }
 
@@ -117,12 +117,6 @@ resource "aws_s3_bucket_notification" "register" {
     filter_suffix = ".parquet"
   }
 
-  lambda_function {
-    lambda_function_arn = module.lambdas_execution.functions_mapping.execution_lambda
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "consume_data/resultData/organizations_executions/"
-    filter_suffix       = ".log"
-  }
 }
 
 module "base_naming" {

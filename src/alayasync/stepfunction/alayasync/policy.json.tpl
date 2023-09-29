@@ -23,8 +23,8 @@
         "s3:DeleteObject"
       ],
       "Resource" : [
-        "arn:aws:s3:::${bucket_id}/consume_data/resultData/individuals",
-        "arn:aws:s3:::${bucket_id}/consume_data/resultData/individuals/*"
+        "arn:aws:s3:::${bucket_id}/consume_data/resultData",
+        "arn:aws:s3:::${bucket_id}/consume_data/resultData/*"
       ]
     },
     {

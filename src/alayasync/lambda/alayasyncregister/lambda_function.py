@@ -1,14 +1,15 @@
 import boto3
 import json
 import logging
+import re
 import os
-import time
 
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 from datetime import datetime, timedelta
 from urllib.parse import unquote_plus
+import time
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -18,6 +19,7 @@ dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
 ttl_days = 30 
+regex = r"(\bs3://\b){1}([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_]+=[^\/]+)/([a-zA-Z0-9_-]+(\b.parquet\b))$"
 
 def parse_s3_event(s3_event):
 
@@ -67,6 +69,9 @@ def get_ttl(days):
 
     return int((datetime.fromtimestamp(int(time.time())) + timedelta(days=days)).timestamp())
 
+def is_valid(id):
+
+    return re.match(regex, id)
 
 def lambda_handler(event, context):
 
@@ -80,26 +85,29 @@ def lambda_handler(event, context):
             message = json.loads(record['body'])['Records'][0]
             operation = message['eventName'].split(':')[-1]
 
-            logger.info(f"Performing Dynamo {operation} operation")
-            if 'Delete' in operation:
-                id = 's3://{}/{}'.format(
-                    message['s3']['bucket']['name'],
-                    unquote_plus(message['s3']['object']['key'])
-                )
-                delete_item(register_table, {'id': id})
-            else:
-                item = parse_s3_event(message)
-                item['id'] = f"s3://{item['bucket']}/{item['key']}"
-                item['status'] = 'JUST_ARRIVED'
-                item['ttl'] = get_ttl(ttl_days)
+            id = f's3://{message["s3"]["bucket"]["name"]}/{unquote_plus(message["s3"]["object"]["key"])}'
+
+            if is_valid(id):
+
+                logger.info(f"Performing Dynamo {operation} operation")
+                if 'Delete' in operation:
+                    delete_item(register_table, {'id': id})
+                else:
+                    item = parse_s3_event(message)
+                    item['id'] = id
+                    item['status'] = 'JUST_ARRIVED'
+                    item['ttl'] = get_ttl(ttl_days)
                 
-                put_item(register_table, item, 'id')
+                    put_item(register_table, item, 'id')
+
+            else:
+                logger.info(f"Not valid Id: {id}")
 
     except Exception as e:
         logger.error('Fatal error', exc_info=True)
         raise e
     return {
         'StatusCode': 200,
-        'Message': 'SUCCESS'
+        'Status': 'SUCCESS'
     }
 

@@ -3,6 +3,15 @@
   "Statement" : [
     {
       "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup"
+      ],
+      "Resource": [
+        "arn:aws:logs:${region}:${account_id}:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
       "Action" : [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
@@ -69,6 +78,18 @@
       ],
       "Resource" : [
         "${sfn_alaya_sync}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject*",
+        "s3:PutObject*",
+        "s3:DeleteObject*"
+      ],
+      "Resource" : [
+        "arn:aws:s3:::${bucket_id}",
+        "arn:aws:s3:::${bucket_id}/*"
       ]
     }
   ]
