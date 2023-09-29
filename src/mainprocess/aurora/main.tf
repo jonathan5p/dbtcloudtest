@@ -87,7 +87,7 @@ resource "aws_rds_cluster" "admintooldb" {
   engine_mode                     = "provisioned"
   engine_version                  = "13.6"
   database_name                   = "dev"
-  master_username                 = "admin"
+  master_username                 = "postgres"
   db_subnet_group_name            = resource.aws_db_subnet_group.db_subnet_group.id
   manage_master_user_password     = true
   backup_retention_period         = var.project_objects.aurora_backup_retention_period
@@ -101,7 +101,7 @@ resource "aws_rds_cluster" "admintooldb" {
 
   serverlessv2_scaling_configuration {
     max_capacity = var.project_objects.aurora_max_capacity
-    min_capacity = var.project_objects.aurora_min_capacity
+    min_capacity = var.project_objeccts.aurora_min_capacity
   }
 }
 
