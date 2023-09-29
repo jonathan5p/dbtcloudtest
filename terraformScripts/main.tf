@@ -1,10 +1,10 @@
 provider "aws" {
   region  = var.region[var.site]
-  profile = "bright_datascience_queryadmin"
-  # assume_role {
-  #   role_arn     = var.role_arn
-  #   session_name = "oidh"
-  # }
+  #profile = "bright_datascience_queryadmin"
+  assume_role {
+    role_arn     = var.role_arn
+    session_name = "oidh"
+  }
 }
 
 provider "archive" {}

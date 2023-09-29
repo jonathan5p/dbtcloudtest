@@ -2,9 +2,9 @@
 zone               = "z1"
 environment_devops = "c1"
 
-environment = "d1"
-role_arn    = "s"
-site        = "aue1"
+# environment = "d1"
+# role_arn    = "s"
+# site        = "aue1"
 
 # S3 parameters
 s3_bucket_tmp_expiration_days     = 15

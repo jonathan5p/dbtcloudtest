@@ -396,6 +396,31 @@ module "cwa_alaya_sync_register_naming" {
 }
 
 #----------------------------------
+# Aurora Names
+#----------------------------------
+
+module "aurora_security_group_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "sgp"
+  purpose     = join("", [var.project_prefix, "-", "admintooldbsecuritygroup"])
+}
+
+module "aurora_subnet_group_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "rdu"
+  purpose     = join("", [var.project_prefix, "-", "admintooldbsubnetgroup"])
+}
+
+module "aurora_cluster_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "rcc"
+  purpose     = join("", [var.project_prefix, "-", "admintooldb"])
+}
+
+#----------------------------------
 # Sfn names
 #----------------------------------
 
@@ -514,6 +539,47 @@ data "aws_iam_policy_document" "assume_dev_deploy" {
     }
   }
 }
+
+# ------------------------------------------------------------------------------
+# Aurora Deployment
+# ------------------------------------------------------------------------------
+
+data "aws_iam_policy_document" "aurora_deploy" {
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "rds:ListTagsForResource",
+      "rds:DescribeDBClusterParameterGroups",
+      "rds:DescribeDBSecurityGroups",
+      "rds:CreateDBCluster",
+      "rds:DeleteDBCluster",
+      "rds:ModifyDBCluster",
+      "rds:DescribeDBCluster",
+      "rds:ModifyDBClusterParameterGroup"
+    ]
+    resources = [
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"
+    ]
+    sid = "auroradeploy"
+  }
+
+    statement {
+    effect = "Allow"
+    actions = [
+      "rds:DescribeDBSubnetGroups",
+      "rds:CreateDBSubnetGroup",
+      "rds:DeleteDBSubnetGroup",
+      "rds:ModifyDBSubnetGroup",
+    ]
+    resources = [
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}"
+    ]
+    sid = "auroradeploy"
+  }
+}
+
+
 
 # ------------------------------------------------------------------------------
 # KMS, S3, SSM Policies
