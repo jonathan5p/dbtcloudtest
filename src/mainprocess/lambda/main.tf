@@ -26,6 +26,7 @@ module "lambda_config_loader" {
   site              = var.site
   tier              = var.tier
   zone              = var.zone
+  runtime           = "python3.10"
 
   policy_variables = var.project_objects
 
@@ -49,6 +50,8 @@ module "lambda_staging_agent" {
   zone              = var.zone
   timeout           = 900
   memory_size       = 2048
+  runtime           = "python3.10"
+
   layers = [
     "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python310:4",
     aws_lambda_layer_version.delta_geopy_layer.arn
@@ -76,6 +79,8 @@ module "lambda_staging_office" {
   zone              = var.zone
   timeout           = 900
   memory_size       = 2048
+  runtime           = "python3.10"
+
   layers = [
     "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python310:4",
     aws_lambda_layer_version.delta_geopy_layer.arn

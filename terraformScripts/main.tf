@@ -1,5 +1,5 @@
 provider "aws" {
-  region  = var.region[var.site]
+  region = var.region[var.site]
   #profile = "bright_datascience_queryadmin"
   assume_role {
     role_arn     = var.role_arn

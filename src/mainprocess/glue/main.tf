@@ -85,15 +85,15 @@ data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
 # Glue Redshift Connection
 #------------------------------------------------------------------------------
 
-module "redshift_connection"{
-  source = "../../../modules/glue_connection"
-  base_naming = var.base_naming
-  project_prefix = var.project_prefix
-  conn_name = "redshiftconn"
-  password = data.aws_ssm_parameter.redshift_conn_password.value
-  username = data.aws_ssm_parameter.redshift_conn_username.value
-  jdbc_url = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
-  subnet_id = data.aws_ssm_parameter.redshift_conn_subnetid.value
+module "redshift_connection" {
+  source                 = "../../../modules/glue_connection"
+  base_naming            = var.base_naming
+  project_prefix         = var.project_prefix
+  conn_name              = "redshiftconn"
+  password               = data.aws_ssm_parameter.redshift_conn_password.value
+  username               = data.aws_ssm_parameter.redshift_conn_username.value
+  jdbc_url               = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
+  subnet_id              = data.aws_ssm_parameter.redshift_conn_subnetid.value
   security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
 }
 
@@ -132,24 +132,24 @@ module "conn_sg_naming" {
   purpose     = join("", [var.project_prefix, "-", "glueconnsgnaming"])
 }
 
-resource "aws_security_group" "conn_sg"{
-    name = module.conn_sg_naming.name
-    tags = module.conn_sg_naming.tags
+resource "aws_security_group" "conn_sg" {
+  name = module.conn_sg_naming.name
+  tags = module.conn_sg_naming.tags
 }
 
 #------------------------------------------------------------------------------
 # Glue Aurora Connection
 #------------------------------------------------------------------------------
 
-module "aurora_connection"{
-  source = "../../../modules/glue_connection"
-  base_naming = var.base_naming
-  project_prefix = var.project_prefix
-  conn_name = "auroraconn"
-  password = data.aws_ssm_parameter.aurora_conn_password.value
-  username = data.aws_ssm_parameter.aurora_conn_username.value
-  jdbc_url = data.aws_ssm_parameter.aurora_conn_jdbc_url.value
-  subnet_id = data.aws_ssm_parameter.aurora_conn_subnetid.value
+module "aurora_connection" {
+  source                 = "../../../modules/glue_connection"
+  base_naming            = var.base_naming
+  project_prefix         = var.project_prefix
+  conn_name              = "auroraconn"
+  password               = data.aws_ssm_parameter.aurora_conn_password.value
+  username               = data.aws_ssm_parameter.aurora_conn_username.value
+  jdbc_url               = data.aws_ssm_parameter.aurora_conn_jdbc_url.value
+  subnet_id              = data.aws_ssm_parameter.aurora_conn_subnetid.value
   security_group_id_list = [data.aws_ssm_parameter.aurora_conn_securitygroupid.value]
 }
 

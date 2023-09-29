@@ -19,17 +19,17 @@ module "aurora_security_group_naming" {
   purpose     = join("", [var.project_prefix, "-", "admintooldbsecuritygroup"])
 }
 
-resource "aws_security_group" "db_sg"{
-    name = module.aurora_security_group_naming.name
-    tags = module.aurora_security_group_naming.tags
+resource "aws_security_group" "db_sg" {
+  name = module.aurora_security_group_naming.name
+  tags = module.aurora_security_group_naming.tags
 
-    ingress {
-        description = "Allow traffic from OIDH glue connection"
-        from_port = 5432
-        to_port = 5432
-        protocol = "tcp"
-        security_groups = [var.project_objects.aurora_conn_sg_id]
-    }
+  ingress {
+    description     = "Allow traffic from OIDH glue connection"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [var.project_objects.aurora_conn_sg_id]
+  }
 }
 
 #------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ resource "aws_rds_cluster" "admintooldb" {
   copy_tags_to_snapshot           = true
   preferred_backup_window         = var.project_objects.aurora_preferred_backup_window
   deletion_protection             = true
-  enabled_cloudwatch_logs_exports = toset(["audit","general", "error"])
+  enabled_cloudwatch_logs_exports = toset(["audit", "general", "error"])
   final_snapshot_identifier       = module.aurora_cluster_final_snapshot_naming.name
   storage_encrypted               = true
   kms_key_id                      = var.project_objects.data_key_arn

@@ -13,13 +13,13 @@ module "glue_resources" {
 }
 
 module "aurora_db" {
-  source             = "./aurora"
-  base_naming        = var.base_naming
-  environment        = var.environment
-  project_app_group  = var.project_app_group
-  project_prefix     = var.project_prefix
-  site               = var.site
-  project_objects    = merge(var.project_objects,{"aurora_conn_sg_id" = module.glue_resources.aurora_conn_sg_id})
+  source            = "./aurora"
+  base_naming       = var.base_naming
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_prefix    = var.project_prefix
+  site              = var.site
+  project_objects   = merge(var.project_objects, { "aurora_conn_sg_id" = module.glue_resources.aurora_conn_sg_id })
 }
 
 module "lambda_resources" {
