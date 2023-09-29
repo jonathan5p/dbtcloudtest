@@ -101,7 +101,7 @@ resource "aws_rds_cluster" "admintooldb" {
 
   serverlessv2_scaling_configuration {
     max_capacity = var.project_objects.aurora_max_capacity
-    min_capacity = var.project_objeccts.aurora_min_capacity
+    min_capacity = var.project_objects.aurora_min_capacity
   }
 }
 
