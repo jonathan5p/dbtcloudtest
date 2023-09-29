@@ -897,7 +897,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
     effect  = "Allow"
     actions = ["events:*"]
     resources = [
-      "arn:aws:events:${var.region}:${var.aws_account_number_env}:rule/${module.cron_trigger_naming.name}"
+      "arn:aws:events:${var.region}:${var.aws_account_number_env}:rule/${module.cron_trigger_naming.name}",
+      "arn:aws:events:us-east-1:497607366324:rule/aue1d1z1cwroidhoidh-crontrigger"
     ]
   }
 
@@ -923,7 +924,9 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection"
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
+      "arn:aws:glue:us-east-1:497607366324:database/aue1d1z1gldoidhoidh_gluedb",
+      "arn:aws:glue:us-east-1:497607366324:database/aue1d1z1gldoidhoidh_gluedb/*"
     ]
   }
 
@@ -937,7 +940,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
     ]
     effect = "Allow"
     resources = [
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/${module.staging_crawler_naming.name}"
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/${module.staging_crawler_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/aue1d1z1glroidhoidh-staginggluecrawler"
     ]
   }
 
