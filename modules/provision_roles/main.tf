@@ -67,7 +67,7 @@ module "glue_db_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "gld"
-  purpose     = join("", [var.project_prefix, "_", "gluedb"])
+  purpose     = join("", [var.project_prefix, "_", "oidhdb"])
 }
 
 module "glue_ingest_job_naming" {
@@ -180,14 +180,14 @@ module "crawler_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
 }
 
 module "staging_crawler_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "glr"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawler"])
+  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
 }
 
 #----------------------------------
@@ -401,21 +401,21 @@ module "cwa_alaya_sync_register_naming" {
 
 module "aurora_security_group_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
+  base_object = module.base_naming
   type        = "sgp"
   purpose     = join("", [var.project_prefix, "-", "admintooldbsecuritygroup"])
 }
 
 module "aurora_subnet_group_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
+  base_object = module.base_naming
   type        = "rdu"
   purpose     = join("", [var.project_prefix, "-", "admintooldbsubnetgroup"])
 }
 
 module "aurora_cluster_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
+  base_object = module.base_naming
   type        = "rcc"
   purpose     = join("", [var.project_prefix, "-", "admintooldb"])
 }
@@ -442,14 +442,14 @@ module "trigger_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+  purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 
 module "cron_trigger_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "cwr"
-  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+  purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 
 #----------------------------------
@@ -502,7 +502,7 @@ module "cron_trigger_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
+  purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 
 module "lambda_enrich_agent_policy_naming" {
@@ -523,7 +523,7 @@ module "staging_glue_crawler_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "staginggluecrawlerpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "stagingcrawlerpolicy"])
 }
 
 # ------------------------------------------------------------------------------
@@ -550,6 +550,7 @@ data "aws_iam_policy_document" "aurora_deploy" {
     effect = "Allow"
     actions = [
       "rds:ListTagsForResource",
+      "rds:AddTagsToResource",
       "rds:DescribeDBClusterParameterGroups",
       "rds:DescribeDBSecurityGroups",
       "rds:CreateDBCluster",
@@ -561,12 +562,14 @@ data "aws_iam_policy_document" "aurora_deploy" {
     resources = [
       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"
     ]
-    sid = "auroradeploy"
+    sid = "clusterpermissions"
   }
 
     statement {
     effect = "Allow"
     actions = [
+      "rds:ListTagsForResource",
+      "rds:AddTagsToResource",
       "rds:DescribeDBSubnetGroups",
       "rds:CreateDBSubnetGroup",
       "rds:DeleteDBSubnetGroup",
@@ -575,7 +578,7 @@ data "aws_iam_policy_document" "aurora_deploy" {
     resources = [
       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}"
     ]
-    sid = "auroradeploy"
+    sid = "subnetgrouppermissions"
   }
 }
 
@@ -816,7 +819,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_processing_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_reduce_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_execution_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${var.site}${var.environment}${var.zone}iro${var.project_prefix}*"
     ]
     sid = "iamroles"
   }
@@ -830,7 +834,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "iam:GetPolicy",
       "iam:GetPolicyVersion",
       "iam:ListPolicyVersions",
-      "iam:CreatePolicyVersion"
+      "iam:CreatePolicyVersion",
+      "iam:DeletePolicyVersion"
 
     ]
     resources = [
@@ -850,7 +855,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_processing_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_reduce_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_execution_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}"
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${var.site}${var.environment}${var.zone}ipl${var.project_prefix}*"
     ]
     sid = "iampolicies"
   }
@@ -872,6 +878,9 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy",
       "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310:*",
       "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310",
+      "arn:aws:lambda:us-east-1:497607366324:function:aue1d1z1lmboidhoidh-lambdacaarenrichoffice",
+      "arn:aws:lambda:us-east-1:497607366324:function:aue1d1z1lmboidhoidh-lambdaconfigloader",
+      "arn:aws:lambda:us-east-1:497607366324:function:aue1d1z1lmboidhoidh-lambdacaarenrichagent"
     ]
   }
 
@@ -879,7 +888,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
     effect  = "Allow"
     actions = ["states:*"]
     resources = [
-      "arn:aws:states:${var.region}:${var.aws_account_number_env}:stateMachine:${module.etl_sfn_naming.name}"
+      "arn:aws:states:${var.region}:${var.aws_account_number_env}:stateMachine:${module.etl_sfn_naming.name}",
+      "arn:aws:states:us-east-1:497607366324:stateMachine:aue1d1z1stmoidhoidh-etlsfn"
     ]
   }
 
@@ -1121,7 +1131,7 @@ resource "aws_iam_policy" "dev_deployment3" {
 }
 
 resource "aws_iam_policy" "dev_deployment4" {
-  name   = module.irp_dev_deployment_naming3.name
+  name   = module.irp_dev_deployment_naming4.name
   policy = data.aws_iam_policy_document.dev_deploy4.json
 }
 

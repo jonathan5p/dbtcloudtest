@@ -5,7 +5,7 @@ data "aws_region" "current" {}
 #------------------------------------------------------------------------------
 
 resource "aws_lambda_layer_version" "delta_geopy_layer" {
-  filename            = "../layers/delta_geopy.zip"
+  filename            = "./layers/delta_geopy.zip"
   layer_name          = "delta_geopy"
   compatible_runtimes = ["python3.10", "python3.9"]
 }

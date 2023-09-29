@@ -8,6 +8,10 @@ data "aws_ssm_parameter" "aurora_conn_subnetid" {
   name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
 }
 
+data "aws_subnet" "connection_subnet" {
+  id = data.aws_ssm_parameter.aurora_conn_subnetid.value
+}
+
 #------------------------------------------------------------------------------
 # Aurora Security Group
 #------------------------------------------------------------------------------
@@ -22,6 +26,7 @@ module "aurora_security_group_naming" {
 resource "aws_security_group" "db_sg" {
   name = module.aurora_security_group_naming.name
   tags = module.aurora_security_group_naming.tags
+  vpc_id = data.aws_subnet.connection_subnet.vpc_id
 
   ingress {
     description     = "Allow traffic from OIDH glue connection"
