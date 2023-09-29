@@ -28,7 +28,7 @@ module "glue_job_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", var.job_name, "role"])
+  purpose     = join("", [var.project_prefix, "-", var.job_name])
 }
 
 resource "aws_iam_role" "glue_job_role" {

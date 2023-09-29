@@ -3,6 +3,7 @@ from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, SparkSession
+from awsglue.dynamicframe import DynamicFrame
 from pyspark.sql.types import BooleanType
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
@@ -206,8 +207,13 @@ if __name__ == "__main__":
     ]
     args = getResolvedOptions(sys.argv, params)
 
+    conn_ops = {
+        "useConnectionProperties": "True",
+        "dbtable": args["aurora_table"],
+        "connectionName": args["aurora_connection_name"],
+    }
+
     s3 = boto3.client("s3")
-    ssm = boto3.client("ssm")
 
     sc = SparkContext()
     sc.setCheckpointDir(args["TempDir"])
@@ -242,30 +248,15 @@ if __name__ == "__main__":
     )
     clusters_df.createOrReplaceTempView("ind_clusters_df")
 
-    # Get Aurora DB credentials
-    username = ssm.get_parameter(
-        Name=f"/secure/{args['ssm_params_base']}/username", WithDecryption=True
-    )["Parameter"]["Value"]
-    jdbcurl = ssm.get_parameter(Name=f"/parameter/{args['ssm_params_base']}/jdbc_url")[
-        "Parameter"
-    ]["Value"]
-    password = ssm.get_parameter(
-        Name=f"/secure/{args['ssm_params_base']}/password", WithDecryption=True
-    )["Parameter"]["Value"]
-
     # Generate new individuals table
     individuals_changes_df = spark.sql(sql_map_query)
 
     # Get current Individuals table from Aurora
     try:
-        cur_ind_df = (
-            spark.read.format("jdbc")
-            .option("url", jdbcurl)
-            .option("user", username)
-            .option("password", password)
-            .option("dbtable", args["aurora_table"])
-            .load()
-        )
+        cur_ind_df = glueContext.create_dynamic_frame_from_options(
+            connection_type="postgresql", connection_options=conn_ops
+        ).toDF()
+
         cur_ind_df.createOrReplaceTempView("target_df")
         individuals_changes_df.createOrReplaceTempView("changes_df")
 
@@ -340,8 +331,10 @@ if __name__ == "__main__":
 
     # Write data to the Aurora PostgreSQL database
 
-    individuals_df.write.format("jdbc").mode("overwrite").option("url", jdbcurl).option(
-        "user", username
-    ).option("password", password).option("dbtable", args["aurora_table"]).save()
+    glueContext.write_dynamic_frame.from_options(
+        frame=DynamicFrame.fromDF(individuals_df, glueContext, "individuals"),
+        connection_type="postgresql",
+        connection_options=conn_ops,
+    )
 
     job.commit()

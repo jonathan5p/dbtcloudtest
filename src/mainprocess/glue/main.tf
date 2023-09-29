@@ -85,31 +85,72 @@ data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
 # Glue Redshift Connection
 #------------------------------------------------------------------------------
 
-data "aws_subnet" "connection_subnet" {
-  id = data.aws_ssm_parameter.redshift_conn_subnetid.value
+module "redshift_connection"{
+  source = "../../../modules/glue_connection"
+  base_naming = var.base_naming
+  project_prefix = var.project_prefix
+  conn_name = "redshiftconn"
+  password = data.aws_ssm_parameter.redshift_conn_password.value
+  username = data.aws_ssm_parameter.redshift_conn_username.value
+  jdbc_url = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
+  subnet_id = data.aws_ssm_parameter.redshift_conn_subnetid.value
+  security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
 }
 
-module "glue_ingest_conn_naming" {
+#------------------------------------------------------------------------------
+# Aurora Credentials
+#------------------------------------------------------------------------------
+
+data "aws_ssm_parameter" "aurora_conn_username" {
+  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/aurora/username"
+}
+
+data "aws_ssm_parameter" "aurora_conn_password" {
+  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/aurora/password"
+}
+
+data "aws_ssm_parameter" "aurora_conn_jdbc_url" {
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/jdbc_url"
+}
+
+data "aws_ssm_parameter" "aurora_conn_subnetid" {
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
+}
+
+data "aws_ssm_parameter" "aurora_conn_securitygroupid" {
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/securitygroupid"
+}
+
+#------------------------------------------------------------------------------
+# Glue Aurora Connection Security Group
+#------------------------------------------------------------------------------
+
+module "conn_sg_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
-  type        = "glx"
-  purpose     = join("", [var.project_prefix, "-", "ingestjobconnection"])
+  type        = "sgp"
+  purpose     = join("", [var.project_prefix, "-", "glueconnsgnaming"])
 }
 
-resource "aws_glue_connection" "redshift_connection" {
-  connection_type = "JDBC"
-  name            = module.glue_ingest_conn_naming.name
-  tags            = module.glue_ingest_conn_naming.tags
-  connection_properties = {
-    JDBC_CONNECTION_URL = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
-    PASSWORD            = data.aws_ssm_parameter.redshift_conn_password.value
-    USERNAME            = data.aws_ssm_parameter.redshift_conn_username.value
-  }
-  physical_connection_requirements {
-    availability_zone      = data.aws_subnet.connection_subnet.availability_zone
-    subnet_id              = data.aws_subnet.connection_subnet.id
-    security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
-  }
+resource "aws_security_group" "conn_sg"{
+    name = module.conn_sg_naming.name
+    tags = module.conn_sg_naming.tags
+}
+
+#------------------------------------------------------------------------------
+# Glue Aurora Connection
+#------------------------------------------------------------------------------
+
+module "aurora_connection"{
+  source = "../../../modules/glue_connection"
+  base_naming = var.base_naming
+  project_prefix = var.project_prefix
+  conn_name = "auroraconn"
+  password = data.aws_ssm_parameter.aurora_conn_password.value
+  username = data.aws_ssm_parameter.aurora_conn_username.value
+  jdbc_url = data.aws_ssm_parameter.aurora_conn_jdbc_url.value
+  subnet_id = data.aws_ssm_parameter.aurora_conn_subnetid.value
+  security_group_id_list = [data.aws_ssm_parameter.aurora_conn_securitygroupid.value]
 }
 
 #------------------------------------------------------------------------------
@@ -128,7 +169,7 @@ module "ingest_job" {
   retry_interval      = 2
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  connections         = [aws_glue_connection.redshift_connection.name]
+  connections         = [module.redshift_connection.conn_name]
   glue_path           = "../src/mainprocess/glue/"
   job_name            = "ingestjob"
   script_bucket       = var.project_objects.glue_bucket_id
@@ -207,7 +248,7 @@ module "ind_dedup_job" {
   retry_interval      = 2
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  connections         = [aws_glue_connection.redshift_connection.name]
+  connections         = [module.aurora_connection.conn_name]
   glue_path           = "../src/mainprocess/glue/"
   job_name            = "inddedupjob"
   script_bucket       = var.project_objects.glue_bucket_id
@@ -251,7 +292,7 @@ module "org_dedup_job" {
   retry_interval      = 2
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  connections         = [aws_glue_connection.redshift_connection.name]
+  connections         = [module.aurora_connection.conn_name]
   glue_path           = "../src/mainprocess/glue/"
   job_name            = "orgdedupjob"
   script_bucket       = var.project_objects.glue_bucket_id

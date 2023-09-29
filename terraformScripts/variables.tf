@@ -99,16 +99,37 @@ variable "cron_schedule" {
 
 # ECS parameters
 variable "ecs_task_alaya_cpu" {
-  description = "CPU for ecs task pust to Alaya"
+  description = "CPU for ecs task post to Alaya"
   default     = 2048
 }
 
 variable "ecs_task_alaya_memory" {
-  description = "Memory for ecs task pust to Alaya"
+  description = "Memory for ecs task post to Alaya"
   default     = 4096
 }
 
 variable "retention_days_ecs_alaya_logs" {
   description = "Retention days for logs in cloudwatch"
   default     = 30
+}
+
+# Aurora serverlessv2 postgresql db
+variable "aurora_backup_retention_period" {
+  description = "Admin tool aurora postgresql database retention period"
+  default     = 30
+}
+
+variable "aurora_preferred_backup_window" {
+  description = "Admin tool aurora postgresql database preferred backup window"
+  default     = "21:00-00:00"
+}
+
+variable "aurora_max_capacity" {
+  description = "Admin tool aurora postgresql max capacity"
+  default     = 4
+}
+
+variable "aurora_min_capacity" {
+  description = "Admin tool aurora postgresql min capacity"
+  default     = 2
 }

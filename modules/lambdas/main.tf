@@ -2,7 +2,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  lambda_runtime = "python3.9"
+  lambda_runtime = "python3.10"
   lambda_handler = "lambda_function.lambda_handler"
   local_objects = {
     "region" : "${data.aws_region.current.name}"

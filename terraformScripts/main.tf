@@ -161,12 +161,17 @@ module "mainprocess" {
     "data_bucket_arn"                    = module.s3_data_bucket.bucket_arn
     "artifacts_bucket_arn"               = module.s3_artifacts_bucket.bucket_arn
     "glue_enc_key"                       = module.glue_enc_key.key_arn
+    "data_key_arn"                       = module.data_key.key_arn
     "cron_schedule"                      = var.cron_schedule
     "cron_trigger_enabled"               = var.cron_trigger_enabled
     "lambda_ec_agent_target_table_name"  = var.lambda_ec_agent_target_table_name
     "lambda_ec_office_target_table_name" = var.lambda_ec_office_target_table_name
     "lambda_ec_agent_source_table_name"  = var.lambda_ec_agent_source_table_name
     "lambda_ec_office_source_table_name" = var.lambda_ec_office_source_table_name
+    "aurora_backup_retention_period"     = var.aurora_backup_retention_period
+    "aurora_preferred_backup_window"     = var.aurora_preferred_backup_window
+    "aurora_max_capacity"                = var.aurora_max_capacity
+    "aurora_min_capacity"                = var.aurora_min_capacity
   }
 }
 

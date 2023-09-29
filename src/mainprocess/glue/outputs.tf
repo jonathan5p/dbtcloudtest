@@ -8,3 +8,7 @@ output "functions_mapping" {
     "gluedb_name" : aws_glue_catalog_database.dedup_process_glue_db.name
   }
 }
+
+output "aurora_conn_sg_id"{
+  value = resource.aws_security_group.conn_sg.id
+}

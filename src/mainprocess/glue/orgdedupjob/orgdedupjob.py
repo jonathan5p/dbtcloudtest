@@ -6,6 +6,7 @@ from pyspark.sql.window import Window
 from pyspark.sql.types import BooleanType, NullType
 import pyspark.sql.functions as F
 from awsglue.context import GlueContext
+from awsglue.dynamicframe import DynamicFrame
 from awsglue.job import Job
 from pyspark.sql import DataFrame, SparkSession
 from splink.spark.linker import SparkLinker
@@ -153,6 +154,7 @@ office_types = [
     "CORPORATE",
 ]
 
+
 # Helper function to run splink model over a dataframe
 def deduplicate_entity(
     entity: str,
@@ -258,8 +260,13 @@ if __name__ == "__main__":
 
     args = getResolvedOptions(sys.argv, params)
 
+    conn_ops = {
+        "useConnectionProperties": "True",
+        "dbtable": args["aurora_table"],
+        "connectionName": args["aurora_connection_name"],
+    }
+
     s3 = boto3.client("s3")
-    ssm = boto3.client("ssm")
 
     sc = SparkContext()
     sc.setCheckpointDir(args["TempDir"])
@@ -270,9 +277,7 @@ if __name__ == "__main__":
 
     # Read clean office and team data
     splink_clean_office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
-    office_df = (
-        spark.read.format("delta").load(splink_clean_office_data_s3_path)
-    )
+    office_df = spark.read.format("delta").load(splink_clean_office_data_s3_path)
 
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
     team_df = spark.read.format("delta").load(splink_clean_team_data_s3_path)
@@ -281,7 +286,7 @@ if __name__ == "__main__":
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     # Filter agents
-    dedup_records = office_df.where(F.col("type").isin(office_types)) 
+    dedup_records = office_df.where(F.col("type").isin(office_types))
 
     # Run splink model over office and team data
     dedup_office_df = deduplicate_entity(
@@ -307,7 +312,9 @@ if __name__ == "__main__":
     dedup_team_df.createOrReplaceTempView("dedup_team_df")
     for field in dedup_team_df.schema:
         if field.dataType == NullType():
-            dedup_team_df = dedup_team_df.withColumn(field.name, F.col(field.name).cast("string"))
+            dedup_team_df = dedup_team_df.withColumn(
+                field.name, F.col(field.name).cast("string")
+            )
 
     # Format office data as needed for the organizations table
     org_office_df = spark.sql(office_sql_map_query)
@@ -315,30 +322,15 @@ if __name__ == "__main__":
     # Format team data as needed for the organizations table
     org_team_df = spark.sql(team_sql_map_query)
 
-    # Get Aurora DB credentials
-    username = ssm.get_parameter(
-        Name=f"/secure/{args['ssm_params_base']}/username", WithDecryption=True
-    )["Parameter"]["Value"]
-    jdbcurl = ssm.get_parameter(Name=f"/parameter/{args['ssm_params_base']}/jdbc_url")[
-        "Parameter"
-    ]["Value"]
-    password = ssm.get_parameter(
-        Name=f"/secure/{args['ssm_params_base']}/password", WithDecryption=True
-    )["Parameter"]["Value"]
-
     # Generate new organizations table
     organization_changes_df = org_office_df.unionByName(org_team_df)
 
     # Get current organizations table from Aurora
     try:
-        cur_org_df = (
-            spark.read.format("jdbc")
-            .option("url", jdbcurl)
-            .option("user", username)
-            .option("password", password)
-            .option("dbtable", args["aurora_table"])
-            .load()
-        )
+        cur_org_df = glueContext.create_dynamic_frame_from_options(
+            connection_type="postgresql", connection_options=conn_ops
+        ).toDF()
+
         cur_org_df.createOrReplaceTempView("target_df")
         organization_changes_df.createOrReplaceTempView("changes_df")
 
@@ -429,10 +421,11 @@ if __name__ == "__main__":
     spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.organizations DROP PARTITIONS;")
 
     # Write data to the Aurora PostgreSQL database
-    organizations_df.write.format("jdbc").mode("overwrite").option(
-      "url", jdbcurl
-    ).option("user", username).option("password", password).option(
-      "dbtable", args["aurora_table"]
-    ).save()
+
+    glueContext.write_dynamic_frame.from_options(
+        frame=DynamicFrame.fromDF(organizations_df, glueContext, "individuals"),
+        connection_type="postgresql",
+        connection_options=conn_ops,
+    )
 
     job.commit()
