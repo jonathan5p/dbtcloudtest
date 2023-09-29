@@ -16,10 +16,6 @@ module "base_naming" {
   zone      = var.zone
 }
 
-# ------------------------------------------------------------------------------
-# Defining resources names
-# ------------------------------------------------------------------------------
-
 #----------------------------------
 # KMS Key names
 #----------------------------------
@@ -74,18 +70,60 @@ module "glue_db_naming" {
   purpose     = join("", [var.project_prefix, "_", "gluedb"])
 }
 
-module "glue_ingest_job_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "ingestjobrole"])
-}
-
 module "glue_ingest_job_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "glj"
   purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
+module "glue_ingest_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
+module "glue_cleaning_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "cleaningjob"])
+}
+
+module "glue_cleaning_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "cleaningjob"])
+}
+
+module "glue_ind_dedup_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "inddedupjob"])
+}
+
+module "glue_ind_dedup_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "inddedupjob"])
+}
+
+module "glue_org_dedup_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
+}
+
+module "glue_org_dedup_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
 }
 
 #----------------------------------
@@ -96,35 +134,42 @@ module "lambda_config_loader_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
+  purpose     = join("", [var.project_prefix, "-", "configloader"])
 }
 
 module "lambda_config_loader_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloader"])
+  purpose     = join("", [var.project_prefix, "-", "configloader"])
 }
 
-module "lambda_enrich_caar_role_naming" {
+module "lambda_enrich_caar_agent_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "lambdaenrichcaar"])
+  purpose     = join("", [var.project_prefix, "-", "enrichagent"])
+}
+
+module "lambda_enrich_caar_office_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "enrichoffice"])
 }
 
 module "lambda_caar_enrich_agent_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "lambdacaarenrichagent"])
+  purpose     = join("", [var.project_prefix, "-", "enrichagent"])
 }
 
 module "lambda_caar_enrich_office_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "lambdacaarenrichoffice"])
+  purpose     = join("", [var.project_prefix, "-", "enrichoffice"])
 }
 
 #----------------------------------
@@ -351,6 +396,31 @@ module "cwa_alaya_sync_register_naming" {
 }
 
 #----------------------------------
+# Aurora Names
+#----------------------------------
+
+module "aurora_security_group_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "sgp"
+  purpose     = join("", [var.project_prefix, "-", "admintooldbsecuritygroup"])
+}
+
+module "aurora_subnet_group_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "rdu"
+  purpose     = join("", [var.project_prefix, "-", "admintooldbsubnetgroup"])
+}
+
+module "aurora_cluster_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "rcc"
+  purpose     = join("", [var.project_prefix, "-", "admintooldb"])
+}
+
+#----------------------------------
 # Sfn names
 #----------------------------------
 
@@ -358,14 +428,14 @@ module "sfn_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "etlsfn"])
+  purpose     = join("", [var.project_prefix, "-", "mainprocess"])
 }
 
 module "etl_sfn_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "stm"
-  purpose     = join("", [var.project_prefix, "-", "etlsfn"])
+  purpose     = join("", [var.project_prefix, "-", "mainprocess"])
 }
 
 module "trigger_role_naming" {
@@ -390,35 +460,63 @@ module "glue_ingest_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "glueingestpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "ingestjob"])
+}
+
+module "glue_cleaning_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "cleaningjob"])
+}
+
+module "glue_ind_dedup_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "inddedupjob"])
+}
+
+module "glue_org_dedup_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
 }
 
 module "lambda_config_loader_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "lambdaconfigloaderpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "configloader"])
 }
 
 module "elt_sfn_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "etlsfnpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "mainprocess"])
 }
 
 module "cron_trigger_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "crontriggerpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "crontrigger"])
 }
 
-module "lambda_enrich_caar_policy_naming" {
+module "lambda_enrich_agent_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "lambdaenrichcaarpolicy"])
+  purpose     = join("", [var.project_prefix, "-", "enrichagent"])
+}
+
+module "lambda_enrich_office_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "enrichoffice"])
 }
 
 module "staging_glue_crawler_policy_naming" {
@@ -441,6 +539,47 @@ data "aws_iam_policy_document" "assume_dev_deploy" {
     }
   }
 }
+
+# ------------------------------------------------------------------------------
+# Aurora Deployment
+# ------------------------------------------------------------------------------
+
+data "aws_iam_policy_document" "aurora_deploy" {
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "rds:ListTagsForResource",
+      "rds:DescribeDBClusterParameterGroups",
+      "rds:DescribeDBSecurityGroups",
+      "rds:CreateDBCluster",
+      "rds:DeleteDBCluster",
+      "rds:ModifyDBCluster",
+      "rds:DescribeDBCluster",
+      "rds:ModifyDBClusterParameterGroup"
+    ]
+    resources = [
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"
+    ]
+    sid = "auroradeploy"
+  }
+
+    statement {
+    effect = "Allow"
+    actions = [
+      "rds:DescribeDBSubnetGroups",
+      "rds:CreateDBSubnetGroup",
+      "rds:DeleteDBSubnetGroup",
+      "rds:ModifyDBSubnetGroup",
+    ]
+    resources = [
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}"
+    ]
+    sid = "auroradeploy"
+  }
+}
+
+
 
 # ------------------------------------------------------------------------------
 # KMS, S3, SSM Policies
@@ -492,39 +631,6 @@ data "aws_iam_policy_document" "dev_deploy" {
   }
 
   statement {
-    effect = "Allow"
-    actions = [
-      "iam:PassRole",
-      "iam:CreateRole",
-      "iam:TagRole",
-      "iam:GetRole",
-      "iam:ListRolePolicies",
-      "iam:ListAttachedRolePolicies",
-      "iam:AttachRolePolicy",
-      "iam:ListInstanceProfilesForRole",
-      "iam:DeleteRole",
-      "iam:DetachRolePolicy"
-    ]
-    resources = [
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ingest_job_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.crawler_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_execution_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_register_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_schedule_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_processing_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_reduce_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_execution_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}"
-    ]
-    sid = "iamroles"
-  }
-
-  statement {
     actions = [
       "ecs:RegisterTaskDefinition",
       "ecs:DescribeTaskDefinition",
@@ -535,36 +641,6 @@ data "aws_iam_policy_document" "dev_deploy" {
       "*"
     ]
     sid = "ecstask"
-  }
-
-  statement {
-    effect = "Allow"
-    actions = [
-      "iam:CreatePolicy",
-      "iam:TagPolicy",
-      "iam:DeletePolicy",
-      "iam:GetPolicy",
-      "iam:GetPolicyVersion",
-      "iam:ListPolicyVersions",
-      "iam:CreatePolicyVersion"
-
-    ]
-    resources = [
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ingest_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_caar_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.staging_glue_crawler_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_ecs_task_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_register_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_schedule_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_processing_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_reduce_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_execution_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}"
-    ]
-    sid = "iampolicies"
   }
 
   statement {
@@ -656,11 +732,10 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ssm:GetParameter"
     ]
     resources = [
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/*",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift",
-      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/*"
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/${var.project_app_group}/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment}/${var.project_app_group}/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/parameter/${var.site}/${var.environment}/*",
+      "arn:aws:ssm:${var.region}:${var.aws_account_number_env}:parameter/secure/${var.site}/${var.environment_devops}/codebuild/*"
     ]
   }
 
@@ -706,9 +781,86 @@ data "aws_iam_policy_document" "dev_deploy" {
 }
 
 # ------------------------------------------------------------------------------
-# ETL Policies
+# IAM Role/Policy Permissions
 # ------------------------------------------------------------------------------
 data "aws_iam_policy_document" "dev_deploy2" {
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:PassRole",
+      "iam:CreateRole",
+      "iam:TagRole",
+      "iam:GetRole",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:AttachRolePolicy",
+      "iam:ListInstanceProfilesForRole",
+      "iam:DeleteRole",
+      "iam:DetachRolePolicy"
+    ]
+    resources = [
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_cleaning_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ind_dedup_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_org_dedup_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_agent_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_office_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.crawler_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_execution_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_register_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_schedule_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_processing_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_reduce_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_execution_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}"
+    ]
+    sid = "iamroles"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:CreatePolicy",
+      "iam:TagPolicy",
+      "iam:DeletePolicy",
+      "iam:GetPolicy",
+      "iam:GetPolicyVersion",
+      "iam:ListPolicyVersions",
+      "iam:CreatePolicyVersion"
+
+    ]
+    resources = [
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ingest_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_cleaning_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ind_dedup_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_org_dedup_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_agent_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_office_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.staging_glue_crawler_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_ecs_task_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_register_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_schedule_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_processing_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_reduce_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_execution_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}"
+    ]
+    sid = "iampolicies"
+  }
+
+}
+
+# ------------------------------------------------------------------------------
+# ETL Policies
+# ------------------------------------------------------------------------------
+data "aws_iam_policy_document" "dev_deploy3" {
   statement {
     effect  = "Allow"
     actions = ["lambda:*"]
@@ -797,8 +949,11 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "glue:GetJob",
       "glue:GetTags"
     ]
-    effect    = "Allow"
-    resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}"]
+    effect = "Allow"
+    resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_cleaning_job_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ind_dedup_job_naming.name}",
+    "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}", ]
   }
 }
 
@@ -806,7 +961,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
 # Alaya Sync
 # ------------------------------------------------------------------------------
 
-data "aws_iam_policy_document" "dev_deploy3" {
+data "aws_iam_policy_document" "dev_deploy4" {
   statement {
     effect  = "Allow"
     actions = ["lambda:*"]
@@ -838,7 +993,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "lambda:GetEventSourceMapping"
     ]
     resources = ["*"]
-    sid = "sourcemappingsync"
+    sid       = "sourcemappingsync"
   }
 
   statement {
@@ -893,6 +1048,14 @@ data "aws_iam_policy_document" "dev_deploy3" {
 # Deployment role policy attachements
 # ------------------------------------------------------------------------------
 
+module "irp_aurora_deployment_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "irp"
+  env         = var.environment
+  purpose     = join("", ["auroradeploy", var.project_prefix])
+}
+
 module "irp_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -917,6 +1080,14 @@ module "irp_dev_deployment_naming3" {
   purpose     = join("", ["deployment3", var.project_prefix])
 }
 
+module "irp_dev_deployment_naming4" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "irp"
+  env         = var.environment
+  purpose     = join("", ["deployment4", var.project_prefix])
+}
+
 module "iro_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.irp_dev_deployment_naming
@@ -927,6 +1098,11 @@ resource "aws_iam_role" "dev_deployment" {
   name               = module.iro_dev_deployment_naming.name
   assume_role_policy = data.aws_iam_policy_document.assume_dev_deploy.json
   tags               = module.iro_dev_deployment_naming.tags
+}
+
+resource "aws_iam_policy" "aurora_deployment" {
+  name   = module.irp_aurora_deployment_naming.name
+  policy = data.aws_iam_policy_document.aurora_deploy.json
 }
 
 resource "aws_iam_policy" "dev_deployment" {
@@ -944,6 +1120,16 @@ resource "aws_iam_policy" "dev_deployment3" {
   policy = data.aws_iam_policy_document.dev_deploy3.json
 }
 
+resource "aws_iam_policy" "dev_deployment4" {
+  name   = module.irp_dev_deployment_naming3.name
+  policy = data.aws_iam_policy_document.dev_deploy4.json
+}
+
+resource "aws_iam_role_policy_attachment" "aurora_deployment" {
+  role       = aws_iam_role.dev_deployment.name
+  policy_arn = aws_iam_policy.aurora_deployment.arn
+}
+
 resource "aws_iam_role_policy_attachment" "dev_deployment" {
   role       = aws_iam_role.dev_deployment.name
   policy_arn = aws_iam_policy.dev_deployment.arn
@@ -957,4 +1143,9 @@ resource "aws_iam_role_policy_attachment" "dev_deployment2" {
 resource "aws_iam_role_policy_attachment" "dev_deployment3" {
   role       = aws_iam_role.dev_deployment.name
   policy_arn = aws_iam_policy.dev_deployment3.arn
+}
+
+resource "aws_iam_role_policy_attachment" "dev_deployment4" {
+  role       = aws_iam_role.dev_deployment.name
+  policy_arn = aws_iam_policy.dev_deployment4.arn
 }

@@ -1,0 +1,150 @@
+  {
+    "StartAt": "load-ingest-conf",
+    "States": {
+      "load-ingest-conf": {
+        "Next": "ingest-job-mapping",
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ClientExecutionTimeoutException",
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException"
+            ],
+            "IntervalSeconds": 0,
+            "MaxAttempts": 2,
+            "BackoffRate": 2
+          }
+        ],
+        "Type": "Task",
+        "OutputPath": "$.Payload",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "Parameters": {
+          "FunctionName": "${config_loader_lambda}",
+          "Payload.$": "$"
+        }
+      },
+      "ingest-job-mapping": {
+        "Type": "Map",
+        "Next": "enrich-caar-data",
+        "ResultPath": null,
+        "Iterator": {
+          "StartAt": "ingest-job",
+          "States": {
+            "ingest-job": {
+              "End": true,
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "${glue_ingest_job}",
+                "Arguments": {
+                  "--target.$": "$.target",
+                  "--target_prefixes.$": "$.target_prefixes",
+                  "--catalog_table.$": "$.catalog_table",
+                  "--catalog_database.$": "$.catalog_database",
+                  "--connection_type.$": "$.connection_type",
+                  "--options.$": "$.options"
+                },
+                "Timeout": 120,
+                "NotificationProperty": {
+                  "NotifyDelayAfter": 5
+                }
+              }
+            }
+          }
+        },
+        "ItemsPath": "$.tables",
+        "MaxConcurrency": 4
+      },
+      "enrich-caar-data": {
+        "Type": "Parallel",
+        "Next": "start-glue-staging-crawler",
+        "Branches": [
+          {
+            "StartAt": "enrich-agent",
+            "States": {
+              "enrich-agent": {
+                "End": true,
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ClientExecutionTimeoutException",
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                  }
+                ],
+                "Type": "Task",
+                "OutputPath": "$.Payload",
+                "Resource": "arn:aws:states:::lambda:invoke",
+                "Parameters": {
+                  "FunctionName": "${staging_agent_lambda}",
+                  "Payload.$": "$"
+                }
+              }
+            }
+          },
+          {
+            "StartAt": "enrich-office",
+            "States": {
+              "enrich-office": {
+                "End": true,
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "Lambda.ClientExecutionTimeoutException",
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                  }
+                ],
+                "Type": "Task",
+                "OutputPath": "$.Payload",
+                "Resource": "arn:aws:states:::lambda:invoke",
+                "Parameters": {
+                  "FunctionName": "${staging_office_lambda}",
+                  "Payload.$": "$"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "start-glue-staging-crawler": {
+        "End": true,
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Type": "Task",
+        "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
+        "Parameters": {
+          "Name": "${glue_staging_crawler}"
+        }
+      }
+    }
+  }
