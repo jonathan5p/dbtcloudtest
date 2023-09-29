@@ -94,7 +94,7 @@ resource "aws_rds_cluster" "admintooldb" {
   copy_tags_to_snapshot           = true
   preferred_backup_window         = var.project_objects.aurora_preferred_backup_window
   deletion_protection             = true
-  enabled_cloudwatch_logs_exports = toset(["audit", "general", "error"])
+  enabled_cloudwatch_logs_exports = toset(["postgresql"])
   final_snapshot_identifier       = module.aurora_cluster_final_snapshot_naming.name
   storage_encrypted               = true
   kms_key_id                      = var.project_objects.data_key_arn
