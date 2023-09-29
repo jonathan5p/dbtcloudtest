@@ -557,32 +557,19 @@ data "aws_iam_policy_document" "aurora_deploy" {
       "rds:DeleteDBCluster",
       "rds:ModifyDBCluster",
       "rds:DescribeDBCluster",
-      "rds:ModifyDBClusterParameterGroup"
-    ]
-    resources = [
-      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"
-    ]
-    sid = "clusterpermissions"
-  }
-
-    statement {
-    effect = "Allow"
-    actions = [
-      "rds:ListTagsForResource",
-      "rds:AddTagsToResource",
+      "rds:ModifyDBClusterParameterGroup",
       "rds:DescribeDBSubnetGroups",
       "rds:CreateDBSubnetGroup",
       "rds:DeleteDBSubnetGroup",
-      "rds:ModifyDBSubnetGroup",
+      "rds:ModifyDBSubnetGroup"
     ]
     resources = [
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}",
       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}"
     ]
-    sid = "subnetgrouppermissions"
+    sid = "clusterpermissions"
   }
 }
-
-
 
 # ------------------------------------------------------------------------------
 # KMS, S3, SSM Policies
@@ -926,7 +913,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
       "arn:aws:glue:us-east-1:497607366324:database/aue1d1z1gldoidhoidh_gluedb",
-      "arn:aws:glue:us-east-1:497607366324:database/aue1d1z1gldoidhoidh_gluedb/*"
+      "arn:aws:glue:us-east-1:497607366324:table/aue1d1z1gldoidhoidh_gluedb/*",
+      "arn:aws:glue:us-east-1:497607366324:userDefinedFunction/aue1d1z1gldoidhoidh_gluedb/*"
     ]
   }
 
