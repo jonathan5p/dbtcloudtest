@@ -14,12 +14,13 @@
                 "s3:PutObjectRetention",
                 "s3:PutObjectTagging",
                 "s3:PutObjectVersionTagging"],
-            "Resource": ["${data_bucket_arn}",
-                        "${data_bucket_arn}/*",
-                        "${glue_bucket_arn}",
-                        "${glue_bucket_arn}/*",
-                        "${artifacts_bucket_arn}",
-                        "${artifacts_bucket_arn}/*"]
+            "Resource": [
+                "${data_bucket_arn}",
+                "${data_bucket_arn}/*",
+                "${glue_bucket_arn}",
+                "${glue_bucket_arn}/*",
+                "${artifacts_bucket_arn}",
+                "${artifacts_bucket_arn}/*"]
         },
         {
             "Effect":"Allow",

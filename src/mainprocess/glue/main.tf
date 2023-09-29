@@ -117,10 +117,6 @@ data "aws_ssm_parameter" "aurora_conn_subnetid" {
   name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
 }
 
-data "aws_ssm_parameter" "aurora_conn_securitygroupid" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/securitygroupid"
-}
-
 #------------------------------------------------------------------------------
 # Glue Aurora Connection Security Group
 #------------------------------------------------------------------------------
@@ -150,7 +146,7 @@ module "aurora_connection" {
   username               = data.aws_ssm_parameter.aurora_conn_username.value
   jdbc_url               = data.aws_ssm_parameter.aurora_conn_jdbc_url.value
   subnet_id              = data.aws_ssm_parameter.aurora_conn_subnetid.value
-  security_group_id_list = [data.aws_ssm_parameter.aurora_conn_securitygroupid.value]
+  security_group_id_list = [aws_security_group.conn_sg.id]
 }
 
 #------------------------------------------------------------------------------
