@@ -88,12 +88,12 @@ module "codepipeline" {
     }
   ]
 
-  image                       = var.image
-  image_pull_credentials_type = var.image_pull_credentials_type
-  project_app_group           = var.project_app_group
-  project_ledger              = var.project_ledger
-  project_prefix              = var.project_prefix
-  s3_bucket_name              = var.s3_bucket_name
+  image                             = var.image
+  image_pull_credentials_type       = var.image_pull_credentials_type
+  project_app_group                 = var.project_app_group
+  project_ledger                    = var.project_ledger
+  project_prefix                    = var.project_prefix
+  s3_bucket_name                    = var.s3_bucket_name
   site                              = var.site
   sns_arn_codepipeline_notification = var.sns_arn_codepipeline_notification
   source_owner                      = var.source_owner

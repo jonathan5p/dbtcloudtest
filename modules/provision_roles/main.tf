@@ -561,13 +561,68 @@ data "aws_iam_policy_document" "aurora_deploy" {
       "rds:DescribeDBSubnetGroups",
       "rds:CreateDBSubnetGroup",
       "rds:DeleteDBSubnetGroup",
-      "rds:ModifyDBSubnetGroup"
+      "rds:ModifyDBSubnetGroup",
+      "rds:DescribeDBClusters",
+      "rds:DescribeGlobalClusters",
+      "rds:AddRoleToDBCluster",
+      "rds:CreateDBInstance",
+      "rds:DescribeDBInstances",
+      "rds:DeleteDBInstance",
+      "rds:ModifyDBInstance",
+      "rds:AddRoleToDBInstance"
     ]
     resources = [
       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}",
-      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}"
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}",
+      "arn:aws:rds::${var.aws_account_number_env}:global-cluster:*"
     ]
     sid = "clusterpermissions"
+  }
+  
+  statement {
+    effect = "Allow"
+    actions = [
+      "rds:CreateDBInstance",
+      "rds:DescribeDBInstances",
+      "rds:DeleteDBInstance",
+      "rds:ModifyDBInstance",
+      "rds:AddRoleToDBInstance",
+      "rds:ListTagsForResource",
+      "rds:AddTagsToResource"
+    ]
+    resources = [
+      "arn:aws:rds:${var.region}:${var.aws_account_number_env}:db:*"
+    ]
+    condition {
+      test = "StringEquals"
+      variable = "rds:db-tag/Name"
+      values = ["${module.aurora_cluster_naming.name}"]
+    }
+    sid = "rdsinstancepermissions"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:CancelRotateSecret",
+      "secretsmanager:UpdateSecret",
+      "secretsmanager:CreateSecret",
+      "secretsmanager:DeleteSecret",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:TagResource",
+      "secretsmanager:UntagResource",
+      "secretsmanager:ListSecrets"
+    ]
+    resources = [
+      "arn:aws:secretsmanager:${var.region}:${var.aws_account_number_env}:secret:*"
+    ]
+    condition {
+      test = "StringEquals"
+      variable = "secretsmanager:ResourceTag/aws:rds:primaryDBClusterArn"
+      values = ["arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"]
+    }
+    sid = "clustersecretpermissions"
   }
 }
 
@@ -864,10 +919,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy:*",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy",
       "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310:*",
-      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310",
-      "arn:aws:lambda:us-east-1:497607366324:function:aue1d1z1lmboidhoidh-lambdacaarenrichoffice",
-      "arn:aws:lambda:us-east-1:497607366324:function:aue1d1z1lmboidhoidh-lambdaconfigloader",
-      "arn:aws:lambda:us-east-1:497607366324:function:aue1d1z1lmboidhoidh-lambdacaarenrichagent"
+      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310"
     ]
   }
 
@@ -875,8 +927,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
     effect  = "Allow"
     actions = ["states:*"]
     resources = [
-      "arn:aws:states:${var.region}:${var.aws_account_number_env}:stateMachine:${module.etl_sfn_naming.name}",
-      "arn:aws:states:us-east-1:497607366324:stateMachine:aue1d1z1stmoidhoidh-etlsfn"
+      "arn:aws:states:${var.region}:${var.aws_account_number_env}:stateMachine:${module.etl_sfn_naming.name}"
     ]
   }
 
@@ -884,8 +935,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
     effect  = "Allow"
     actions = ["events:*"]
     resources = [
-      "arn:aws:events:${var.region}:${var.aws_account_number_env}:rule/${module.cron_trigger_naming.name}",
-      "arn:aws:events:us-east-1:497607366324:rule/aue1d1z1cwroidhoidh-crontrigger"
+      "arn:aws:events:${var.region}:${var.aws_account_number_env}:rule/${module.cron_trigger_naming.name}"
     ]
   }
 
@@ -911,10 +961,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
-      "arn:aws:glue:us-east-1:497607366324:database/aue1d1z1gldoidhoidh_gluedb",
-      "arn:aws:glue:us-east-1:497607366324:table/aue1d1z1gldoidhoidh_gluedb/*",
-      "arn:aws:glue:us-east-1:497607366324:userDefinedFunction/aue1d1z1gldoidhoidh_gluedb/*"
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection"
     ]
   }
 
