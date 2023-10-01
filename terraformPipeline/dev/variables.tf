@@ -37,7 +37,7 @@ variable "compute_type" {
 
 variable "create_s3_bucket" {
   default = false
-  type = bool
+  type    = bool
 }
 
 variable "datapipeline_name" {
@@ -101,7 +101,7 @@ variable "region" {
 
 variable "s3_bucket_name" {
   default = ""
-  type = string
+  type    = string
 }
 
 variable "site" {

@@ -22,6 +22,21 @@
                         "${artifacts_bucket_arn}/*"]
         },
         {
+            "Effect" : "Allow",
+            "Action": [
+                "kms:DescribeKey",
+                "kms:Encrypt",
+                "kms:Decrypt",
+                "kms:ReEncrypt*",
+                "kms:GenerateDataKey*",
+                "kms:CreateGrant"
+            ],
+            "Resource" : [
+                "${data_key_arn}",
+                "${glue_enc_key}"
+            ]
+        },
+        {
             "Effect":"Allow",
             "Action": ["logs:AssociateKmsKey"],
             "Resource": ["arn:aws:logs:${region}:${account_id}:log-group:/aws-glue/jobs/*"]

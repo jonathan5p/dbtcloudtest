@@ -14,6 +14,20 @@
       ]
     },
     {
+      "Effect" : "Allow",
+      "Action": [
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:CreateGrant"
+      ],
+      "Resource" : [
+        "${data_key_arn}"
+      ]
+    },
+    {
       "Effect": "Allow",
       "Action" : [
         "logs:CreateLogStream",
