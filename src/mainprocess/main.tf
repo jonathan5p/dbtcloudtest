@@ -19,7 +19,7 @@ module "aurora_db" {
   project_app_group = var.project_app_group
   project_prefix    = var.project_prefix
   site              = var.site
-  project_objects   = merge(var.project_objects, { "glue_conn_sg_id" = module.glue_resources.aurora_conn_sg_id })
+  project_objects   = merge(var.project_objects, { "glue_conn_sg_id" = module.glue_resources.glue_conn_sg_id })
 }
 
 module "lambda_resources" {
@@ -68,9 +68,9 @@ module "stepfunction" {
 #------------------------------------------------------------------------------
 
 resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
-  security_group_id = modules.glue_resources.glue_conn_sg_id
+  security_group_id = module.glue_resources.glue_conn_sg_id
   ip_protocol = "tcp"
   from_port = 0
   to_port = 65535
-  referenced_security_group_id = modules.aurora_db.aurora_sg_id
+  referenced_security_group_id = module.aurora_db.aurora_sg_id
 }
