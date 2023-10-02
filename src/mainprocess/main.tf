@@ -1,3 +1,13 @@
+module "aurora_db" {
+  source            = "./aurora"
+  base_naming       = var.base_naming
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_prefix    = var.project_prefix
+  site              = var.site
+  project_objects   = var.project_objects
+}
+
 module "glue_resources" {
   source             = "./glue"
   base_naming        = var.base_naming
@@ -10,16 +20,6 @@ module "glue_resources" {
   tier               = var.tier
   zone               = var.zone
   project_objects    = var.project_objects
-}
-
-module "aurora_db" {
-  source            = "./aurora"
-  base_naming       = var.base_naming
-  environment       = var.environment
-  project_app_group = var.project_app_group
-  project_prefix    = var.project_prefix
-  site              = var.site
-  project_objects   = merge(var.project_objects, { "glue_conn_sg_id" = module.glue_resources.glue_conn_sg_id })
 }
 
 module "lambda_resources" {
@@ -73,4 +73,12 @@ resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
   from_port = 0
   to_port = 65535
   referenced_security_group_id = module.aurora_db.aurora_sg_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress"{
+  security_group_id = module.aurora_db.aurora_sg_id
+  ip_protocol = "tcp"
+  from_port = 5432
+  to_port = 5432
+  referenced_security_group_id = module.glue_resources.glue_conn_sg_id
 }

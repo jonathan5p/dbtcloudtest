@@ -23,15 +23,6 @@ resource "aws_security_group" "db_sg" {
   name   = module.aurora_security_group_naming.name
   tags   = module.aurora_security_group_naming.tags
   vpc_id = data.aws_ssm_parameter.aurora_vpc_id.value
-
-  ingress {
-    description     = "Allow traffic from OIDH glue connection"
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [var.project_objects.aurora_conn_sg_id]
-  }
-  
 }
 
 #------------------------------------------------------------------------------
