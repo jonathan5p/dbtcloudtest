@@ -16,6 +16,14 @@
             "BackoffRate": 2
           }
         ],
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailedState"
+          }
+        ],
         "Type": "Task",
         "OutputPath": "$.Payload",
         "Resource": "arn:aws:states:::lambda:invoke",
@@ -64,7 +72,15 @@
           }
         },
         "ItemsPath": "$.tables",
-        "MaxConcurrency": 4
+        "MaxConcurrency": 4,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailedState"
+          }
+        ]
       },
       "enrich-caar-data": {
         "Type": "Parallel",
@@ -126,10 +142,18 @@
               }
             }
           }
+        ],
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailedState"
+          }
         ]
       },
       "start-glue-staging-crawler": {
-        "End": true,
+        "Next": "cleaning-job",
         "Retry": [
           {
             "ErrorEquals": [
@@ -140,11 +164,122 @@
             "BackoffRate": 2
           }
         ],
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailedState"
+          }
+        ],
         "Type": "Task",
         "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
         "Parameters": {
           "Name": "${glue_staging_crawler}"
         }
+      },
+      "cleaning-job": {
+        "Next": "deduplication-jobs",
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "IntervalSeconds": 2,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailedState"
+          }
+        ],
+        "Type": "Task",
+        "Resource": "arn:aws:states:::glue:startJobRun.sync",
+        "Parameters": {
+          "JobName": "${glue_cleaning_job}",
+          "Timeout": 120,
+          "NotificationProperty": {
+            "NotifyDelayAfter": 5
+          }
+        }
+      },
+      "deduplication-jobs": {
+        "Type": "Parallel",
+        "End": true,
+        "Branches": [
+          {
+            "StartAt": "individuals",
+            "States": {
+              "individuals": {
+                "End": true,
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "States.ALL"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                  }
+                ],
+                "Type": "Task",
+                "Resource": "arn:aws:states:::glue:startJobRun.sync",
+                "Parameters": {
+                  "JobName": "${glue_ind_dedup_job}",
+                  "Timeout": 120,
+                  "NotificationProperty": {
+                    "NotifyDelayAfter": 5
+                  }
+                }
+              }
+            }
+          },
+          {
+            "StartAt": "organizations",
+            "States": {
+              "enrich-office": {
+                "End": true,
+                "Retry": [
+                  {
+                    "ErrorEquals": [
+                      "States.ALL"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 3,
+                    "BackoffRate": 2
+                  }
+                ],
+                "Type": "Task",
+                "Resource": "arn:aws:states:::glue:startJobRun.sync",
+                "Parameters": {
+                  "JobName": "${glue_org_dedup_job}",
+                  "Timeout": 120,
+                  "NotificationProperty": {
+                    "NotifyDelayAfter": 5
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "FailedState"
+          }
+        ]
+      },
+      "FailState": {
+        "Type": "Fail",
+        "Cause": "Level_Error",
+        "Error": "Level_Error"
       }
     }
   }
