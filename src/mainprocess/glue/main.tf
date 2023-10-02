@@ -140,13 +140,13 @@ resource "aws_security_group" "conn_sg" {
 resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress"{
   security_group_id = aws_security_group.conn_sg.id
   ip_protocol = -1
-  security_group_id = aws_security_group.conn_sg.id
+  referenced_security_group_id = aws_security_group.conn_sg.id
 }
 
 resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
   security_group_id = aws_security_group.conn_sg.id
   ip_protocol = -1
-  security_group_id = aws_security_group.conn_sg.id
+  referenced_security_group_id = aws_security_group.conn_sg.id
 }
 
 #------------------------------------------------------------------------------
