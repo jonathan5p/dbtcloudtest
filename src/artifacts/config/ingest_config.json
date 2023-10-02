@@ -3,18 +3,18 @@
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
     "catalog_table": "bright_raw_agent_latest",
-    "catalog_database": "aue1d1z1gldoidhoidh_gluedb",
+    "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
         "dbtable": "public.bright_raw_agent_latest",
-        "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
+        "connectionName": "aue1d1z1glxoidhoidh-redshiftconn",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
       "write_options": {
         "partitions": "",
-        "write_mode": "full",
+        "write_mode": "incremental",
         "compression": "snappy",
         "merge_key": "membermlsid",
         "precombine_keys": "modificationtimestamp",
@@ -26,18 +26,18 @@
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
     "catalog_table": "bright_raw_office_latest",
-    "catalog_database": "aue1d1z1gldoidhoidh_gluedb",
+    "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
         "dbtable": "public.bright_raw_office_latest",
-        "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
+        "connectionName": "aue1d1z1glxoidhoidh-redshiftconn",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
       "write_options": {
         "partitions": "",
-        "write_mode": "full",
+        "write_mode": "incremental",
         "compression": "snappy",
         "merge_key": "officemlsid",
         "precombine_keys": "modificationtimestamp",
@@ -49,18 +49,18 @@
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
     "catalog_table": "bright_raw_team_latest",
-    "catalog_database": "aue1d1z1gldoidhoidh_gluedb",
+    "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
         "dbtable": "public.bright_raw_team_latest",
-        "connectionName": "aue1d1z1glxoidhoidh-ingestjobconnection",
+        "connectionName": "aue1d1z1glxoidhoidh-redshiftconn",
         "redshiftTmpDir": "s3://aue1d1z1s3boidhoidh-glueartifacts/tmp/ingest-job/"
       },
       "write_options": {
         "partitions": "",
-        "write_mode": "full",
+        "write_mode": "incremental",
         "compression": "snappy",
         "merge_key": "teamkey",
         "precombine_keys": "teammodificationtimestamp",
