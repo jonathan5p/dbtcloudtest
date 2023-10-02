@@ -9,6 +9,6 @@ output "functions_mapping" {
   }
 }
 
-output "aurora_conn_sg_id" {
-  value = resource.aws_security_group.conn_sg.id
+output "glue_conn_sg_id" {
+  value = aws_security_group.conn_sg.id
 }

@@ -135,22 +135,18 @@ resource "aws_security_group" "conn_sg" {
   name   = module.conn_sg_naming.name
   tags   = module.conn_sg_naming.tags
   vpc_id = data.aws_subnet.connection_subnet.vpc_id
+}
 
-  ingress {
-    description = "Ingress Access"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
-  }
+resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress"{
+  security_group_id = aws_security_group.conn_sg.id
+  ip_protocol = -1
+  security_group_id = aws_security_group.conn_sg.id
+}
 
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
+resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
+  security_group_id = aws_security_group.conn_sg.id
+  ip_protocol = -1
+  security_group_id = aws_security_group.conn_sg.id
 }
 
 #------------------------------------------------------------------------------
