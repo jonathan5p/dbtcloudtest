@@ -59,6 +59,7 @@ SELECT
     cs.uniqueorgid as indsourceresouoi,
     '' as indexpirationdate,
     cs.dlingestionts as indcreatedts,
+    cs.indisbrightparticipant as indisbrightparticipant,
     current_timestamp() as indlastmodifiedts
 FROM ind_clusters_df as cs
 LEFT JOIN office_df as odf ON cs.officemlsid = odf.officemlsid

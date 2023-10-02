@@ -26,8 +26,8 @@ team_sql_map_query = """
         END as orgsourcename,
         dof.mlsid as orgsourcerecordid,
         dtf.key as orgsourcerecordkey,
-        dtf.dlingestionts as orgcreatedtms,
-        current_timestamp() as orglastmodifiedtms,
+        dtf.dlingestionts as orgcreatedts,
+        current_timestamp() as orglastmodifiedts,
         dof.orgsourcetype as orgsourcetype,
         dof.type||' '||dof.branchtype as orgtype,
         dof.status as orgstatus,
@@ -60,7 +60,8 @@ team_sql_map_query = """
         dof.tradingas as orgtradingasname,
         dtf.key as orgalternatesourcerecordkey,
         dof.dateadded as sourcesystemcreatedtms,
-        dtf.modificationtimestamp as sourcesystemmodtms 
+        dtf.modificationtimestamp as sourcesystemmodtms,
+        false as orgisbrightparticipant
     FROM dedup_team_df as dtf
     LEFT JOIN dedup_office_df as dof ON dtf.mlsid__office = dof.mlsid
     """
@@ -77,8 +78,8 @@ office_sql_map_query = """
         END as orgsourcename,
         dedup_office_df.mlsid as orgsourcerecordid,
         dedup_office_df.key as orgsourcerecordkey,
-        dedup_office_df.dlingestionts as orgcreatedtms,
-        current_timestamp() as orglastmodifiedtms,
+        dedup_office_df.dlingestionts as orgcreatedts,
+        current_timestamp() as orglastmodifiedts,
         dedup_office_df.orgsourcetype as orgsourcetype,
         dedup_office_df.type||' '||dedup_office_df.branchtype as orgtype,
         dedup_office_df.status as orgstatus,
@@ -111,7 +112,8 @@ office_sql_map_query = """
         dedup_office_df.tradingas as orgtradingasname,
         dedup_office_df.key as orgalternatesourcerecordkey,
         dedup_office_df.dateadded as sourcesystemcreatedtms,
-        dedup_office_df.modificationtimestamp as sourcesystemmodtms 
+        dedup_office_df.modificationtimestamp as sourcesystemmodtms,
+        dedup_office_df.orgisbrightparticipant as orgisbrightparticipant
     FROM dedup_office_df
     """
 

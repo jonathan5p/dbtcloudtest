@@ -78,7 +78,7 @@ module "lambda_staging_office" {
   tier              = var.tier
   zone              = var.zone
   timeout           = 900
-  memory_size       = 2048
+  memory_size       = 4096
   runtime           = "python3.10"
 
   layers = [
