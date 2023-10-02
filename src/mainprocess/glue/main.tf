@@ -129,15 +129,15 @@ resource "aws_security_group" "conn_sg" {
   vpc_id = data.aws_subnet.connection_subnet.vpc_id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress"{
-  security_group_id = aws_security_group.conn_sg.id
-  ip_protocol = -1
+resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress" {
+  security_group_id            = aws_security_group.conn_sg.id
+  ip_protocol                  = -1
   referenced_security_group_id = aws_security_group.conn_sg.id
 }
 
-resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
-  security_group_id = aws_security_group.conn_sg.id
-  ip_protocol = -1
+resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
+  security_group_id            = aws_security_group.conn_sg.id
+  ip_protocol                  = -1
   referenced_security_group_id = aws_security_group.conn_sg.id
 }
 
@@ -184,6 +184,7 @@ module "ingest_job" {
     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
     "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
     "--job-bookmark-option" = "job-bookmark-disable"
+    "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
   }
 }
 
@@ -225,12 +226,15 @@ module "cleaning_job" {
     "--office_table_name"               = "bright_staging_office_latest"
     "--team_table_name"                 = "bright_raw_team_latest"
     "--datalake-formats"                = "delta"
+    "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
     "--model_version"                   = "1"
     "--additional-python-modules"       = "clean==${data.aws_ssm_parameter.ds_clean_library_version.value}"
-    "--python-modules-installer-option" = "${data.aws_ssm_parameter.bright_pypi_pipconf.value}"
+    "--python-modules-installer-option" = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "\\s+", ""), "^\\[global\\]", "")}"
   }
 }
+
+
 
 #------------------------------------------------------------------------------
 # Glue Splink Individuals Job
@@ -265,6 +269,7 @@ module "ind_dedup_job" {
     "--data_bucket"               = var.project_objects.data_bucket_id
     "--agent_table_name"          = "clean_splink_agent_data"
     "--office_table_name"         = "bright_staging_office_latest"
+    "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
     "--county_info_s3_path"       = "s3://aue1d1z1s3boidhoidh-datastorage/raw_data/aue1d1z1glddatahubdatahub_utilities/counties_associate_with_bmls/RulesToDetermineNativeRecords.csv"
     "--max_records_per_file"      = 1000
@@ -309,6 +314,7 @@ module "org_dedup_job" {
     "--data_bucket"               = var.project_objects.data_bucket_id
     "--office_table_name"         = "clean_splink_office_data"
     "--team_table_name"           = "clean_splink_team_data"
+    "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
     "--county_info_s3_path"       = "s3://aue1d1z1s3boidhoidh-datastorage/raw_data/aue1d1z1glddatahubdatahub_utilities/counties_associate_with_bmls/RulesToDetermineNativeRecords.csv"
     "--max_records_per_file"      = 1000
@@ -380,6 +386,20 @@ data "aws_iam_policy_document" "staging_glue_crawler_policy" {
     ]
     resources = [var.project_objects.data_bucket_arn,
     "${var.project_objects.data_bucket_arn}/*"]
+  }
+
+  statement {
+    sid    = "kmsread"
+    effect = "Allow"
+    actions = [
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:CreateGrant"
+    ]
+    resources = [var.project_objects.data_key_arn]
   }
 }
 
