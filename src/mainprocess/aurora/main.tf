@@ -128,13 +128,14 @@ resource "aws_rds_cluster_instance" "example" {
 #------------------------------------------------------------------------------
 
 resource "aws_ssm_parameter" "aurora_jdbc_url" {
-  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/vpcid"
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/jdbc_url"
   type  = "String"
   value = "jdbc:postgresql://${aws_rds_cluster.admintooldb.endpoint}:5432/dev"
 }
 
-resource "aws_ssm_parameter" "aurora_jdbc_url" {
-  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/vpcid"
+resource "aws_ssm_parameter" "aurora_subnetid" {
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
   type  = "String"
-  value = "jdbc:postgresql://${aws_rds_cluster.admintooldb.endpoint}:5432/dev"
+  value = data.aws_subnets.db_subnets.ids[0]
 }
+
