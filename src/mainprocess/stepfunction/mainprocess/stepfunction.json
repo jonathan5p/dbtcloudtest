@@ -276,7 +276,8 @@
           }
         ]
       },
-      "FailState": {
+      "FailedState": {
+        "End": true,
         "Type": "Fail",
         "Cause": "Level_Error",
         "Error": "Level_Error"

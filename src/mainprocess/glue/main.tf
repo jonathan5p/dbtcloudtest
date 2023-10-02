@@ -8,7 +8,6 @@ resource "aws_s3_object" "glue_jars" {
   key                    = join("/", ["jars", each.value])
   source                 = "../src/mainprocess/glue/jars/${each.value}"
   server_side_encryption = "AES256"
-  etag                   = filemd5("../src/mainprocess/glue/jars/${each.value}")
   bucket_key_enabled     = true
 }
 
