@@ -72,5 +72,5 @@ resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
   ip_protocol = "tcp"
   from_port = 0
   to_port = 65535
-  security_group_id = modules.aurora_db.aurora_sg_id
+  referenced_security_group_id = modules.aurora_db.aurora_sg_id
 }
