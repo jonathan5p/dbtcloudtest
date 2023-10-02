@@ -1,5 +1,10 @@
 data "aws_region" "current" {}
 
+locals{
+  db_name = "dev"
+  db_port = 5432
+}
+
 #------------------------------------------------------------------------------
 # Aurora Credentials
 #------------------------------------------------------------------------------
@@ -78,7 +83,7 @@ resource "aws_rds_cluster" "admintooldb" {
   engine                          = "aurora-postgresql"
   engine_mode                     = "provisioned"
   engine_version                  = "13.6"
-  database_name                   = "dev"
+  database_name                   = local.db_name
   master_username                 = "postgres"
   db_subnet_group_name            = resource.aws_db_subnet_group.db_subnet_group.id
   manage_master_user_password     = true
@@ -105,21 +110,5 @@ resource "aws_rds_cluster_instance" "example" {
   engine             = aws_rds_cluster.admintooldb.engine
   engine_version     = aws_rds_cluster.admintooldb.engine_version
   tags               = module.aurora_cluster_naming.tags
-}
-
-#------------------------------------------------------------------------------
-# Register Parameters 
-#------------------------------------------------------------------------------
-
-resource "aws_ssm_parameter" "aurora_jdbc_url" {
-  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/jdbc_url"
-  type  = "String"
-  value = "jdbc:postgresql://${aws_rds_cluster.admintooldb.endpoint}:5432/dev"
-}
-
-resource "aws_ssm_parameter" "aurora_subnetid" {
-  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
-  type  = "String"
-  value = data.aws_subnets.db_subnets.ids[0]
 }
 

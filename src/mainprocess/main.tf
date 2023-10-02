@@ -19,7 +19,8 @@ module "glue_resources" {
   site               = var.site
   tier               = var.tier
   zone               = var.zone
-  project_objects    = var.project_objects
+  project_objects    = merge(var.project_objects, { "aurora_jdbc_url" = module.aurora_db.jdbc_url, 
+                                                    "aurora_subnetid" = module.aurora_db.subnetid })
 }
 
 module "lambda_resources" {
@@ -67,18 +68,18 @@ module "stepfunction" {
 # Glue Aurora Connection
 #------------------------------------------------------------------------------
 
-resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
-  security_group_id = module.glue_resources.glue_conn_sg_id
-  ip_protocol = "tcp"
-  from_port = 0
-  to_port = 65535
-  referenced_security_group_id = module.aurora_db.aurora_sg_id
+resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
+  security_group_id            = module.glue_resources.glue_conn_sg_id
+  ip_protocol                  = "tcp"
+  from_port                    = 0
+  to_port                      = 65535
+  referenced_security_group_id = module.aurora_db.sg_id
 }
 
-resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress"{
-  security_group_id = module.aurora_db.aurora_sg_id
-  ip_protocol = "tcp"
-  from_port = 5432
-  to_port = 5432
+resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
+  security_group_id            = module.aurora_db.sg_id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
   referenced_security_group_id = module.glue_resources.glue_conn_sg_id
 }
