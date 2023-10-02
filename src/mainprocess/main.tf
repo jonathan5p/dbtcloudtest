@@ -59,5 +59,6 @@ module "stepfunction" {
     "config_loader_lambda"  = module.lambda_resources.functions_mapping.config_loader.lambda_arn
     "staging_agent_lambda"  = module.lambda_resources.functions_mapping.staging_agent.lambda_arn
     "staging_office_lambda" = module.lambda_resources.functions_mapping.staging_office.lambda_arn
+    "data_key_arn"          = var.project_objects.data_key_arn
   }
 }
