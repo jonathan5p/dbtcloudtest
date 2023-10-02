@@ -242,7 +242,7 @@
           {
             "StartAt": "organizations",
             "States": {
-              "enrich-office": {
+              "organizations": {
                 "End": true,
                 "Retry": [
                   {
