@@ -20,8 +20,8 @@ module "aurora_security_group_naming" {
 }
 
 resource "aws_security_group" "db_sg" {
-  name = module.aurora_security_group_naming.name
-  tags = module.aurora_security_group_naming.tags
+  name   = module.aurora_security_group_naming.name
+  tags   = module.aurora_security_group_naming.tags
   vpc_id = data.aws_ssm_parameter.aurora_vpc_id.value
 
   ingress {
@@ -31,20 +31,21 @@ resource "aws_security_group" "db_sg" {
     protocol        = "tcp"
     security_groups = [var.project_objects.aurora_conn_sg_id]
   }
+  
 }
 
 #------------------------------------------------------------------------------
 # Aurora Subnet Group
 #------------------------------------------------------------------------------
 
-data "aws_subnets" "db_subnets"{
-  filter{
-    name = "vpc-id"
-    values  = [data.aws_ssm_parameter.aurora_vpc_id.value]
+data "aws_subnets" "db_subnets" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_ssm_parameter.aurora_vpc_id.value]
   }
 
-  filter{
-    name = "tag:Name"
+  filter {
+    name   = "tag:Name"
     values = ["*mtxdatabase"]
   }
 }
@@ -103,6 +104,8 @@ resource "aws_rds_cluster" "admintooldb" {
     max_capacity = var.project_objects.aurora_max_capacity
     min_capacity = var.project_objects.aurora_min_capacity
   }
+
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
 }
 
 resource "aws_rds_cluster_instance" "example" {
@@ -112,3 +115,20 @@ resource "aws_rds_cluster_instance" "example" {
   engine_version     = aws_rds_cluster.admintooldb.engine_version
   tags               = module.aurora_cluster_naming.tags
 }
+
+#------------------------------------------------------------------------------
+# Register Parameters 
+#------------------------------------------------------------------------------
+
+resource "aws_ssm_parameter" "aurora_jdbc_url" {
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/jdbc_url"
+  type  = "String"
+  value = "jdbc:postgresql://${aws_rds_cluster.admintooldb.endpoint}:5432/dev"
+}
+
+resource "aws_ssm_parameter" "aurora_subnetid" {
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/aurora/subnetid"
+  type  = "String"
+  value = data.aws_subnets.db_subnets.ids[0]
+}
+

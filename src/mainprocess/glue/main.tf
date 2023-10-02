@@ -132,9 +132,21 @@ module "conn_sg_naming" {
 }
 
 resource "aws_security_group" "conn_sg" {
-  name = module.conn_sg_naming.name
-  tags = module.conn_sg_naming.tags
+  name   = module.conn_sg_naming.name
+  tags   = module.conn_sg_naming.tags
   vpc_id = data.aws_subnet.connection_subnet.vpc_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress"{
+  security_group_id = aws_security_group.conn_sg.id
+  ip_protocol = -1
+  security_group_id = aws_security_group.conn_sg.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "glue_sg_egress"{
+  security_group_id = aws_security_group.conn_sg.id
+  ip_protocol = -1
+  security_group_id = aws_security_group.conn_sg.id
 }
 
 #------------------------------------------------------------------------------
