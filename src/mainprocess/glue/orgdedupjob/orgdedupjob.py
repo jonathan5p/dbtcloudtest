@@ -60,8 +60,7 @@ team_sql_map_query = """
         dof.tradingas as orgtradingasname,
         dtf.key as orgalternatesourcerecordkey,
         dof.dateadded as sourcesystemcreatedtms,
-        dtf.modificationtimestamp as sourcesystemmodtms,
-        false as orgisbrightparticipant
+        dtf.modificationtimestamp as sourcesystemmodtms
     FROM dedup_team_df as dtf
     LEFT JOIN dedup_office_df as dof ON dtf.mlsid__office = dof.mlsid
     """
@@ -112,8 +111,7 @@ office_sql_map_query = """
         dedup_office_df.tradingas as orgtradingasname,
         dedup_office_df.key as orgalternatesourcerecordkey,
         dedup_office_df.dateadded as sourcesystemcreatedtms,
-        dedup_office_df.modificationtimestamp as sourcesystemmodtms,
-        dedup_office_df.orgisbrightparticipant as orgisbrightparticipant
+        dedup_office_df.modificationtimestamp as sourcesystemmodtms
     FROM dedup_office_df
     """
 
@@ -258,6 +256,7 @@ if __name__ == "__main__":
         "aurora_table",
         "county_info_s3_path",
         "max_records_per_file",
+        "aurora_connection_name"
     ]
 
     args = getResolvedOptions(sys.argv, params)
