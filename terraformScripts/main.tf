@@ -398,3 +398,16 @@ module "alayasync" {
     "data_key_arn" : module.data_key.key_arn
   }
 }
+
+module "athena" {
+  source = "../src/athena"
+
+  environment         = var.environment  
+  project_app_group   = var.project_app_group
+  project_ledger      = var.project_ledger
+  project_prefix      = var.project_prefix
+  site                = var.site
+  tier                = var.tier
+  zone                = var.zone
+
+}
