@@ -6,6 +6,10 @@ terraform {
   }
 }
 
+locals {
+  athena_workgroup = "${var.site}${var.environment}z1atw${var.project_app_group}${var.project_prefix}"
+}
+
 module "base_naming" {
   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   app_group = var.project_app_group
@@ -1102,6 +1106,20 @@ data "aws_iam_policy_document" "dev_deploy4" {
       "arn:aws:cloudwatch:${var.region}:${var.aws_account_number_env}:alarm:${module.cwa_alaya_sync_register_naming.name}"
     ]
     sid = "cloudwatchalarms"
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "athena:CreateWorkGroup",
+      "athena:TagResource",
+      "athena:DeleteWorkGroup",
+      "athena:GetWorkGroup",
+      "athena:ListTagsForResource"
+    ]
+    resources = [
+      "arn:aws:athena:${var.region}:${var.aws_account_number_env}:workgroup/${local.athena_workgroup}"
+    ]
   }
 }
 # ------------------------------------------------------------------------------
