@@ -136,10 +136,9 @@ resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
-  security_group_id            = aws_security_group.conn_sg.id
+  security_group_id             = aws_security_group.conn_sg.id
   ip_protocol                   = -1
-  cidr_blocks                  = ["0.0.0.0/0"]
-  #referenced_security_group_id = aws_security_group.conn_sg.id
+  cidr_ipv4                     = ["0.0.0.0/0"]
 }
 
 #------------------------------------------------------------------------------
