@@ -120,7 +120,7 @@ module "conn_sg_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "sgp"
-  purpose     = join("", [var.project_prefix, "-", "glueconnsgnaming"])
+  purpose     = join("", [var.project_prefix, "-", "glueconnsg"])
 }
 
 resource "aws_security_group" "conn_sg" {
@@ -137,8 +137,9 @@ resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress" {
 
 resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
   security_group_id            = aws_security_group.conn_sg.id
-  ip_protocol                  = -1
-  referenced_security_group_id = aws_security_group.conn_sg.id
+  ip_protocol                   = -1
+  cidr_blocks                  = ["0.0.0.0/0"]
+  #referenced_security_group_id = aws_security_group.conn_sg.id
 }
 
 #------------------------------------------------------------------------------
@@ -230,11 +231,9 @@ module "cleaning_job" {
     "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
     "--model_version"                   = "1"
     "--additional-python-modules"       = "clean==${data.aws_ssm_parameter.ds_clean_library_version.value}"
-    "--python-modules-installer-option" = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "\\s+", ""), "^\\[global\\]", "")}"
+    "--python-modules-installer-option" = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", "")}"
   }
 }
-
-
 
 #------------------------------------------------------------------------------
 # Glue Splink Individuals Job
@@ -278,6 +277,7 @@ module "ind_dedup_job" {
     "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.individuals"
+    "--aurora_connection_name"    = module.aurora_connection.conn_name
   }
 }
 
@@ -323,6 +323,7 @@ module "org_dedup_job" {
     "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.organizations"
+    "--aurora_connection_name"    = module.aurora_connection.conn_name
   }
 }
 

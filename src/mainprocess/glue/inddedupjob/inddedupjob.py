@@ -59,7 +59,6 @@ SELECT
     cs.uniqueorgid as indsourceresouoi,
     '' as indexpirationdate,
     cs.dlingestionts as indcreatedts,
-    cs.indisbrightparticipant as indisbrightparticipant,
     current_timestamp() as indlastmodifiedts
 FROM ind_clusters_df as cs
 LEFT JOIN office_df as odf ON cs.officemlsid = odf.officemlsid
@@ -205,6 +204,7 @@ if __name__ == "__main__":
         "aurora_table",
         "county_info_s3_path",
         "max_records_per_file",
+        "aurora_connection_name"
     ]
     args = getResolvedOptions(sys.argv, params)
 
