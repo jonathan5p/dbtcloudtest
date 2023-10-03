@@ -121,13 +121,13 @@ native_records_query = """
 WITH native_records AS(
     SELECT 
         orghubid, 
-        orgisbrightparticipant,
+        orgcanbenative,
         orgglobalidentifier 
     FROM (  SELECT 
     *,
     ROW_NUMBER() OVER (PARTITION BY orghubid ORDER BY orgglobalidentifier ASC) AS row_num
   FROM bright_participants_df
-  WHERE orgisbrightparticipant)
+  WHERE orgcanbenative)
     WHERE row_num = 1
 )
 SELECT bdf.*,
@@ -233,7 +233,7 @@ def generate_globalids_and_native_records(
     )
 
     bright_participants_df = global_id_df.withColumn(
-        "orgisbrightparticipant",
+        "orgcanbenative",
         check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))),
     )
     bright_participants_df.createOrReplaceTempView("bright_participants_df")
