@@ -175,6 +175,6 @@ resource "aws_cloudwatch_metric_alarm" "register" {
   insufficient_data_actions = []
   tags                      = module.cwa_alaya_sync_register_naming.tags
   dimensions = {
-    QueueName=module.sqs.sqs_names.registration
+    QueueName=module.sqs.sqs_names.registration_dlq
   }
 }
