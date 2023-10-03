@@ -724,7 +724,7 @@ data "aws_iam_policy_document" "dev_deploy" {
     ]
     resources = [
       "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group/*",
-      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group-rules/*",
+      "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:security-group-rule/*",
       "arn:aws:ec2:${var.region}:${var.aws_account_number_env}:vpc/*"
     ]
     sid = "ec2sgcreate"
