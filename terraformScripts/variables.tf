@@ -65,7 +65,6 @@ variable "s3_bucket_objects_transition_days" {
 }
 
 # Lambda enrich caar data parameters
-
 variable "lambda_ec_agent_source_table_name" {
   description = "Name of the agent table registered in the S3 Raw layer"
   default     = "bright_raw_agent_latest"
@@ -84,6 +83,12 @@ variable "lambda_ec_office_source_table_name" {
 variable "lambda_ec_office_target_table_name" {
   description = "Name of the office table registered in the S3 Staging layer"
   default     = "bright_staging_office_latest"
+}
+
+# Glue max records per file
+variable "glue_max_records_per_file" {
+  description = "NMaximum number of records per parquet file write in the deduplication jobs"
+  default     = 1000
 }
 
 # Event bridge cron trigger

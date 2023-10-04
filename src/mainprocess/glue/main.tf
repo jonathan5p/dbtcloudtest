@@ -270,7 +270,7 @@ module "ind_dedup_job" {
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
     "--county_info_s3_path"       = "s3://aue1d1z1s3boidhoidh-datastorage/raw_data/aue1d1z1glddatahubdatahub_utilities/counties_associate_with_bmls/RulesToDetermineNativeRecords.csv"
-    "--max_records_per_file"      = 1000
+    "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
     "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
@@ -316,7 +316,7 @@ module "org_dedup_job" {
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
     "--county_info_s3_path"       = "s3://aue1d1z1s3boidhoidh-datastorage/raw_data/aue1d1z1glddatahubdatahub_utilities/counties_associate_with_bmls/RulesToDetermineNativeRecords.csv"
-    "--max_records_per_file"      = 1000
+    "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
     "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
