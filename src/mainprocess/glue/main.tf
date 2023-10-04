@@ -214,7 +214,7 @@ data "aws_ssm_parameter" "bright_pypi_pipconf" {
 }
 
 locals{
-  jfrog_url = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", "")}"
+  jfrog_url = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
 }
 
 module "cleaning_job" {
