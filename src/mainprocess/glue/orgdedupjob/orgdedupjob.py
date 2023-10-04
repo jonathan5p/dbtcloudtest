@@ -353,8 +353,8 @@ if __name__ == "__main__":
     # and generate a county list with all the counties that are Bright Participants
     county_df = ps.read_csv(args["county_info_s3_path"])
 
-    bright_participants = county_df.groupby("Bright Participant/Bordering").get_group(
-        "Bright Participant"
+    bright_participants = county_df.groupby("Native/Bordering").get_group(
+        "Native"
     )
     county_list = (
         bright_participants[["Upper County", "State"]].values.tolist()
