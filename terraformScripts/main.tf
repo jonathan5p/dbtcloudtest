@@ -136,6 +136,16 @@ resource "aws_s3_object" "artifacts" {
 }
 
 #------------------------------------------------------------------------------
+# Glue max records per file parameter
+#------------------------------------------------------------------------------
+
+resource "aws_ssm_parameter" "max_records_param" {
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/alayasync/max_records"
+  type  = "String"
+  value = var.glue_max_records_per_file
+}
+
+#------------------------------------------------------------------------------
 # Main process
 #------------------------------------------------------------------------------
 
@@ -171,6 +181,7 @@ module "mainprocess" {
     "aurora_preferred_backup_window"     = var.aurora_preferred_backup_window
     "aurora_max_capacity"                = var.aurora_max_capacity
     "aurora_min_capacity"                = var.aurora_min_capacity
+    "max_records_per_file"               = var.glue_max_records_per_file
   }
 }
 
