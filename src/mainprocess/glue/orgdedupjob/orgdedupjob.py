@@ -250,6 +250,7 @@ if __name__ == "__main__":
         "model_version",
         "data_bucket",
         "glue_db",
+        "alaya_glue_db",
         "office_table_name",
         "team_table_name",
         "ssm_params_base",
@@ -406,7 +407,7 @@ if __name__ == "__main__":
         "overwrite"
     ).format("parquet").option(
         "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/organizations/",
+        f"s3://{args['data_bucket']}/consume_data/{args['alaya_glue_db']}/organizations/",
     ).option(
         "overwriteSchema", "true"
     ).option(

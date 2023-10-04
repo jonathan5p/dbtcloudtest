@@ -291,7 +291,8 @@ module "ind_dedup_job" {
     "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
-    "--glue_db"                   = aws_glue_catalog_database.alayasync_process_glue_db.name
+    "--alaya_glue_db"             = aws_glue_catalog_database.alayasync_process_glue_db.name
+    "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.individuals"
     "--aurora_connection_name"    = module.aurora_connection.conn_name
@@ -337,7 +338,8 @@ module "org_dedup_job" {
     "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
-    "--glue_db"                   = aws_glue_catalog_database.alayasync_process_glue_db.name
+    "--alaya_glue_db"             = aws_glue_catalog_database.alayasync_process_glue_db.name
+    "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.organizations"
     "--aurora_connection_name"    = module.aurora_connection.conn_name
