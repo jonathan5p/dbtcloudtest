@@ -28,6 +28,19 @@ resource "aws_glue_catalog_database" "dedup_process_glue_db" {
   tags         = module.glue_db_naming.tags
 }
 
+module "glue_alayasyncdb_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = var.base_naming
+  type        = "gld"
+  purpose     = join("", [var.project_prefix, "_", "alayasync"])
+}
+
+resource "aws_glue_catalog_database" "alayasync_process_glue_db" {
+  name         = module.glue_alayasyncdb_naming.name
+  location_uri = "s3://${var.project_objects.data_bucket_id}/consume_data/${module.glue_alayasyncdb_naming.name}"
+  tags         = module.glue_alayasyncdb_naming.tags
+}
+
 #------------------------------------------------------------------------------
 # Glue Security Configuration
 #------------------------------------------------------------------------------
@@ -200,6 +213,10 @@ data "aws_ssm_parameter" "bright_pypi_pipconf" {
   name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
 }
 
+locals{
+  jfrog_url = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", "")}"
+}
+
 module "cleaning_job" {
   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=dev"
   base_naming         = var.base_naming
@@ -226,7 +243,7 @@ module "cleaning_job" {
     "--office_table_name"               = "bright_staging_office_latest"
     "--team_table_name"                 = "bright_raw_team_latest"
     "--datalake-formats"                = "delta"
-    "--python-modules-installer-option" = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", "")}"
+    "--python-modules-installer-option" = local.jfrog_url
     "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
     "--model_version"                   = "1"
@@ -240,6 +257,7 @@ module "cleaning_job" {
 
 locals {
   ind_dedup_job_workers = 20
+  counties_path = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
 }
 
 module "ind_dedup_job" {
@@ -269,11 +287,11 @@ module "ind_dedup_job" {
     "--office_table_name"         = "bright_staging_office_latest"
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
-    "--county_info_s3_path"       = "s3://aue1d1z1s3boidhoidh-datastorage/raw_data/aue1d1z1glddatahubdatahub_utilities/counties_associate_with_bmls/RulesToDetermineNativeRecords.csv"
+    "--county_info_s3_path"       = local.counties_path
     "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
-    "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
+    "--glue_db"                   = aws_glue_catalog_database.alayasync_process_glue_db.name
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.individuals"
     "--aurora_connection_name"    = module.aurora_connection.conn_name
@@ -315,11 +333,11 @@ module "org_dedup_job" {
     "--team_table_name"           = "clean_splink_team_data"
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
-    "--county_info_s3_path"       = "s3://aue1d1z1s3boidhoidh-datastorage/raw_data/aue1d1z1glddatahubdatahub_utilities/counties_associate_with_bmls/RulesToDetermineNativeRecords.csv"
+    "--county_info_s3_path"       = local.counties_path
     "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
-    "--glue_db"                   = aws_glue_catalog_database.dedup_process_glue_db.name
+    "--glue_db"                   = aws_glue_catalog_database.alayasync_process_glue_db.name
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.organizations"
     "--aurora_connection_name"    = module.aurora_connection.conn_name

@@ -81,6 +81,13 @@ module "glue_db_naming" {
   purpose     = join("", [var.project_prefix, "_", "oidhdb"])
 }
 
+module "glue_alayasyncdb_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "gld"
+  purpose     = join("", [var.project_prefix, "_", "alayasync"])
+}
+
 module "glue_ingest_job_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -972,11 +979,14 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:database/${module.glue_db_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:userDefinedFunction/${module.glue_db_naming.name}/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:table/${module.glue_db_naming.name}/*",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:database/${module.glue_alayasyncdb_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:userDefinedFunction/${module.glue_alayasyncdb_naming.name}/*",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:table/${module.glue_alayasyncdb_naming.name}/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:catalog",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection"
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
     ]
   }
 
