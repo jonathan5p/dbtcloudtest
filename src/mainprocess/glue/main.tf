@@ -226,11 +226,11 @@ module "cleaning_job" {
     "--office_table_name"               = "bright_staging_office_latest"
     "--team_table_name"                 = "bright_raw_team_latest"
     "--datalake-formats"                = "delta"
+    "--python-modules-installer-option" = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", "")}"
     "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
     "--model_version"                   = "1"
     "--additional-python-modules"       = "clean==${data.aws_ssm_parameter.ds_clean_library_version.value}"
-    "--python-modules-installer-option" = "--${replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", "")}"
   }
 }
 
