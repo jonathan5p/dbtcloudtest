@@ -51,6 +51,28 @@ variable "zone" {
   default = {}
 }
 
+# Data KMS Admins and Users
+variable "kms_data_admins" {
+  description = "Arn of the IAM roles/users that will administrate the kms data key"
+  default     = []
+}
+
+variable "kms_data_users" {
+  description = "Arn of the IAM roles/users that will use the kms data key"
+  default     = []
+}
+
+# Glue KMS Admins and Users
+variable "kms_glue_admins" {
+  description = "Arn of the IAM roles/users that will administrate the kms data key"
+  default     = []
+}
+
+variable "kms_glue_users" {
+  description = "Arn of the IAM roles/users that will use the kms data key"
+  default     = []
+}
+
 # S3 parameters
 variable "s3_bucket_tmp_expiration_days" {
   description = "Expiration lifecycle policy for all objects store in the tmp prefix of the s3 buckets"

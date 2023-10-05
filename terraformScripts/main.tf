@@ -38,9 +38,11 @@ module "data_key_name" {
   purpose     = join("", [var.project_prefix, "-", "datakey"])
 }
 module "data_key" {
-  source             = "../modules/kms"
+  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
   key_name           = module.data_key_name.name
   key_tags           = module.data_key_name.tags
+  key_admins         = var.kms_data_admins
+  key_users          = var.kms_data_users
   key_description    = "KMS key used for data encryption of all the data in the datahub-dedup process"
   aws_account_number = data.aws_caller_identity.current.account_id
 }
@@ -53,9 +55,11 @@ module "glue_enc_key_name" {
   purpose     = join("", [var.project_prefix, "-", "glueenckey"])
 }
 module "glue_enc_key" {
-  source             = "../modules/kms"
+  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
   key_name           = module.glue_enc_key_name.name
   key_tags           = module.glue_enc_key_name.tags
+  key_admins         = var.kms_glue_admins
+  key_users          = var.kms_glue_users
   key_description    = "KMS key used for data encryption of all the glue resources used in the datahub-dedup process"
   aws_account_number = data.aws_caller_identity.current.account_id
 }
@@ -423,12 +427,12 @@ module "alayasync" {
 module "athena" {
   source = "../src/athena"
 
-  environment         = var.environment  
-  project_app_group   = var.project_app_group
-  project_ledger      = var.project_ledger
-  project_prefix      = var.project_prefix
-  site                = var.site
-  tier                = var.tier
-  zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
 }
