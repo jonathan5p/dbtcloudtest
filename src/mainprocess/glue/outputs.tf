@@ -16,3 +16,7 @@ output "glue_conn_sg_id" {
 output "alayasyncdb_path" {
   value = aws_glue_catalog_database.alayasync_process_glue_db.location_uri
 }
+
+output "alayasync_db" {
+  value = aws_glue_catalog_database.alayasync_process_glue_db.name
+}

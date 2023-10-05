@@ -68,24 +68,27 @@ LEFT JOIN office_df as odf ON cs.officemlsid = odf.officemlsid
 # and linked global identifiers for each record
 native_records_query = """
 WITH native_records AS(
-    SELECT 
-        indhubid, 
-        indcanbenative,
-        indglobalidentifier 
-    FROM (  SELECT 
-    *,
-    ROW_NUMBER() OVER (PARTITION BY indhubid ORDER BY indglobalidentifier ASC) AS row_num
-  FROM ind_bright_participants
-  WHERE indcanbenative)
-    WHERE row_num = 1
+	SELECT indhubid,
+		indcanbenative,
+		indglobalidentifier
+	FROM (
+			SELECT *,
+				ROW_NUMBER() OVER (
+					PARTITION BY indhubid
+					ORDER BY indglobalidentifier ASC, indstatus ASC
+				) AS row_num
+			FROM ind_bright_participants
+			WHERE indcanbenative
+		)
+	WHERE row_num = 1
 )
 SELECT ibp.*,
-       CASE WHEN 
-       nr.indglobalidentifier = ibp.indglobalidentifier OR ibp.indhubid IS NULL
-       THEN  ' '
-       ELSE COALESCE(nr.indglobalidentifier, '') END as indlinkedglobalidentifier
-FROM ind_bright_participants as ibp 
-LEFT JOIN native_records as nr ON ibp.indhubid = nr.indhubid
+	CASE
+		WHEN nr.indglobalidentifier = ibp.indglobalidentifier
+		OR ibp.indhubid IS NULL THEN ' ' ELSE COALESCE(nr.indglobalidentifier, '')
+	END as indlinkedglobalidentifier
+FROM ind_bright_participants as ibp
+	LEFT JOIN native_records as nr ON ibp.indhubid = nr.indhubid
 ORDER BY ibp.indhubid DESC
 """
 
