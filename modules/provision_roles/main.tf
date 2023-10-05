@@ -368,6 +368,50 @@ module "lambda_execution_naming" {
   purpose     = join("", [var.project_prefix, "-", "alayasyncexecution"])
 }
 
+# lambdas - ecs_start
+module "ipl_lambda_ecs_start_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstart"])
+}
+
+module "iro_lambda_ecs_start_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstart"])
+}
+
+module "lambda_ecs_start_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstart"])
+}
+
+# lambdas - ecs_status
+module "ipl_lambda_ecs_status_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+}
+
+module "iro_lambda_ecs_status_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+}
+
+module "lambda_ecs_status_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+}
+
 # dynamo table sync
 module "dynamodb_sources_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
@@ -883,6 +927,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_processing_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_reduce_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_execution_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_ecs_start_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_ecs_status_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${var.site}${var.environment}${var.zone}iro${var.project_prefix}*"
     ]
@@ -919,6 +965,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_processing_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_reduce_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_execution_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_ecs_start_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_ecs_status_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${var.site}${var.environment}${var.zone}ipl${var.project_prefix}*"
     ]
@@ -972,7 +1020,10 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "glue:DeleteConnection",
       "glue:GetConnection",
       "glue:UpdateConnection",
-      "glue:GetTags"
+      "glue:GetTags",
+      "glue:CreateTable",
+      "glue:DeleteTable",
+      "glue:GetTable"
     ]
     effect = "Allow"
     resources = [
@@ -1024,10 +1075,12 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "glue:GetTags"
     ]
     effect = "Allow"
-    resources = ["arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}",
+    resources = [
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_cleaning_job_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ind_dedup_job_naming.name}",
-    "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}", ]
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}" 
+    ]
   }
 }
 
@@ -1044,7 +1097,9 @@ data "aws_iam_policy_document" "dev_deploy4" {
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_schedule_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_processing_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_reduce_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_execution_naming.name}"
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_execution_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_start_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_status_naming.name}"
     ]
   }
 

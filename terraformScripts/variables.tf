@@ -160,3 +160,8 @@ variable "aurora_min_capacity" {
   description = "Admin tool aurora postgresql min capacity"
   default     = 2
 }
+
+variable "ecs_subnets" {
+  type = string
+  description = "comma separated values for the subnets to use"
+}
