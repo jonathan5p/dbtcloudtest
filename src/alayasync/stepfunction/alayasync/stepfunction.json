@@ -1,92 +1,158 @@
 {
   "Comment": "Using Map state in Distributed mode",
-  "StartAt": "Scheduling",
+  "StartAt": "Parallel_Task",
   "States": {
-    "Scheduling": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
-      "Parameters": {
-        "FunctionName": "${schedule_lambda}",
-        "Payload.$": "$"
-      },
-      "Next": "Process data",
-      "Catch": [
+    "Parallel_Task": {
+      "Type": "Parallel",
+      "Branches": [
         {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "Next": "FailBranch_1_1"
-        }
-      ]
-    },
-    "Process data": {
-      "Type": "Map",
-      "ToleratedFailurePercentage": 100,
-      "MaxConcurrency": 2,
-      "ItemProcessor": {
-        "ProcessorConfig": {
-          "Mode": "DISTRIBUTED",
-          "ExecutionType": "STANDARD"
-        },
-        "StartAt": "Sending to Alaya",
-        "States": {
-          "Sending to Alaya": {
-            "Type": "Task",
-            "Resource": "arn:aws:states:::lambda:invoke",
-            "OutputPath": "$.Payload",
-            "Parameters": {
-              "Payload.$": "$",
-              "FunctionName": "${processing_lambda}"
+          "StartAt": "Scheduling",
+          "States": {
+            "Scheduling": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "FunctionName": "${schedule_lambda}",
+                "Payload.$": "$"
+              },
+              "Next": "Process data"
             },
-            "End": true
+            "Process data": {
+              "Type": "Map",
+              "ToleratedFailurePercentage": 100,
+              "MaxConcurrency": 2,
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "Main_Block",
+                "States": {
+                  "Main_Block": {
+                    "Type": "Parallel",
+                    "Branches": [
+                      {
+                        "StartAt": "Start_Sending_to_Alaya",
+                        "States": {
+                          "Start_Sending_to_Alaya": {
+                            "Type": "Task",
+                            "Resource": "${ecs_start}",
+                            "ResultPath": "$.run_async_id",
+                            "Next": "Wait_Send"
+                          },
+                          "Wait_Send": {
+                            "Type": "Wait",
+                            "Seconds": 30,
+                            "Next": "Send_status"
+                          },
+                          "Send_status": {
+                            "Type": "Task",
+                            "Resource": "${ecs_status}",
+                            "ResultPath": "$.run_async_status",
+                            "Next": "Choice_status"
+                          },
+                          "Choice_status": {
+                            "Type": "Choice",
+                            "Choices": [
+                              {
+                                "Variable": "$.run_async_status.status",
+                                "StringEquals": "STOPPED",
+                                "Next": "SuccessBranch"
+                              },
+                              {
+                                "Variable": "$.run_async_status.status",
+                                "StringEquals": "FAILED",
+                                "Next": "FailBranch"
+                              },
+                              {
+                                "Variable": "$.run_async_status.status",
+                                "StringEquals": "TIMEOUT",
+                                "Next": "FailBranch"
+                              }
+                            ],
+                            "Default": "Wait_Send"
+                          },
+                          "SuccessBranch": {
+                            "Type": "Pass",
+                            "End": true
+                          },
+                          "FailBranch": {
+                            "Type": "Fail",
+                            "Cause": "Wrong_status_for_ECS_task",
+                            "Error": "ECS_Task_Failed"
+                          }
+                        }
+                      }
+                    ],
+                    "Catch": [
+                      {
+                        "ErrorEquals": [
+                          "States.ALL"
+                        ],
+                        "ResultPath": "$.error_info",
+                        "Next": "MapEndFail"
+                      }
+                    ],
+                    "Next": "MapEndSuccess"
+                  },
+                  "MapEndSuccess": {
+                    "Type": "Pass",
+                    "End": true
+                  },
+                  "MapEndFail": {
+                    "Type": "Fail",
+                    "ErrorPath": "$.error_info.Error",
+                    "CausePath": "States.Format('Map Error {}', $.error_info.Cause)"
+                  }
+                }
+              },
+              "Label": "Processdata",
+              "Next": "Gathering results",
+              "ResultWriter": {
+                "Resource": "arn:aws:states:::s3:putObject",
+                "Parameters": {
+                  "Bucket": "${bucket_id}",
+                  "Prefix": "consume_data/resultData/"
+                }
+              },
+              "ItemSelector": {
+                "index.$": "$$.Map.Item.Index",
+                "value.$": "$$.Map.Item.Value"
+              }
+            },
+            "Gathering results": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "FunctionName": "${reduce_lambda}",
+                "Payload.$": "$"
+              },
+              "End": true
+            }
           }
         }
-      },
-      "Label": "Processdata",
-      "Next": "Gathering results",
-      "ResultWriter": {
-        "Resource": "arn:aws:states:::s3:putObject",
-        "Parameters": {
-          "Bucket": "${bucket_id}",
-          "Prefix": "consume_data/resultData"
-        }
-      },
-      "ItemSelector": {
-        "index.$": "$$.Map.Item.Index",
-        "value.$": "$$.Map.Item.Value"
-      },
+      ],
+      "ResultPath": "$.Payload",
       "Catch": [
         {
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "FailBranch_1_1"
-        }
-      ]
-    },
-    "Gathering results": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::lambda:invoke",
-      "OutputPath": "$.Payload",
-      "Parameters": {
-        "FunctionName": "${reduce_lambda}",
-        "Payload.$": "$"
-      },
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "Next": "FailBranch_1_1"
+          "ResultPath": "$.Payload",
+          "Next": "WorkflowEndFail"
         }
       ],
+      "Next": "WorkflowEnd"
+    },
+    "WorkflowEnd": {
+      "Type": "Pass",
       "End": true
     },
-    "FailBranch_1_1": {
+    "WorkflowEndFail": {
       "Type": "Fail",
-      "Cause": "Level_Error",
-      "Error": "Level_Error"
+      "Error": "Step Functions Execution Error"
     }
   }
 }
