@@ -119,24 +119,27 @@ office_sql_map_query = """
 # and linked global identifiers for each record
 native_records_query = """
 WITH native_records AS(
-    SELECT 
-        orghubid, 
-        orgcanbenative,
-        orgglobalidentifier 
-    FROM (  SELECT 
-    *,
-    ROW_NUMBER() OVER (PARTITION BY orghubid ORDER BY orgglobalidentifier ASC) AS row_num
-  FROM bright_participants_df
-  WHERE orgcanbenative)
-    WHERE row_num = 1
+	SELECT orghubid,
+		orgcanbenative,
+		orgglobalidentifier
+	FROM (
+			SELECT *,
+				ROW_NUMBER() OVER (
+					PARTITION BY orghubid
+					ORDER BY orgglobalidentifier ASC, orgstatus ASC
+				) AS row_num
+			FROM bright_participants_df
+			WHERE orgcanbenative
+		)
+	WHERE row_num = 1
 )
 SELECT bdf.*,
-       CASE WHEN 
-       native_records.orgglobalidentifier = bdf.orgglobalidentifier OR bdf.orghubid IS NULL
-       THEN  ' '
-       ELSE COALESCE(native_records.orgglobalidentifier, '') END as orglinkedglobalidentifier
-FROM bright_participants_df as bdf 
-LEFT JOIN native_records ON bdf.orghubid = native_records.orghubid
+	CASE
+		WHEN native_records.orgglobalidentifier = bdf.orgglobalidentifier
+		OR bdf.orghubid IS NULL THEN ' ' ELSE COALESCE(native_records.orgglobalidentifier, '')
+	END as orglinkedglobalidentifier
+FROM bright_participants_df as bdf
+	LEFT JOIN native_records ON bdf.orghubid = native_records.orghubid
 ORDER BY bdf.orghubid DESC
 """
 
