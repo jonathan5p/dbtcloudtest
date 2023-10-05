@@ -223,7 +223,7 @@
                       "States.ALL"
                     ],
                     "IntervalSeconds": 2,
-                    "MaxAttempts": 3,
+                    "MaxAttempts": 1,
                     "BackoffRate": 2
                   }
                 ],
@@ -250,7 +250,7 @@
                       "States.ALL"
                     ],
                     "IntervalSeconds": 2,
-                    "MaxAttempts": 3,
+                    "MaxAttempts": 1,
                     "BackoffRate": 2
                   }
                 ],

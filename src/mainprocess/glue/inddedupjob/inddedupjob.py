@@ -11,6 +11,7 @@ from awsglue.context import GlueContext
 from awsglue.job import Job
 from splink.spark.linker import SparkLinker
 import pyspark.pandas as ps
+from datetime import datetime
 import boto3
 import json
 
@@ -208,7 +209,7 @@ if __name__ == "__main__":
         "aurora_table",
         "county_info_s3_path",
         "max_records_per_file",
-        "aurora_connection_name"
+        "aurora_connection_name",
     ]
     args = getResolvedOptions(sys.argv, params)
 
@@ -283,9 +284,7 @@ if __name__ == "__main__":
     # # and generate a county list with all the counties that are Bright Participants
     county_df = ps.read_csv(args["county_info_s3_path"])
 
-    bright_participants = county_df.groupby("Native/Bordering").get_group(
-        "Native"
-    )
+    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
     county_list = (
         bright_participants[["Upper County", "State"]].values.tolist()
         + bright_participants[["County Name", "State"]].values.tolist()
@@ -296,11 +295,9 @@ if __name__ == "__main__":
 
     # Write data to S3
     partition_col = "dt_utc"
-    partition_value = F.date_format(
-        F.date_trunc("second", F.current_timestamp()), "yyyy-MM-dd-HH-mm-ss"
-    ).cast("string")
+    partition_value = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
-    clusters_df.withColumn(partition_col, partition_value).write.mode(
+    clusters_df.withColumn(partition_col, F.lit(partition_value)).write.mode(
         "overwrite"
     ).format("parquet").option(
         "path",
@@ -315,7 +312,7 @@ if __name__ == "__main__":
         f"{args['glue_db']}.splink_agent_cluster_df"
     )
 
-    individuals_df.withColumn(partition_col, partition_value).write.mode(
+    individuals_df.withColumn(partition_col, F.lit(partition_value)).write.mode(
         "append"
     ).format("parquet").option(
         "path",
@@ -329,10 +326,10 @@ if __name__ == "__main__":
     ).partitionBy(
         partition_col
     ).saveAsTable(
-        f"{args['glue_db']}.individuals"
+        f"{args['alaya_glue_db']}.individuals"
     )
 
-    spark.sql(f"MSCK REPAIR TABLE {args['glue_db']}.individuals DROP PARTITIONS;")
+    spark.sql(f"MSCK REPAIR TABLE {args['alaya_glue_db']}.individuals DROP PARTITIONS;")
 
     # Write data to the Aurora PostgreSQL database
 
@@ -340,6 +337,19 @@ if __name__ == "__main__":
         frame=DynamicFrame.fromDF(individuals_df, glueContext, "individuals"),
         connection_type="postgresql",
         connection_options=conn_ops,
+    )
+
+    # Trigger update alaya process
+    update_alaya_payload = {
+        "batch": partition_value,
+        "table": "individuals",
+        "database": args["alaya_glue_db"],
+    }
+
+    s3.put_object(
+        Bucket=args["data_bucket"],
+        Body=json.dumps(update_alaya_payload),
+        Key=f"trigger_update_alaya/individuals_trigger.json",
     )
 
     job.commit()
