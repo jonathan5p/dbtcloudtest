@@ -1,5 +1,5 @@
 provider "aws" {
-  region  = var.region[var.site]
+  region = var.region[var.site]
   assume_role {
     role_arn     = var.role_arn
     session_name = "oidh"
@@ -38,7 +38,7 @@ module "data_key_name" {
   purpose     = join("", [var.project_prefix, "-", "datakey"])
 }
 module "data_key" {
-  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=dev"
+  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
   key_name           = module.data_key_name.name
   key_tags           = module.data_key_name.tags
   key_admins         = var.kms_data_admins
@@ -55,7 +55,7 @@ module "glue_enc_key_name" {
   purpose     = join("", [var.project_prefix, "-", "glueenckey"])
 }
 module "glue_enc_key" {
-  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=dev"
+  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
   key_name           = module.glue_enc_key_name.name
   key_tags           = module.glue_enc_key_name.tags
   key_admins         = var.kms_glue_admins
