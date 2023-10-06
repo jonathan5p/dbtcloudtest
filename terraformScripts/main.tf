@@ -272,7 +272,8 @@ data "aws_iam_policy_document" "policy_ecs" {
       "glue:BatchCreatePartition",
       "glue:UpdateTable",
       "glue:CreateTable",
-      "glue:GetPartitions"
+      "glue:GetPartitions",
+      "glue:GetPartition"
     ]
     effect = "Allow"
     resources = [
