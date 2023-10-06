@@ -1,0 +1,14 @@
+{
+  "primary_key": {
+    "name" : "bdmporgkey",
+    "type" : "string"
+  },
+  "first_partition_key": {
+    "name": "dt_utc",
+    "type": "string"
+  },
+  "second_partition_key":{
+    "name": "source_file",
+    "type": "string"
+  }
+}
