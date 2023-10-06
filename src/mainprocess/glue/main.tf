@@ -149,9 +149,9 @@ resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress" {
 }
 
 resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
-  security_group_id             = aws_security_group.conn_sg.id
-  ip_protocol                   = -1
-  cidr_ipv4                     = "0.0.0.0/0"
+  security_group_id = aws_security_group.conn_sg.id
+  ip_protocol       = -1
+  cidr_ipv4         = "0.0.0.0/0"
 }
 
 #------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ data "aws_ssm_parameter" "bright_pypi_pipconf" {
   name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
 }
 
-locals{
+locals {
   jfrog_url = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
 }
 
@@ -257,7 +257,7 @@ module "cleaning_job" {
 
 locals {
   ind_dedup_job_workers = 20
-  counties_path = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
+  counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
 }
 
 module "ind_dedup_job" {
