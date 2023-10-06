@@ -465,6 +465,7 @@ module "alayasync" {
     "ecs_subnets": var.ecs_subnets
     "alayasyncdb": module.mainprocess.alayasync_db
     "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
+    "concurrent_tasks" : var.number_concurrent_tasks
     #"alayasyncdb_path": "s3://aue1d1z1s3boidhoidh-datastorage-1/consume_data/aue1d1z1gldoidhoidh_alayasync"
   }
 }

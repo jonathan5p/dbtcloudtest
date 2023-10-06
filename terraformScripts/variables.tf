@@ -165,3 +165,9 @@ variable "ecs_subnets" {
   type = string
   description = "comma separated values for the subnets to use"
 }
+
+variable "number_concurrent_tasks" {
+  type = number
+  description = "number of concurrent tasks for alaya sync"
+  default = 12
+}
