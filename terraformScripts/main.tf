@@ -355,6 +355,10 @@ resource "aws_ecs_task_definition" "task_ecs" {
           awslogs-stream-prefix = "ecs"
         }
       }
+      environment = [{
+        "name": "athena_bucket",
+        "value": "${module.athena.bucket_id}"
+      }]
   }])
 
   cpu                      = var.ecs_task_alaya_cpu
