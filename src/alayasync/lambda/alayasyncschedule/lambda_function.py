@@ -12,9 +12,9 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
-projection_expression = "#i, #t, #p, #b, #tbl"
+projection_expression = "#i, #t, #p, #b, #tbl, #bckt, #k, #db"
 index_name = 'scheduling-index'
-expression_attributes_names = {"#i": "id", "#t":"last_modified_date", "#p": "status", "#b": "batch", "#tbl": "table"}
+expression_attributes_names = {"#i": "id", "#t":"last_modified_date", "#p": "status", "#b": "batch", "#tbl": "table", "#bckt": "bucket", "#k": "key", "#db": "database"}
 
 query_parameters = {
         'ProjectionExpression': projection_expression,
@@ -38,8 +38,8 @@ def get_from_dynamo(table, query_parameters):
 
     response = table.query(**query_parameters)
     logger.info(f'Response:{response}')
-    validate_response(response)
     
+    validate_response(response)
     records = response.get('Items')
 
     return records
@@ -50,7 +50,7 @@ def lambda_handler(event, context):
     logger.info(f'Event:{event}')
 
     query_parameters['KeyConditionExpression'] = (Key('batch').eq(event['batch']) & Key('status').eq(event['status']))
-    query_parameters['FilterExpression'] = (Attr('table').eq(event['table']))
+    query_parameters['FilterExpression'] = (Attr('table').eq(event['table']) & Attr('database').eq(event['database']))
 
     records = get_from_dynamo(register_table, query_parameters)
 
