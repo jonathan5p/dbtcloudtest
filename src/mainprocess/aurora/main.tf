@@ -1,6 +1,6 @@
 data "aws_region" "current" {}
 
-locals{
+locals {
   db_name = "dev"
   db_port = 5432
 }
@@ -82,7 +82,7 @@ resource "aws_rds_cluster" "admintooldb" {
   tags                            = module.aurora_cluster_naming.tags
   engine                          = "aurora-postgresql"
   engine_mode                     = "provisioned"
-  engine_version                  = "13.6"
+  engine_version                  = "13.10"
   database_name                   = local.db_name
   master_username                 = "postgres"
   db_subnet_group_name            = resource.aws_db_subnet_group.db_subnet_group.id
@@ -105,10 +105,11 @@ resource "aws_rds_cluster" "admintooldb" {
 }
 
 resource "aws_rds_cluster_instance" "example" {
-  cluster_identifier = aws_rds_cluster.admintooldb.id
-  instance_class     = "db.serverless"
-  engine             = aws_rds_cluster.admintooldb.engine
-  engine_version     = aws_rds_cluster.admintooldb.engine_version
-  tags               = module.aurora_cluster_naming.tags
+  cluster_identifier         = aws_rds_cluster.admintooldb.id
+  instance_class             = "db.serverless"
+  engine                     = aws_rds_cluster.admintooldb.engine
+  engine_version             = aws_rds_cluster.admintooldb.engine_version
+  auto_minor_version_upgrade = false
+  tags                       = module.aurora_cluster_naming.tags
 }
 

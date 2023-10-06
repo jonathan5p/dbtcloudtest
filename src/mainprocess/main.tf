@@ -19,8 +19,8 @@ module "glue_resources" {
   site               = var.site
   tier               = var.tier
   zone               = var.zone
-  project_objects    = merge(var.project_objects, { "aurora_jdbc_url" = module.aurora_db.jdbc_url, 
-                                                    "aurora_subnetid" = module.aurora_db.subnetid })
+  project_objects = merge(var.project_objects, { "aurora_jdbc_url" = module.aurora_db.jdbc_url,
+  "aurora_subnetid" = module.aurora_db.subnetid })
 }
 
 module "lambda_resources" {
