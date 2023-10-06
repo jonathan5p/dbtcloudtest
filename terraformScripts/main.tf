@@ -250,7 +250,7 @@ data "aws_iam_policy_document" "policy_ecs" {
     effect = "Allow"
     resources = [
       "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/*",
-      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/",
+      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}",
       "arn:aws:s3:::${module.athena.bucket_id}/*",
       "arn:aws:s3:::${module.athena.bucket_id}"
     ]
