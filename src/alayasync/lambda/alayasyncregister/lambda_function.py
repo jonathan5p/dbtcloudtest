@@ -19,7 +19,7 @@ dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
 ttl_days = 7
-regex = r"(\bs3://\b){1}([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_]+=[^\/]+)/([a-zA-Z0-9_-]+(\b.parquet\b))$"
+regex = r"(\bs3://\b){1}([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_]+=[^\/]+)/([a-zA-Z0-9_.-]+(\b.parquet\b))$"
 
 def parse_s3_event(s3_event):
 
