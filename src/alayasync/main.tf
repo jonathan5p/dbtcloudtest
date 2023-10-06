@@ -54,7 +54,7 @@ module "lambdas" {
     tier                = var.tier
     zone                = var.zone
 
-    project_objects     = merge(var.project_objects, 
+    project_objects     = merge(var.project_objects, module.tables.primary_keys,
     {
         "dynamo_table_register" = "${module.dynamo.table_naming.name}"
     })
