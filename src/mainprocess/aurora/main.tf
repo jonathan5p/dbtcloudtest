@@ -82,7 +82,7 @@ resource "aws_rds_cluster" "admintooldb" {
   tags                            = module.aurora_cluster_naming.tags
   engine                          = "aurora-postgresql"
   engine_mode                     = "provisioned"
-  engine_version                  = "13.6"
+  engine_version                  = "13.10"
   database_name                   = local.db_name
   master_username                 = "postgres"
   db_subnet_group_name            = resource.aws_db_subnet_group.db_subnet_group.id
