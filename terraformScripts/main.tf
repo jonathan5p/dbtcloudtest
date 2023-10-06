@@ -250,7 +250,19 @@ data "aws_iam_policy_document" "policy_ecs" {
     effect = "Allow"
     resources = [
       "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/*",
-      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/"
+      "arn:aws:s3:::${module.s3_data_bucket.bucket_id}/",
+      "arn:aws:s3:::${module.athena.bucket_id}/*",
+      "arn:aws:s3:::${module.athena.bucket_id}"
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:GetBucketLocation"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:s3:::*"
     ]
   }
 
@@ -259,7 +271,8 @@ data "aws_iam_policy_document" "policy_ecs" {
       "glue:GetTable",
       "glue:BatchCreatePartition",
       "glue:UpdateTable",
-      "glue:CreateTable"
+      "glue:CreateTable",
+      "glue:GetPartitions"
     ]
     effect = "Allow"
     resources = [
@@ -298,6 +311,34 @@ data "aws_iam_policy_document" "policy_ecs" {
       "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/*"
     ]
   }
+
+  statement {
+    actions = [
+      "athena:StartQueryExecution",
+      "athena:GetQueryExecution",
+      "athena:GetQueryResults",
+      "athena:GetQueryResultsStream"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:athena:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:workgroup/*"
+    ]
+  }
+
+  statement {
+      effect = "Allow"
+      actions =  [
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:CreateGrant"
+      ]
+      resources = [
+        "${module.data_key.key_arn}"
+      ]
+    }
 }
 
 data "aws_iam_policy_document" "assume_ecs_task" {
