@@ -110,7 +110,7 @@ variable "lambda_ec_office_target_table_name" {
 # Glue max records per file
 variable "glue_max_records_per_file" {
   description = "NMaximum number of records per parquet file write in the deduplication jobs"
-  default     = 1000
+  default     = 5000
 }
 
 # Event bridge cron trigger
