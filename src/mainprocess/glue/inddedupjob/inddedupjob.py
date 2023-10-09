@@ -350,7 +350,7 @@ if __name__ == "__main__":
     s3.put_object(
         Bucket=args["data_bucket"],
         Body=json.dumps(update_alaya_payload),
-        Key=f"{args['alaya_trigger_key']}/individuals_{partition_value}",
+        Key=f"{args['alaya_trigger_key']}/individuals_{partition_value}.json",
     )
 
     job.commit()
