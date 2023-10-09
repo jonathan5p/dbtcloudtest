@@ -114,14 +114,9 @@ variable "glue_max_records_per_file" {
 }
 
 # Update alaya triggers
-variable "ind_trigger_key" {
-  description = "S3 key of the file that will trigger the update to alaya process for the individuals table"
-  default     = "trigger_update_alaya/individuals_trigger.json"
-}
-
-variable "org_trigger_key" {
-  description = "S3 key of the file that will trigger the update to alaya process for the organizations table"
-  default     = "trigger_update_alaya/organizations_trigger.json"
+variable "alaya_trigger_key" {
+  description = "S3 key of the file that will trigger the update to alaya process"
+  default     = "consume_data/resultData/executions_1"
 }
 
 # Event bridge cron trigger
