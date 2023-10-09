@@ -186,6 +186,8 @@ module "mainprocess" {
     "aurora_max_capacity"                = var.aurora_max_capacity
     "aurora_min_capacity"                = var.aurora_min_capacity
     "max_records_per_file"               = var.glue_max_records_per_file
+    "org_trigger_key"                    = var.org_trigger_key
+    "ind_trigger_key"                    = var.ind_trigger_key
   }
 }
 

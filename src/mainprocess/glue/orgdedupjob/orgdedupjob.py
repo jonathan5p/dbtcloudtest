@@ -262,6 +262,7 @@ if __name__ == "__main__":
         "county_info_s3_path",
         "max_records_per_file",
         "aurora_connection_name",
+        "alaya_trigger_key"
     ]
 
     args = getResolvedOptions(sys.argv, params)
@@ -441,7 +442,7 @@ if __name__ == "__main__":
     s3.put_object(
         Bucket=args["data_bucket"],
         Body=json.dumps(update_alaya_payload),
-        Key=f"trigger_update_alaya/organizations_trigger.json",
+        Key=args["alaya_trigger_key"],
     )
 
     job.commit()

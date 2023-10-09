@@ -109,8 +109,19 @@ variable "lambda_ec_office_target_table_name" {
 
 # Glue max records per file
 variable "glue_max_records_per_file" {
-  description = "NMaximum number of records per parquet file write in the deduplication jobs"
+  description = "Maximum number of records per parquet file write in the deduplication jobs"
   default     = 1000
+}
+
+# Update alaya triggers
+variable "ind_trigger_key"{
+  description = "S3 key of the file that will trigger the update to alaya process for the individuals table"
+  default = "trigger_update_alaya/individuals_trigger.json"
+}
+
+variable "org_trigger_key"{
+  description = "S3 key of the file that will trigger the update to alaya process for the organizations table"
+  default = "trigger_update_alaya/organizations_trigger.json"
 }
 
 # Event bridge cron trigger
