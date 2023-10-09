@@ -296,7 +296,7 @@ module "ind_dedup_job" {
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.individuals"
     "--aurora_connection_name"    = module.aurora_connection.conn_name
-    "--alaya_trigger_key"         = var.project_objects.ind_trigger_key
+    "--alaya_trigger_key"         = var.project_objects.alaya_trigger_key
   }
 }
 
@@ -344,7 +344,7 @@ module "org_dedup_job" {
     "--additional-python-modules" = "splink==3.9.2"
     "--aurora_table"              = "public.organizations"
     "--aurora_connection_name"    = module.aurora_connection.conn_name
-    "--alaya_trigger_key"         = var.project_objects.org_trigger_key
+    "--alaya_trigger_key"         = var.project_objects.alaya_trigger_key
   }
 }
 
