@@ -38,7 +38,7 @@ def lambda_handler(event, context):
     
     logger.info(f'Event received: {event}')
     
-    task_arguments = parse_event(event['value'])    
+    task_arguments = parse_event(event['value'])
 
     id = event['value']['id']
     response = register_table.update_item(
