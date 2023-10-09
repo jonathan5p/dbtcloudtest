@@ -1,3 +1,17 @@
+module "tables" {
+  source = "./glue"
+
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    zone                = var.zone
+
+    project_objects     = var.project_objects
+}
+
 module "sqs" {
     source = "./sqs"
 
@@ -40,7 +54,7 @@ module "lambdas" {
     tier                = var.tier
     zone                = var.zone
 
-    project_objects     = merge(var.project_objects, 
+    project_objects     = merge(var.project_objects, module.tables.primary_keys,
     {
         "dynamo_table_register" = "${module.dynamo.table_naming.name}"
     })
@@ -99,7 +113,14 @@ resource "aws_s3_bucket_notification" "register" {
   queue {
     queue_arn = module.sqs.sqs_register_queue_arn
     events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/individuals_test"
+    filter_prefix = trimprefix("${var.project_objects.alayasyncdb_path}/individuals/", "s3://${var.project_objects.bucket_id}/")
+    filter_suffix = ".parquet"
+  }
+
+  queue {
+    queue_arn = module.sqs.sqs_register_queue_arn
+    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    filter_prefix = trimprefix("${var.project_objects.alayasyncdb_path}/organizations/", "s3://${var.project_objects.bucket_id}/")
     filter_suffix = ".parquet"
   }
 
@@ -109,14 +130,6 @@ resource "aws_s3_bucket_notification" "register" {
     filter_prefix       = "consume_data/resultData/executions/"
     filter_suffix       = ".log"
   }
-
-  queue {
-    queue_arn = module.sqs.sqs_register_queue_arn
-    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    filter_prefix = "consume_data/aue1d1z1gldoidhoidh_gluedb/organizations_test"
-    filter_suffix = ".parquet"
-  }
-
 }
 
 module "base_naming" {

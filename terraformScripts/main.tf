@@ -186,6 +186,8 @@ module "mainprocess" {
     "aurora_max_capacity"                = var.aurora_max_capacity
     "aurora_min_capacity"                = var.aurora_min_capacity
     "max_records_per_file"               = var.glue_max_records_per_file
+    "org_trigger_key"                    = var.org_trigger_key
+    "ind_trigger_key"                    = var.ind_trigger_key
   }
 }
 
@@ -355,6 +357,10 @@ resource "aws_ecs_task_definition" "task_ecs" {
           awslogs-stream-prefix = "ecs"
         }
       }
+      environment = [{
+        "name": "athena_bucket",
+        "value": "${module.athena.bucket_id}"
+      }]
   }])
 
   cpu                      = var.ecs_task_alaya_cpu
@@ -395,6 +401,10 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   tags                = module.iro_ecs_task_execution_naming.tags
 }
 
+data "aws_ssm_parameter" "ecs_cluster_name" {
+  name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
+}
+
 module "alayasync" {
   source = "../src/alayasync"
 
@@ -411,6 +421,12 @@ module "alayasync" {
     "bucket_arn" : module.s3_data_bucket.bucket_arn
     "data_key_id" : module.data_key.key_id
     "data_key_arn" : module.data_key.key_arn
+    "ecs_cluster": data.aws_ssm_parameter.ecs_cluster_name.value
+    "task_definition": module.ect_task_naming.name
+    "ecs_subnets": var.ecs_subnets
+    "alayasyncdb": module.mainprocess.alayasync_db
+    "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
+    #"alayasyncdb_path": "s3://aue1d1z1s3boidhoidh-datastorage-1/consume_data/aue1d1z1gldoidhoidh_alayasync"
   }
 }
 

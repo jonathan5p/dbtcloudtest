@@ -9,7 +9,9 @@
       "Resource": [
         "${schedule_lambda}",
         "${processing_lambda}",
-        "${reduce_lambda}"
+        "${reduce_lambda}",
+        "${ecs_start}",
+        "${ecs_status}"
       ]
     },
     {
