@@ -22,13 +22,23 @@ def parse_event(event):
         task_args.append(event[item])
         
     logger.info(f'Parsed args: {task_args}')
+    
+    task_args = add_primary_key(task_args, event['table'])
+    return task_args
+    
+def add_primary_key(task_args, table):
+    
+    task_args.append('--primary_key')
+    task_args.append(os.environ[table.upper()])
+    
+    logger.info(f'Primary key: {os.environ[table.upper()]}')
     return task_args
 
 def lambda_handler(event, context):
     
     logger.info(f'Event received: {event}')
     
-    task_arguments = parse_event(event['value'])
+    task_arguments = parse_event(event['value'])    
 
     id = event['value']['id']
     response = register_table.update_item(
