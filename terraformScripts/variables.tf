@@ -109,8 +109,8 @@ variable "lambda_ec_office_target_table_name" {
 
 # Glue max records per file
 variable "glue_max_records_per_file" {
-  description = "Maximum number of records per parquet file write in the deduplication jobs"
-  default     = 1000
+  description = "NMaximum number of records per parquet file write in the deduplication jobs"
+  default     = 5000
 }
 
 # Update alaya triggers
@@ -175,4 +175,10 @@ variable "aurora_min_capacity" {
 variable "ecs_subnets" {
   type = string
   description = "comma separated values for the subnets to use"
+}
+
+variable "concurrent_tasks" {
+  type = number
+  description = "number of concurrent tasks for alaya sync"
+  default = 12
 }
