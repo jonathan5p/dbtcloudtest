@@ -1,7 +1,3 @@
-variable "alaya_trigger_key" {
-  description = "S3 key of the file that will trigger the update to alaya process"
-}
-
 variable "environment" {
   description = "Env value belongs to dev, tst, prod account like d1, t1, p1 resp."
   default     = {}
