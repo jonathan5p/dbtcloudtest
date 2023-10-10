@@ -12,7 +12,7 @@ locals {
 }
 
 module "athena_bucket" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//s3?ref=s3_add"
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//s3?ref=v0.0.5"
 
     environment         = var.environment
     project_app_group   = var.project_app_group
