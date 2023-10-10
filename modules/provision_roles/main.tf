@@ -21,6 +21,21 @@ module "base_naming" {
 }
 
 #----------------------------------
+# Resource names module
+#----------------------------------
+
+module "resource_names" {
+  source            = "../resource_names"
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  project_ledger    = var.project_ledger
+  zone              = var.zone
+}
+
+#----------------------------------
 # KMS Key names
 #----------------------------------
 
@@ -885,7 +900,8 @@ data "aws_iam_policy_document" "dev_deploy" {
       "ecr:PutImageTagMutability"
     ]
     resources = [
-      "arn:aws:ecr:${var.region}:${var.aws_account_number_env}:repository/${module.ecr_naming.name}"
+      "arn:aws:ecr:${var.region}:${var.aws_account_number_env}:repository/${module.ecr_naming.name}",
+      "arn:aws:ecr:${var.region}:${var.aws_account_number_env}:repository/${module.resource_names.ecr_names.addgeoinfo.name}"
     ]
     sid = "ecrrepocreation"
   }
