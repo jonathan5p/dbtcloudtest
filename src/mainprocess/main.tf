@@ -83,3 +83,26 @@ resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
   to_port                      = 5432
   referenced_security_group_id = module.glue_resources.glue_conn_sg_id
 }
+
+#------------------------------------------------------------------------------
+# ECR Configuration
+#------------------------------------------------------------------------------
+
+module "ecr_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ecr"
+  purpose     = join("", [var.project_prefix, "-addgeoinfo"])
+}
+
+resource "aws_ecr_repository" "addgeoinfo" {
+  name                 = module.ecr_naming.name
+  image_tag_mutability = "MUTABLE"
+  tags                 = module.ecr_naming.tags
+}
+
+resource "aws_ssm_parameter" "repository_url" {
+  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/ecr_addgeoinfo_repository_url"
+  type  = "String"
+  value = aws_ecr_repository.addgeoinfo.repository_url
+}
