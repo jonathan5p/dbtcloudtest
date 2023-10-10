@@ -337,19 +337,19 @@ data "aws_iam_policy_document" "policy_ecs" {
   }
 
   statement {
-      effect = "Allow"
-      actions =  [
-        "kms:DescribeKey",
-        "kms:Encrypt",
-        "kms:Decrypt",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:CreateGrant"
-      ]
-      resources = [
-        "${module.data_key.key_arn}"
-      ]
-    }
+    effect = "Allow"
+    actions = [
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:CreateGrant"
+    ]
+    resources = [
+      "${module.data_key.key_arn}"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "assume_ecs_task" {
@@ -477,7 +477,7 @@ module "alayasync" {
     "alayasyncdb" : module.mainprocess.alayasync_db
     "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
     "concurrent_tasks" : var.concurrent_tasks
-    "alaya_trigger_key": var.alaya_trigger_key
+    "alaya_trigger_key" : var.alaya_trigger_key
   }
 }
 
