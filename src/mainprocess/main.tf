@@ -1,3 +1,22 @@
+#------------------------------------------------------------------------------
+# Resource Names
+#------------------------------------------------------------------------------
+
+module "resource_names" {
+  source            = "../../modules/resource_names"
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  project_ledger    = var.project_ledger
+  zone              = var.zone
+}
+
+#------------------------------------------------------------------------------
+# Resources
+#------------------------------------------------------------------------------
+
 module "aurora_db" {
   source            = "./aurora"
   base_naming       = var.base_naming
@@ -88,17 +107,10 @@ resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
 # ECR Configuration
 #------------------------------------------------------------------------------
 
-module "ecr_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ecr"
-  purpose     = join("", [var.project_prefix, "-addgeoinfo"])
-}
-
 resource "aws_ecr_repository" "addgeoinfo" {
-  name                 = module.ecr_naming.name
+  name                 = module.resource_names.ecr_names.addgeoinfo.name
   image_tag_mutability = "MUTABLE"
-  tags                 = module.ecr_naming.tags
+  tags                 = module.resource_names.ecr_names.addgeoinfo.tags
 }
 
 resource "aws_ssm_parameter" "repository_url" {
