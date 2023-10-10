@@ -128,7 +128,8 @@ resource "aws_s3_bucket_notification" "register" {
     lambda_function_arn = module.lambdas_execution.functions_mapping.execution_lambda
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = "consume_data/resultData/executions/"
-    filter_suffix       = ".log"
+    #filter_prefix       = var.alaya_trigger_key
+    filter_suffix       = ".json"
   }
 }
 
