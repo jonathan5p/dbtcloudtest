@@ -1,7 +1,9 @@
+import awswrangler as wr
 import boto3
 import json
 import logging
 import os
+import time
 
 from boto3.dynamodb.conditions import Key, Attr
 from datetime import datetime
@@ -73,7 +75,7 @@ def get_records(database, table, dt_utc, athena_bucket, ids):
             group by 1,2
             having dt_utc = '{dt_utc}'
             and "$path" in ({ids})
-            order by conteo desc;
+            order by num_records desc;
         """
     #print(f"query:{query}")
 
