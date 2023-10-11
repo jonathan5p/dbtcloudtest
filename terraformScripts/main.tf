@@ -478,6 +478,7 @@ module "alayasync" {
     "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
     "concurrent_tasks" : var.concurrent_tasks
     "alaya_trigger_key": var.alaya_trigger_key
+    "athena_bucket_id": module.athena.bucket_id
   }
 }
 
