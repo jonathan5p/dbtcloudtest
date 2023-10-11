@@ -49,6 +49,7 @@ def full_load(
         write_df.save()
     else:
         write_df.saveAsTable(f"{catalog_db}.{catalog_table}")
+        spark.sql(f"ALTER TABLE {catalog_db}.{catalog_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)")
 
 def incremental_load(
         spark:SparkSession,
