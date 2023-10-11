@@ -91,6 +91,18 @@
         "arn:aws:s3:::${bucket_id}",
         "arn:aws:s3:::${bucket_id}/*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults",
+        "athena:GetQueryResultsStream"
+      ],
+      "Resource" : [
+        "arn:aws:athena:${region}:${account_id}:workgroup/*"
+      ]
     }
   ]
 }
