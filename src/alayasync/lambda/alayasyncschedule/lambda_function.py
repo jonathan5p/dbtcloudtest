@@ -102,7 +102,6 @@ def process_records(dfs, payload):
         num_records = 0
         
         for df in dfs:
-                
             for index, row in df.iterrows():
                 
                 num_records += row['num_records']
@@ -118,7 +117,7 @@ def process_records(dfs, payload):
                     
                     num_records = 0
                     list_id = []
-                    
+
     except Exception as e:
 
         error = f'Error in initial iteration: {repr(e)}'
