@@ -38,6 +38,7 @@ module "lambda_alaya_sync_scheduling" {
     
     environment_variables = {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
+      "ATHENA_BUCKET" = var.project_objects.athena_bucket_id
     }
 
     layers = [

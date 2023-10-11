@@ -15,7 +15,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 athena_client = boto3.client('athena')
-athena_bucket = 'aue1d1z1s3boidhoidh-athena'
+#athena_bucket = 'aue1d1z1s3boidhoidh-athena'
+athena_bucket = os.environ['ATHENA_BUCKET']
 
 dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
