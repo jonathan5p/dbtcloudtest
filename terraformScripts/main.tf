@@ -337,19 +337,19 @@ data "aws_iam_policy_document" "policy_ecs" {
   }
 
   statement {
-      effect = "Allow"
-      actions =  [
-        "kms:DescribeKey",
-        "kms:Encrypt",
-        "kms:Decrypt",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:CreateGrant"
-      ]
-      resources = [
-        "${module.data_key.key_arn}"
-      ]
-    }
+    effect = "Allow"
+    actions = [
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:CreateGrant"
+    ]
+    resources = [
+      "${module.data_key.key_arn}"
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "assume_ecs_task" {
