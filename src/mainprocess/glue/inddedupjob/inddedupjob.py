@@ -210,7 +210,7 @@ if __name__ == "__main__":
         "county_info_s3_path",
         "max_records_per_file",
         "aurora_connection_name",
-        "alaya_trigger_key"
+        "alaya_trigger_key",
     ]
     args = getResolvedOptions(sys.argv, params)
 
@@ -313,24 +313,29 @@ if __name__ == "__main__":
         f"{args['glue_db']}.splink_agent_cluster_df"
     )
 
-    individuals_df.withColumn(partition_col, F.lit(partition_value)).write.mode(
-        "append"
-    ).format("parquet").option(
-        "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['alaya_glue_db']}/individuals/",
-    ).option(
-        "overwriteSchema", "true"
-    ).option(
-        "maxRecordsPerFile", args.get("max_records_per_file", 1000)
-    ).option(
-        "compression", "snappy"
-    ).partitionBy(
-        partition_col
-    ).saveAsTable(
+    ind_writer = (
+        individuals_df.withColumn(partition_col, F.lit(partition_value))
+        .write.format("parquet")
+        .option(
+            "path",
+            f"s3://{args['data_bucket']}/consume_data/{args['alaya_glue_db']}/individuals/",
+        )
+        .option("maxRecordsPerFile", int(args.get("max_records_per_file", 1000)))
+        .option("compression", "snappy")
+        .partitionBy(partition_col)
+    )
+
+    table_exists = spark.catalog._jcatalog.tableExists(
         f"{args['alaya_glue_db']}.individuals"
     )
 
-    spark.sql(f"MSCK REPAIR TABLE {args['alaya_glue_db']}.individuals DROP PARTITIONS;")
+    if table_exists:
+        ind_writer.mode("append").save()
+        spark.sql(
+            f"MSCK REPAIR TABLE {args['alaya_glue_db']}.individuals DROP PARTITIONS;"
+        )
+    else:
+        ind_writer.mode("overwrite").saveAsTable(f"{args['alaya_glue_db']}.individuals")
 
     # Write data to the Aurora PostgreSQL database
 
