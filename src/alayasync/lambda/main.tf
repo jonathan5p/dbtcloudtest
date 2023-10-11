@@ -32,6 +32,7 @@ module "lambda_alaya_sync_scheduling" {
     site                = var.site
     tier                = var.tier
     zone                = var.zone
+    runtime             = "python3.10"
 
     policy_variables = var.project_objects
     
@@ -40,7 +41,7 @@ module "lambda_alaya_sync_scheduling" {
     }
 
     layers = [
-      "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python39:10"
+      "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python310:4"
     ]
 }
 
