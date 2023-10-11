@@ -59,13 +59,15 @@ def get_results(results_files: dict, bucket, status):
             }
 
             logger.info(f'Payload:{payload}')
+            
+            for id in payload['id'].split(','):
 
-            response = register_table.update_item(
-                Key={'id': payload['id']},
-                UpdateExpression="set #p=:p, #e=:er",
-                ExpressionAttributeValues={':p': payload['status'], ':er': payload['error']},
-                ExpressionAttributeNames={"#p": "status", "#e": "error"},
-                ReturnValues="UPDATED_NEW")
+                response = register_table.update_item(
+                    Key={'id': id},
+                    UpdateExpression="set #p=:p, #e=:er",
+                    ExpressionAttributeValues={':p': payload['status'], ':er': payload['error']},
+                    ExpressionAttributeNames={"#p": "status", "#e": "error"},
+                    ReturnValues="UPDATED_NEW")
 
     else:
         logger.info(f'No files in status:{status}')
