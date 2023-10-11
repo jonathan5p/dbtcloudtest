@@ -108,6 +108,15 @@
       "Resource" : [
         "arn:aws:athena:${region}:${account_id}:workgroup/*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::*"
+      ]
     }
   ]
 }
