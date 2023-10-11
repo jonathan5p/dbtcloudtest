@@ -29,14 +29,16 @@ def parse_s3_event(s3_event):
     batch = key_parts[3].split('=')[1]
 
     return {
-        'bucket': s3_event['s3']['bucket']['name'],
-        'key': unquote_plus(s3_event['s3']['object']['key']),
-        'size': s3_event['s3']['object']['size'],
-        'last_modified_date': s3_event['eventTime'].split('.')[0]+'+00:00',
-        'timestamp': int(round(datetime.utcnow().timestamp()*1000, 0)),
         'batch': batch,
+        'bucket': s3_event['s3']['bucket']['name'],
+        'database': database,
+        'error': "",
+        'key': unquote_plus(s3_event['s3']['object']['key']),
+        'records': {},
+        'size': s3_event['s3']['object']['size'],
         'table': table,
-        'database': database
+        'timestamp': int(round(datetime.utcnow().timestamp()*1000, 0))
+        #'last_modified_date': s3_event['eventTime'].split('.')[0]+'+00:00',
     }
 
 def put_item(table, item, key):
