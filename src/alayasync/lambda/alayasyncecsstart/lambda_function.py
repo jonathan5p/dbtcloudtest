@@ -39,16 +39,21 @@ def lambda_handler(event, context):
     logger.info(f'Event received: {event}')
     
     task_arguments = parse_event(event['value'])
+    
+    ids = event['value']['id'].split(',')
+    
+    logger.info(f'Updating ids:{ids}')
+    
+    for id in ids:
+    
+        response = register_table.update_item(
+            Key={'id': id},
+            UpdateExpression="set #p=:p, #e=:e, #t=:t, #r=:r",
+            ExpressionAttributeValues={':p': 'IN_PROGRESS', ':e': '', ':t':'', ':r':{}},
+            ExpressionAttributeNames={"#p": "status", "#e": "error", "#t":"task_id", "#r":"records"},
+            ReturnValues="UPDATED_NEW")
 
-    id = event['value']['id']
-    response = register_table.update_item(
-        Key={'id': id},
-        UpdateExpression="set #p=:p, #e=:e, #t=:t",
-        ExpressionAttributeValues={':p': 'IN_PROGRESS', ':e': '', ':t':''},
-        ExpressionAttributeNames={"#p": "status", "#e": "error", "#t":"task_id"},
-        ReturnValues="UPDATED_NEW")
-
-    logger.info(f'Response from updates: {response}')
+        #logger.info(f'Response from updates: {response}')
     
     response = ecs_client.run_task(
         cluster = cluster_name,
@@ -77,12 +82,14 @@ def lambda_handler(event, context):
 
     logger.info(f'Task initiatted with task_id: {task_id}')
 
-    response = register_table.update_item(
-        Key={'id': id},
-        UpdateExpression="set #t=:t",
-        ExpressionAttributeValues={':t': task_id},
-        ExpressionAttributeNames={"#t": "task_id"},
-        ReturnValues="UPDATED_NEW")
+    for id in ids:
+    
+        response = register_table.update_item(
+            Key={'id': id},
+            UpdateExpression="set #t=:t",
+            ExpressionAttributeValues={':t': task_id},
+            ExpressionAttributeNames={"#t": "task_id"},
+            ReturnValues="UPDATED_NEW")
 
     return {
         'statusCode': 200,

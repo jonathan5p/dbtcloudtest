@@ -97,24 +97,25 @@ def process_records(dfs, payload):
     records = []
 
     try:
-        for df in dfs:
-            
-            list_id = []
-            num_records = 0
-            record = payload
 
+        list_id = []
+        num_records = 0
+        
+        for df in dfs:
             for index, row in df.iterrows():
                 
                 num_records += row['num_records']
                 list_id.append(row['id'])
                 
-                if (num_records >= max_records) or (index+1 == df.shape[0]):
+                if (num_records > max_records) or (index+1 == df.shape[0]):
 
-                    record['id'] = ','.join(list_id)
+                    print(f'n:{num_records}, i:{index}, s:{df.shape[0]}')
+                    print(f'l:{",".join(list_id)}')
+                    tmp = {'id': ",".join(list_id)}
+                    record = {**payload, **tmp}
                     records.append(record)
                     
                     num_records = 0
-                    record = payload
                     list_id = []
 
     except Exception as e:
