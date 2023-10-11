@@ -108,7 +108,7 @@ def process_records(dfs, payload):
                 num_records += row['num_records']
                 list_id.append(row['id'])
                 
-                if num_records > max_records:
+                if (num_records >= max_records) or (index+1 == df.shape[0]):
 
                     record['id'] = ','.join(list_id)
                     records.append(record)
