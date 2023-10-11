@@ -83,13 +83,18 @@
     {
       "Effect": "Allow",
       "Action": [
-        "s3:GetObject*",
-        "s3:PutObject*",
-        "s3:DeleteObject*"
+        "s3:GetObject",
+        "s3:GetBucketAcl",
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:PutObjectAcl",
+        "s3:DeleteObject"
       ],
       "Resource" : [
         "arn:aws:s3:::${bucket_id}",
-        "arn:aws:s3:::${bucket_id}/*"
+        "arn:aws:s3:::${bucket_id}/*",
+        "arn:aws:s3:::${athena_bucket_id}/*",
+        "arn:aws:s3:::${athena_bucket_id}"
       ]
     },
     {
