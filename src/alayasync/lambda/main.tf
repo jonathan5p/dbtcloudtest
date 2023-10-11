@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 module "lambda_alaya_sync_register" {
     source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
     
@@ -19,7 +21,7 @@ module "lambda_alaya_sync_register" {
 }
 
 module "lambda_alaya_sync_scheduling" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.6"
 
     environment         = var.environment
     lambda_name         = "alayasyncschedule"
@@ -36,6 +38,10 @@ module "lambda_alaya_sync_scheduling" {
     environment_variables = {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
     }
+
+    layers = [
+      "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python39:10"
+    ]
 }
 
 module "lambda_alaya_sync_processing" {

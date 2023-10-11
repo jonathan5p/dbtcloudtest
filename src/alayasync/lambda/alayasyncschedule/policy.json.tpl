@@ -117,6 +117,20 @@
       "Resource": [
         "arn:aws:s3:::*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTable",
+        "glue:BatchCreatePartition",
+        "glue:UpdateTable",
+        "glue:CreateTable",
+        "glue:GetPartitions",
+        "glue:GetPartition"
+      ],
+      "Resource": [
+        "arn:aws:glue:${region}:${account_id}:*"
+      ]
     }
   ]
 }
