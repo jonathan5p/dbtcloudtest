@@ -410,12 +410,12 @@ resource "aws_ecs_task_definition" "task_ecs" {
       }
       environment = [
         {
-          "name" : "athena_bucket",
-          "value" : "${module.athena.bucket_id}"
+          "name" = "athena_bucket",
+          "value" = "${module.athena.bucket_id}"
         },
         {
-          "name": "oidh_table",
-          "value": "${module.alayasync.dynamo_table}"
+          "name" = "oidh_table",
+          "value" = "${module.alayasync.dynamo_table}"
         }
       ]
   }])
