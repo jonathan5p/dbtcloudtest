@@ -18,7 +18,9 @@
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "FailedState"
         }
       ],
@@ -41,7 +43,9 @@
             "End": true,
             "Retry": [
               {
-                "ErrorEquals": ["States.ALL"],
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
                 "IntervalSeconds": 2,
                 "MaxAttempts": 3,
                 "BackoffRate": 2
@@ -71,7 +75,9 @@
       "MaxConcurrency": 4,
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "FailedState"
         }
       ]
@@ -81,13 +87,26 @@
       "Next": "start-glue-staging-crawler",
       "ResultPath": null,
       "Iterator": {
-        "StartAt": "geoinfo-job",
+        "StartAt": "choice-status",
         "States": {
+          "choice-status": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.getgeoinfo",
+                "BooleanEquals": true,
+                "Next": "geoinfo-job"
+              }
+            ],
+            "Default": "Pass"
+          },
           "geoinfo-job": {
             "End": true,
             "Retry": [
               {
-                "ErrorEquals": ["States.ALL"],
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
                 "IntervalSeconds": 2,
                 "MaxAttempts": 3,
                 "BackoffRate": 2
@@ -100,7 +119,7 @@
               "Arguments": {
                 "--table.$": "$.catalog_table",
                 "--database.$": "$.catalog_database",
-                "--geoinfo_cols.$" : "$.geoinfo_cols"
+                "--geoinfo_cols.$": "$.geoinfo_cols"
               },
               "Timeout": 120,
               "NotificationProperty": {
@@ -114,7 +133,9 @@
       "MaxConcurrency": 4,
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "FailedState"
         }
       ]
@@ -123,7 +144,9 @@
       "Next": "cleaning-job",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 1,
           "MaxAttempts": 3,
           "BackoffRate": 2
@@ -131,7 +154,9 @@
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "FailedState"
         }
       ],
@@ -145,7 +170,9 @@
       "Next": "deduplication-jobs",
       "Retry": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "IntervalSeconds": 2,
           "MaxAttempts": 3,
           "BackoffRate": 2
@@ -153,7 +180,9 @@
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "FailedState"
         }
       ],
@@ -178,7 +207,9 @@
               "End": true,
               "Retry": [
                 {
-                  "ErrorEquals": ["States.ALL"],
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
                   "IntervalSeconds": 2,
                   "MaxAttempts": 1,
                   "BackoffRate": 2
@@ -203,7 +234,9 @@
               "End": true,
               "Retry": [
                 {
-                  "ErrorEquals": ["States.ALL"],
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
                   "IntervalSeconds": 2,
                   "MaxAttempts": 1,
                   "BackoffRate": 2
@@ -224,7 +257,9 @@
       ],
       "Catch": [
         {
-          "ErrorEquals": ["States.ALL"],
+          "ErrorEquals": [
+            "States.ALL"
+          ],
           "Next": "FailedState"
         }
       ]
