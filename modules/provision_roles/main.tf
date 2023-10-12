@@ -850,7 +850,8 @@ data "aws_iam_policy_document" "dev_deploy" {
     ]
     effect = "Allow"
     resources = [
-      "arn:aws:logs:${var.region}:${var.aws_account_number_env}:log-group::log-stream:*"
+      "arn:aws:logs:${var.region}:${var.aws_account_number_env}:log-group::log-stream:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_number_env}:log-group:*"
     ]
   }
 
