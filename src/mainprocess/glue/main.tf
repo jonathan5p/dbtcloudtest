@@ -219,6 +219,7 @@ module "geo_job" {
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
   job_arguments = {
+    "--data_bucket"                     = var.project_objects.data_bucket_id
     "--conf" = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
     "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
