@@ -75,6 +75,7 @@ module "stepfunction" {
     "glue_cleaning_job"     = module.glue_resources.functions_mapping.cleaningjob.job_id
     "glue_ind_dedup_job"    = module.glue_resources.functions_mapping.inddedupjob.job_id
     "glue_org_dedup_job"    = module.glue_resources.functions_mapping.orgdedupjob.job_id
+    "glue_geoinfo_job"      = module.glue_resources.functions_mapping.geojob.job_id
     "glue_staging_crawler"  = module.glue_resources.functions_mapping.staging_crawler.id
     "config_loader_lambda"  = module.lambda_resources.functions_mapping.config_loader.lambda_arn
     "staging_agent_lambda"  = module.lambda_resources.functions_mapping.staging_agent.lambda_arn

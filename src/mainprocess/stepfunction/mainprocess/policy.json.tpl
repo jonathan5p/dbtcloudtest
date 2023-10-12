@@ -43,6 +43,7 @@
         "arn:aws:glue:${region}:${account_id}:job/${glue_cleaning_job}",
         "arn:aws:glue:${region}:${account_id}:job/${glue_ind_dedup_job}",
         "arn:aws:glue:${region}:${account_id}:job/${glue_org_dedup_job}",
+        "arn:aws:glue:${region}:${account_id}:job/${glue_geoinfo_job}",
         "arn:aws:glue:${region}:${account_id}:crawler/${glue_staging_crawler}"
       ]
     }

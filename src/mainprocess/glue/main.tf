@@ -202,6 +202,34 @@ module "ingest_job" {
 }
 
 #------------------------------------------------------------------------------
+# Glue Get Geo Info Job
+#------------------------------------------------------------------------------
+
+module "geo_job" {
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  base_naming         = var.base_naming
+  project_prefix      = var.project_prefix
+  max_concurrent_runs = 4
+  timeout             = 60
+  worker_type         = "G.1X"
+  number_of_workers   = 5
+  security_config_id  = aws_glue_security_configuration.glue_security_config.id
+  glue_path           = "../src/mainprocess/glue/"
+  job_name            = "getgeoinfojob"
+  script_bucket       = var.project_objects.glue_bucket_id
+  policy_variables    = var.project_objects
+  job_arguments = {
+    "--data_bucket"                     = var.project_objects.data_bucket_id
+    "--conf" = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+    "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
+    "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
+    "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
+    "--job-bookmark-option" = "job-bookmark-disable"
+    "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
+  }
+}
+
+#------------------------------------------------------------------------------
 # Glue Cleaning Job
 #------------------------------------------------------------------------------
 

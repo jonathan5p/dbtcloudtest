@@ -60,7 +60,6 @@ def full_load(
             f"ALTER TABLE {catalog_db}.{catalog_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)"
         )
 
-
 def incremental_load(
     spark: SparkSession,
     input_df: DataFrame,
