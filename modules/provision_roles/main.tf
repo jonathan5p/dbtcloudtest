@@ -159,6 +159,20 @@ module "glue_org_dedup_job_role_naming" {
   purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
 }
 
+module "glue_getgeoinfo_job_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "glj"
+  purpose     = join("", [var.project_prefix, "-", "getgeoinfojob"])
+}
+
+module "glue_getgeoinfo_job_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "getgeoinfojob"])
+}
+
 #----------------------------------
 # Lambda names
 #----------------------------------
@@ -561,6 +575,13 @@ module "glue_org_dedup_policy_naming" {
   purpose     = join("", [var.project_prefix, "-", "orgdedupjob"])
 }
 
+module "glue_getgeoinfo_job_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "getgeoinfojob"])
+}
+
 module "lambda_config_loader_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -930,6 +951,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_cleaning_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_ind_dedup_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_org_dedup_job_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_getgeoinfo_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_agent_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_office_role_naming.name}",
@@ -969,6 +991,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_cleaning_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_ind_dedup_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_org_dedup_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_getgeoinfo_job_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_agent_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_office_policy_naming.name}",
@@ -1095,7 +1118,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ingest_job_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_cleaning_job_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ind_dedup_job_naming.name}",
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}" 
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}",
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_getgeoinfo_job_naming.name}" 
     ]
   }
 }
