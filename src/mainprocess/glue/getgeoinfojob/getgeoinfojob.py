@@ -10,6 +10,7 @@ import pyspark.sql.functions as F
 from pyspark.sql import Window, DataFrame, SparkSession
 from pyspark.sql.types import *
 from delta import DeltaTable
+import json
 
 state_abb2name = {
     "AL": "Alabama",
@@ -64,9 +65,11 @@ state_abb2name = {
     "WY": "Wyoming",
 }
 
+uoi_mapper = {"BRIGHT_CAAR": "A00001567", "Other": "M00000309"}
+
 
 @F.udf(returnType=StringType())
-def get_geo_info(city, state, country):
+def get_geo_info(city, state):
     """
     Auxiliar function to get CAAR county data
     """
@@ -78,7 +81,7 @@ def get_geo_info(city, state, country):
         query = city + ", " + state_abb2name.get(state, "")
         location = geocode(
             query,
-            country_codes=[country],
+            country_codes=["us"],
             addressdetails=True,
             featuretype="",
         )
@@ -106,6 +109,19 @@ def get_geo_info_df(geo_cols: str, input_df: DataFrame):
     return output_df
 
 
+def get_reso_id(input_df: DataFrame):
+    uoi_lambda = F.udf(
+        lambda subsystem: uoi_mapper.get(subsystem, uoi_mapper["Other"]),
+        StringType(),
+    )
+
+    output_df = input_df.withColumn(
+        "uniqueorgid",
+        uoi_lambda(F.col("officesubsystemlocale")),
+    )
+    return output_df
+
+
 def first_load(
     target_path: str,
     target_table: str,
@@ -116,8 +132,8 @@ def first_load(
     test: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
-
-    insert_df = get_geo_info_df(geo_cols, input_df)
+    reso_df = get_reso_id(input_df)
+    insert_df = get_geo_info_df(geo_cols, reso_df)
 
     write_df = (
         insert_df.write.mode("overwrite")
@@ -153,9 +169,10 @@ def incremental_load(
         changes_df.select(
             "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
         ).show()
-    )    
+    )
 
-    upsert_df = get_geo_info_df(geo_cols, changes_df)
+    reso_df = get_reso_id(changes_df)
+    upsert_df = get_geo_info_df(geo_cols, reso_df)
 
     target_df = DeltaTable.forName(spark, f"{database}.{table}")
 
@@ -169,7 +186,14 @@ def incremental_load(
 if __name__ == "__main__":
     args = getResolvedOptions(
         sys.argv,
-        ["JOB_NAME", "table", "data_bucket", "database", "geoinfo_cols"],
+        [
+            "JOB_NAME",
+            "table",
+            "data_bucket",
+            "database",
+            "geoinfo_cols",
+            "options",
+        ],
     )
 
     sc = SparkContext()
@@ -224,7 +248,9 @@ if __name__ == "__main__":
             ).show()
         )
 
-        merge_key = "officemlsid"
+        write_options = json.loads(args["options"]).get("write_options", {})
+        merge_key = write_options.get("merge_key")
+
         incremental_load(
             spark,
             args["geoinfo_cols"],
