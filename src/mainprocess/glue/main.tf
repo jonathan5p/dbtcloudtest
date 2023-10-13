@@ -226,6 +226,7 @@ module "geo_job" {
     "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
     "--job-bookmark-option" = "job-bookmark-disable"
     "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
+    "--additional-python-modules" = "geopy"
   }
 }
 
