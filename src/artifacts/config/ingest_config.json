@@ -5,8 +5,7 @@
     "catalog_table": "bright_raw_agent_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
-    "getgeoinfo" : true,
-    "geoinfo_cols": "officecity,officestateorprovince,officecountry",
+    "getgeoinfo" : false,
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
@@ -29,8 +28,7 @@
     "catalog_table": "bright_raw_office_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
-    "getgeoinfo": false,
-    "geoinfo_cols": "",
+    "getgeoinfo": true,
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
@@ -44,6 +42,10 @@
         "merge_key": "officemlsid",
         "precombine_keys": "modificationtimestamp",
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
+      },
+      "geoinfo_config": {
+        "geoinfo_cols": "officecity,officestateorprovince",
+        "entity": "office"
       }
     }
   },
@@ -54,7 +56,6 @@
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "getgeoinfo": false,
-    "geoinfo_cols": "",
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
