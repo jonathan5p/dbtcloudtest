@@ -201,6 +201,8 @@ if __name__ == "__main__":
 
     options = json.loads(args["options"])
     geo_cols = options["geoinfo_config"]["geoinfo_cols"]
+    entity = options["geoinfo_config"]["entity"]
+
     staging_table = args["table"].replace("raw", "staging")
 
     table_exists = spark._jsparkSession.catalog().tableExists(
@@ -214,6 +216,7 @@ if __name__ == "__main__":
             geo_cols=geo_cols,
             database=args["database"],
             source_table=args["table"],
+            entity=entity
         )
     elif table_exists:
         cdc_df = (
@@ -257,6 +260,6 @@ if __name__ == "__main__":
             args["database"],
             staging_table,
             merge_key,
-            args["geoinfo_config"]["entity"],
+            entity,
         )
 job.commit()
