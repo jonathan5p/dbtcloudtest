@@ -123,7 +123,8 @@
               "Arguments": {
                 "--table.$": "$.catalog_table",
                 "--database.$": "$.catalog_database",
-                "--geoinfo_cols.$": "$.geoinfo_cols"
+                "--geoinfo_cols.$": "$.geoinfo_cols",
+                "--options.$": "$.options"
               },
               "Timeout": 120,
               "NotificationProperty": {
