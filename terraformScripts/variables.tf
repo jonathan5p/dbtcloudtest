@@ -133,12 +133,12 @@ variable "cron_schedule" {
 # ECS parameters
 variable "ecs_task_alaya_cpu" {
   description = "CPU for ecs task post to Alaya"
-  default     = 2048
+  default     = 1024
 }
 
 variable "ecs_task_alaya_memory" {
   description = "Memory for ecs task post to Alaya"
-  default     = 4096
+  default     = 2048
 }
 
 variable "retention_days_ecs_alaya_logs" {
