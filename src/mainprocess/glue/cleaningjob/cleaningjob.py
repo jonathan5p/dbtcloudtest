@@ -4,11 +4,27 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
-import boto3
-import json
 from clean.full_run import CleanAgentOfficeRecords, CleanTeamRecords
 from pyspark.sql import DataFrame
+from pyspark.sql.types import *
+import pyspark.sql.functions as F
+import boto3
+import json
 
+
+uoi_mapper = {"BRIGHT_CAAR": "A00001567", "Other": "M00000309"}
+
+def get_reso_id(input_df: DataFrame, entity:str):
+    uoi_lambda = F.udf(
+        lambda subsystem: uoi_mapper.get(subsystem, uoi_mapper["Other"]),
+        StringType(),
+    )
+
+    output_df = input_df.withColumn(
+        "uniqueorgid",
+        uoi_lambda(F.col(f"{entity}subsystemlocale")),
+    )
+    return output_df
 
 def clean_splink_data(
     data_df: DataFrame, configs: dict, unique_id_key: str, clean_type: str, **kwargs
@@ -56,7 +72,7 @@ if __name__ == '__main__':
     job.init(args["JOB_NAME"], args)
 
     # Load delta tables for agents, offices and teams
-    agent_df = spark.read.format("delta").load(f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['agent_table_name']}/")
+    agent_df = spark.read.format("delta").load(f"s3://{args['data_bucket']}/raw_data/{args['glue_db']}/{args['agent_table_name']}/")
     office_df = spark.read.format("delta").load(f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/")
     team_df = spark.read.format("delta").load(f"s3://{args['data_bucket']}/raw_data/{args['glue_db']}/{args['team_table_name']}/")
 
@@ -97,6 +113,9 @@ if __name__ == '__main__':
         clean_agent_df=clean_agent_df,
         clean_office_df=clean_office_df,
     )
+
+    clean_agent_df = get_reso_id(clean_agent_df, "member")
+    clean_office_df = get_reso_id(clean_office_df, "office")
 
     # Write the clean data to S3
     clean_agent_df.write.mode("overwrite")\

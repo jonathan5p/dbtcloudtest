@@ -65,9 +65,6 @@ state_abb2name = {
     "WY": "Wyoming",
 }
 
-uoi_mapper = {"BRIGHT_CAAR": "A00001567", "Other": "M00000309"}
-
-
 @F.udf(returnType=StringType())
 def get_geo_info(city, state):
     """
@@ -96,44 +93,41 @@ def get_geo_info(city, state):
 
     return output
 
-
 def get_geo_info_df(geo_cols: str, input_df: DataFrame):
     geo_cols = args["geoinfo_cols"].split(",")
     if geo_cols not in ["", None]:
         geo_cols = [F.col(col_name) for col_name in geo_cols]
-        output_df = input_df.withColumn("officecounty", get_geo_info(*geo_cols))
+        output_df = input_df.withColumn("geo_info", get_geo_info(*geo_cols))
     else:
         raise ValueError(
             "The geo_cols argument must contain n columns following the order: [WIP]"
         )
     return output_df
 
-
-def get_reso_id(input_df: DataFrame):
-    uoi_lambda = F.udf(
-        lambda subsystem: uoi_mapper.get(subsystem, uoi_mapper["Other"]),
-        StringType(),
-    )
-
-    output_df = input_df.withColumn(
-        "uniqueorgid",
-        uoi_lambda(F.col("officesubsystemlocale")),
-    )
-    return output_df
-
-
 def first_load(
     target_path: str,
     target_table: str,
     geo_cols: str,
+    entity: str,
     compression: str = "snappy",
     database: str = "default",
     source_table: str = "test_table",
     test: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
-    reso_df = get_reso_id(input_df)
-    insert_df = get_geo_info_df(geo_cols, reso_df)
+
+    # TODO Tmp until we get access to the geosvc API
+    caar_cond = (F.col(f"{entity}subsystemlocale") == "BRIGHT_CAAR") & (
+        F.col(f"{entity}city") != "OTHER"
+    )
+
+    geo_cols = args["geoinfo_cols"].split(",")
+    geo_cols = [F.col(col_name) for col_name in geo_cols]
+
+    insert_df = input_df.withColum(
+        f"{entity}county",
+        F.when(caar_cond, get_geo_info(*geo_cols)).otherwise(F.col(f"{entity}county"))
+    )
 
     write_df = (
         insert_df.write.mode("overwrite")
@@ -159,6 +153,7 @@ def incremental_load(
     database: str,
     table: str,
     merge_key: str,
+    entity: str,
 ):
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
@@ -171,15 +166,18 @@ def incremental_load(
         ).show()
     )
 
-    reso_df = get_reso_id(changes_df)
-    upsert_df = get_geo_info_df(geo_cols, reso_df)
+    upsert_df = (
+        get_geo_info_df(geo_cols, changes_df)
+        .withColumn(f"{entity}county", F.col("geo_info"))
+        .drop("geo_info")
+    )
 
     target_df = DeltaTable.forName(spark, f"{database}.{table}")
 
     target_df.alias("target").merge(
         upsert_df.alias("updates"), f"target.{merge_key} = updates.{merge_key}"
     ).whenMatchedUpdate(
-        set={"officecounty": "updates.officecounty"}
+        set={f"{entity}county": f"updates.{entity}county"}
     ).whenNotMatchedInsertAll().execute()
 
 
@@ -191,7 +189,6 @@ if __name__ == "__main__":
             "table",
             "data_bucket",
             "database",
-            "geoinfo_cols",
             "options",
         ],
     )
@@ -202,6 +199,8 @@ if __name__ == "__main__":
     job = Job(glueContext)
     job.init(args["JOB_NAME"], args)
 
+    options = json.loads(args["options"])
+    geo_cols = options["geoinfo_config"]["geoinfo_cols"]
     staging_table = args["table"].replace("raw", "staging")
 
     table_exists = spark._jsparkSession.catalog().tableExists(
@@ -212,7 +211,7 @@ if __name__ == "__main__":
         first_load(
             target_path=f"s3://{args['data_bucket']}/staging_data/{args['database']}/{staging_table}",
             target_table=staging_table,
-            geo_cols=args["geoinfo_cols"],
+            geo_cols=geo_cols,
             database=args["database"],
             source_table=args["table"],
         )
@@ -248,15 +247,16 @@ if __name__ == "__main__":
             ).show()
         )
 
-        write_options = json.loads(args["options"]).get("write_options", {})
+        write_options = options["write_options"]
         merge_key = write_options.get("merge_key")
 
         incremental_load(
             spark,
-            args["geoinfo_cols"],
+            geo_cols,
             latest_df,
             args["database"],
             staging_table,
             merge_key,
+            args["geoinfo_config"]["entity"],
         )
 job.commit()
