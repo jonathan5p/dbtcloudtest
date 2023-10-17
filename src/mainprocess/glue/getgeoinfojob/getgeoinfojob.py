@@ -118,7 +118,7 @@ def first_load(
     test: bool = False,
     tmp: bool = False,
 ):
-    input_df = spark.read.format("delta").table(f"{database}.{source_table}").limit(100)
+    input_df = spark.read.format("delta").table(f"{database}.{source_table}")
 
     if tmp:
         # TODO Tmp until we get access to the geosvc API
