@@ -145,7 +145,7 @@ ORDER BY bdf.orghubid DESC
 """
 
 # Define merge_key var as primary key of the organizations table
-merge_key = "orgsourcerecordid"
+merge_key = "orgsourcerecordkey"
 
 # Native record office valid types for deduping
 office_types = [

@@ -16,7 +16,7 @@
       "write_options": {
         "partitions": "",
         "compression": "snappy",
-        "merge_key": "membermlsid",
+        "merge_key": "memberkey",
         "precombine_keys": "modificationtimestamp",
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
       }
@@ -39,7 +39,7 @@
       "write_options": {
         "partitions": "",
         "compression": "snappy",
-        "merge_key": "officemlsid",
+        "merge_key": "officekey",
         "precombine_keys": "modificationtimestamp",
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
       },

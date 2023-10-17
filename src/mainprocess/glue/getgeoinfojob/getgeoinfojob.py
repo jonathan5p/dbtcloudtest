@@ -65,13 +65,14 @@ state_abb2name = {
     "WY": "Wyoming",
 }
 
+
 @F.udf(returnType=StringType())
 def get_geo_info(city, state):
     """
     Auxiliar function to get CAAR county data
     """
     geolocator = Nominatim(user_agent="geoapp", timeout=15)
-    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1 / 100)
+    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
 
     output = None
     if city is not None:
@@ -93,8 +94,9 @@ def get_geo_info(city, state):
 
     return output
 
+
 def get_geo_info_df(geo_cols: str, input_df: DataFrame):
-    geo_cols = args["geoinfo_cols"].split(",")
+    geo_cols = geo_cols.split(",")
     if geo_cols not in ["", None]:
         geo_cols = [F.col(col_name) for col_name in geo_cols]
         output_df = input_df.withColumn("geo_info", get_geo_info(*geo_cols))
@@ -103,6 +105,7 @@ def get_geo_info_df(geo_cols: str, input_df: DataFrame):
             "The geo_cols argument must contain n columns following the order: [WIP]"
         )
     return output_df
+
 
 def first_load(
     target_path: str,
@@ -113,21 +116,33 @@ def first_load(
     database: str = "default",
     source_table: str = "test_table",
     test: bool = False,
+    tmp: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
 
-    # TODO Tmp until we get access to the geosvc API
-    caar_cond = (F.col(f"{entity}subsystemlocale") == "BRIGHT_CAAR") & (
-        F.col(f"{entity}city") != "OTHER"
-    )
+    if tmp:
+        # TODO Tmp until we get access to the geosvc API
+        caar_cond = (F.col(f"{entity}subsystemlocale") == "BRIGHT_CAAR") & (
+            F.col(f"{entity}city") != "OTHER"
+        )
 
-    geo_cols = args["geoinfo_cols"].split(",")
-    geo_cols = [F.col(col_name) for col_name in geo_cols]
+        #print("Caar count: ", input_df.filter(caar_cond).count())
 
-    insert_df = input_df.withColum(
-        f"{entity}county",
-        F.when(caar_cond, get_geo_info(*geo_cols)).otherwise(F.col(f"{entity}county"))
-    )
+        geo_cols = geo_cols.split(",")
+        geo_cols = [F.col(col_name) for col_name in geo_cols]
+
+        insert_df = input_df.withColumn(
+            f"{entity}county",
+            F.when(caar_cond, get_geo_info(*geo_cols)).otherwise(
+                F.col(f"{entity}county")
+            ),
+        )
+    else:
+        insert_df = (
+            get_geo_info_df(geo_cols, input_df)
+            .withColumn(f"{entity}county", F.col("geo_info"))
+            .drop("geo_info")
+        )
 
     write_df = (
         insert_df.write.mode("overwrite")
@@ -158,26 +173,25 @@ def incremental_load(
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
     )
+    delete_df = latest_df.filter(F.col("_change_type") == "delete")
 
-    changes_df.printSchema()
-    print(
-        changes_df.select(
-            "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-        ).show()
-    )
-
-    upsert_df = (
+    updates_df = (
         get_geo_info_df(geo_cols, changes_df)
         .withColumn(f"{entity}county", F.col("geo_info"))
         .drop("geo_info")
     )
+
+    upsert_df = updates_df.unionByName(delete_df)
 
     target_df = DeltaTable.forName(spark, f"{database}.{table}")
 
     target_df.alias("target").merge(
         upsert_df.alias("updates"), f"target.{merge_key} = updates.{merge_key}"
     ).whenMatchedUpdate(
-        set={f"{entity}county": f"updates.{entity}county"}
+        condition=(F.col("_change_type") == "update_postimage"),
+        set={f"{entity}county": f"updates.{entity}county"},
+    ).whenMatchedDelete(
+        condition=(F.col("_change_type") == "delete")
     ).whenNotMatchedInsertAll().execute()
 
 
@@ -216,7 +230,7 @@ if __name__ == "__main__":
             geo_cols=geo_cols,
             database=args["database"],
             source_table=args["table"],
-            entity=entity
+            entity=entity,
         )
     elif table_exists:
         cdc_df = (
@@ -224,13 +238,6 @@ if __name__ == "__main__":
             .option("startingVersion", "1")
             .format("delta")
             .table(f"{args['database']}.{args['table']}")
-        )
-
-        cdc_df.printSchema()
-        print(
-            cdc_df.select(
-                "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-            ).show()
         )
 
         latest_df = (
@@ -241,13 +248,7 @@ if __name__ == "__main__":
                 ),
             )
             .filter("_commit_version = latest_version")
-            .drop("maxdate")
-        )
-
-        print(
-            latest_df.select(
-                "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-            ).show()
+            .drop("latest_version")
         )
 
         write_options = options["write_options"]

@@ -100,15 +100,15 @@ if __name__ == '__main__':
 
     # Clean the data for agent, offices and teams
     clean_agent_df = clean_splink_data(
-        agent_df, cleaning_agent_config, "dlid", clean_type="agent"
+        agent_df, cleaning_agent_config, "memberkey", clean_type="agent"
     )
     clean_office_df = clean_splink_data(
-        office_df, cleaning_office_config, "dlid", clean_type="office"
+        office_df, cleaning_office_config, "officekey", clean_type="office"
     )
     clean_team_df = clean_splink_data(
         team_df,
         cleaning_team_config,
-        "dlid",
+        "teamkey",
         clean_type="team",
         clean_agent_df=clean_agent_df,
         clean_office_df=clean_office_df,
