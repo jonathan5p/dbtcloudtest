@@ -36,7 +36,8 @@ module "provision_roles" {
 }
 
 module "codepipeline" {
-  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//codepipeline_data?ref=v0.0.2"
+  #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//codepipeline_data?ref=v0.0.2"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//codepipeline_data?ref=s3_add"
 
   providers = {
     aws = aws.code
@@ -89,10 +90,12 @@ module "codepipeline" {
   ]
 
   image                             = var.image
+  image_build                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
   image_pull_credentials_type       = var.image_pull_credentials_type
   project_app_group                 = var.project_app_group
   project_ledger                    = var.project_ledger
   project_prefix                    = var.project_prefix
+  privileged_mode_build             = true 
   s3_bucket_name                    = var.s3_bucket_name
   site                              = var.site
   sns_arn_codepipeline_notification = var.sns_arn_codepipeline_notification
