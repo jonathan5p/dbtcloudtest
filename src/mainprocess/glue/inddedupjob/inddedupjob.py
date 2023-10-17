@@ -94,7 +94,7 @@ ORDER BY ibp.indhubid DESC
 """
 
 # Define merge_key var as primary key of the individuals table
-merge_key = "indsourcerecordid"
+merge_key = "indsourcerecordkey"
 
 # Native record agent valid types for deduping
 agent_types = [
