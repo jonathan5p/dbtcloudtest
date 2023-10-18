@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM public.ecr.aws/glue/aws-glue-libs:glue_libs_4.0.0_image_01
 
 ARG JF_PIP_FILE
 RUN mkdir ${HOME}/.pip
