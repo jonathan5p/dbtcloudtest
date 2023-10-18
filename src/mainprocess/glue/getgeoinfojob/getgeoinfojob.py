@@ -135,7 +135,7 @@ def first_load(
         county_df = get_geo_info_df(geo_cols, caar_data)
 
         insert_df = (
-            input_df.join(county_df, on=merge_key, how="left")
+            input_df.join(county_df.select(merge_key, "geo_info"), on=merge_key, how="left")
             .withColumn(
                 f"{entity}county",
                 F.when(F.col("geo_info").isNotNull(), F.col("geo_info")).otherwise(

@@ -186,7 +186,9 @@ def deduplicate_entity(
     linker = SparkLinker(spark_df, spark=spark, break_lineage_method="parquet")
     linker.load_model(splink_model_path)
 
-    predictions = linker.predict(threshold_match_probability=0.2)
+    predictions = linker.predict(
+        threshold_match_probability=splink_config["THRESHOLD_MATCH_PROBABILITY"]
+    )
     clusters = linker.cluster_pairwise_predictions_at_threshold(
         predictions,
         threshold_match_probability=splink_config["THRESHOLD_MATCH_PROBABILITY"],
