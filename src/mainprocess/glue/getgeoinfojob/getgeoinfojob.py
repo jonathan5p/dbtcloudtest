@@ -112,6 +112,7 @@ def first_load(
     target_table: str,
     geo_cols: str,
     entity: str,
+    merge_key: str,
     compression: str = "snappy",
     database: str = "default",
     source_table: str = "test_table",
@@ -119,6 +120,7 @@ def first_load(
     tmp: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
+    print("Input count: ", input_df.count())
 
     if tmp:
         # TODO Tmp until we get access to the geosvc API
@@ -126,17 +128,26 @@ def first_load(
             F.col(f"{entity}city") != "OTHER"
         )
 
-        #print("Caar count: ", input_df.filter(caar_cond).count())
+        caar_data = input_df.filter(caar_cond).limit(10)
 
-        geo_cols = geo_cols.split(",")
-        geo_cols = [F.col(col_name) for col_name in geo_cols]
+        print("Conteo caar: ", caar_data.count())
 
-        insert_df = input_df.withColumn(
-            f"{entity}county",
-            F.when(caar_cond, get_geo_info(*geo_cols)).otherwise(
-                F.col(f"{entity}county")
-            ),
+        county_df = get_geo_info_df(geo_cols, caar_data)
+
+        insert_df = (
+            input_df.join(county_df, on=merge_key, how="left")
+            .withColumn(
+                f"{entity}county",
+                F.when(F.col("geo_info").isNotNull(), F.col("geo_info")).otherwise(
+                    F.col(f"{entity}county")
+                ),
+            )
+            .drop("geo_info")
         )
+
+        insert_df.printSchema()
+        print("Insert count: ", insert_df.count())
+
     else:
         insert_df = (
             get_geo_info_df(geo_cols, input_df)
@@ -173,7 +184,21 @@ def incremental_load(
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
     )
+
     delete_df = latest_df.filter(F.col("_change_type") == "delete")
+
+    print(
+        delete_df.select(
+            "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
+        ).show()
+    )
+
+    changes_df.printSchema()
+    print(
+        changes_df.select(
+            "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
+        ).show()
+    )
 
     updates_df = (
         get_geo_info_df(geo_cols, changes_df)
@@ -217,6 +242,9 @@ if __name__ == "__main__":
     geo_cols = options["geoinfo_config"]["geoinfo_cols"]
     entity = options["geoinfo_config"]["entity"]
 
+    write_options = options["write_options"]
+    merge_key = write_options.get("merge_key")
+
     staging_table = args["table"].replace("raw", "staging")
 
     table_exists = spark._jsparkSession.catalog().tableExists(
@@ -231,6 +259,8 @@ if __name__ == "__main__":
             database=args["database"],
             source_table=args["table"],
             entity=entity,
+            merge_key=merge_key,
+            tmp=True,
         )
     elif table_exists:
         cdc_df = (
@@ -238,6 +268,13 @@ if __name__ == "__main__":
             .option("startingVersion", "1")
             .format("delta")
             .table(f"{args['database']}.{args['table']}")
+        )
+
+        cdc_df.printSchema()
+        print(
+            cdc_df.select(
+                "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
+            ).show()
         )
 
         latest_df = (
@@ -251,8 +288,11 @@ if __name__ == "__main__":
             .drop("latest_version")
         )
 
-        write_options = options["write_options"]
-        merge_key = write_options.get("merge_key")
+        print(
+            latest_df.select(
+                "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
+            ).show()
+        )
 
         incremental_load(
             spark,
