@@ -128,7 +128,7 @@ def first_load(
             F.col(f"{entity}city") != "OTHER"
         )
 
-        caar_data = input_df.filter(caar_cond).limit(10)
+        caar_data = input_df.filter(caar_cond)
 
         print("Conteo caar: ", caar_data.count())
 
