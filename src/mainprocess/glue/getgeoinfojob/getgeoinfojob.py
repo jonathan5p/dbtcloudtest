@@ -120,7 +120,6 @@ def first_load(
     tmp: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
-    print("Input count: ", input_df.count())
 
     if tmp:
         # TODO Tmp until we get access to the geosvc API
@@ -129,13 +128,10 @@ def first_load(
         )
 
         caar_data = input_df.filter(caar_cond)
-
-        print("Conteo caar: ", caar_data.count())
-
         county_df = get_geo_info_df(geo_cols, caar_data)
 
         insert_df = (
-            input_df.join(county_df, on=merge_key, how="left")
+            input_df.join(county_df.select(merge_key, "geo_info"), on=merge_key, how="left")
             .withColumn(
                 f"{entity}county",
                 F.when(F.col("geo_info").isNotNull(), F.col("geo_info")).otherwise(
@@ -144,9 +140,6 @@ def first_load(
             )
             .drop("geo_info")
         )
-
-        insert_df.printSchema()
-        print("Insert count: ", insert_df.count())
 
     else:
         insert_df = (
@@ -186,19 +179,6 @@ def incremental_load(
     )
 
     delete_df = latest_df.filter(F.col("_change_type") == "delete")
-
-    print(
-        delete_df.select(
-            "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-        ).show()
-    )
-
-    changes_df.printSchema()
-    print(
-        changes_df.select(
-            "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-        ).show()
-    )
 
     updates_df = (
         get_geo_info_df(geo_cols, changes_df)
@@ -270,13 +250,6 @@ if __name__ == "__main__":
             .table(f"{args['database']}.{args['table']}")
         )
 
-        cdc_df.printSchema()
-        print(
-            cdc_df.select(
-                "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-            ).show()
-        )
-
         latest_df = (
             cdc_df.withColumn(
                 "latest_version",
@@ -286,12 +259,6 @@ if __name__ == "__main__":
             )
             .filter("_commit_version = latest_version")
             .drop("latest_version")
-        )
-
-        print(
-            latest_df.select(
-                "officemlsid", "_change_type", "_commit_version", "_commit_timestamp"
-            ).show()
         )
 
         incremental_load(

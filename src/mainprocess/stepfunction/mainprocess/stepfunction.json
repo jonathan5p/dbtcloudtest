@@ -84,7 +84,7 @@
     },
     "geoinfo-mapping": {
       "Type": "Map",
-      "Next": "start-glue-staging-crawler",
+      "Next": "cleaning-job",
       "ResultPath": null,
       "Iterator": {
         "StartAt": "choice-status",
@@ -143,32 +143,6 @@
           "Next": "FailedState"
         }
       ]
-    },
-    "start-glue-staging-crawler": {
-      "Next": "cleaning-job",
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "IntervalSeconds": 1,
-          "MaxAttempts": 3,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "Next": "FailedState"
-        }
-      ],
-      "Type": "Task",
-      "Resource": "arn:aws:states:::aws-sdk:glue:startCrawler",
-      "Parameters": {
-        "Name": "${glue_staging_crawler}"
-      }
     },
     "cleaning-job": {
       "Next": "deduplication-jobs",
