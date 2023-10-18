@@ -15,7 +15,7 @@ import json
 uoi_mapper = {"BRIGHT_CAAR": "A00001567", "Other": "M00000309"}
 
 
-def get_reso_id(input_df: DataFrame, entity: str):
+def get_reso_id(input_df: DataFrame):
     uoi_lambda = F.udf(
         lambda subsystem: uoi_mapper.get(subsystem, uoi_mapper["Other"]),
         StringType(),
@@ -23,7 +23,7 @@ def get_reso_id(input_df: DataFrame, entity: str):
 
     output_df = input_df.withColumn(
         "uniqueorgid",
-        uoi_lambda(F.col(f"{entity}subsystemlocale")),
+        uoi_lambda(F.col("subsystemlocale")),
     )
     return output_df
 
@@ -123,8 +123,8 @@ if __name__ == "__main__":
         clean_office_df=clean_office_df,
     )
 
-    clean_agent_df = get_reso_id(clean_agent_df, "member")
-    clean_office_df = get_reso_id(clean_office_df, "office")
+    clean_agent_df = get_reso_id(clean_agent_df)
+    clean_office_df = get_reso_id(clean_office_df)
 
     # Write the clean data to S3
     clean_agent_df.write.mode("overwrite").format("delta").option(
