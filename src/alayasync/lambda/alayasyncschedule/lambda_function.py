@@ -166,7 +166,9 @@ def lambda_handler(event, context):
 
     logger.info(f'Event:{event}')
 
-    query_parameters['KeyConditionExpression'] = (Key('batch').eq(event['batch']) & Key('status').eq(event.get('status', 'JUST_ARRIVED')))
+    status = event.get('status', 'JUST_ARRIVED')
+
+    query_parameters['KeyConditionExpression'] = (Key('batch').eq(event['batch']) & Key('status').eq(status))
     query_parameters['FilterExpression'] = (Attr('table').eq(event['table']) & Attr('database').eq(event['database']))
 
     records = get_from_dynamo(register_table, query_parameters)
@@ -178,7 +180,7 @@ def lambda_handler(event, context):
             'batch': event['batch'],
             'bucket': records[0]['bucket'],
             'database': event['database'],
-            'status': event['status'],
+            'status': status,
             'table': event['table'],
         }
         

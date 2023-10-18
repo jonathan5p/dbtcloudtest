@@ -66,6 +66,11 @@ variable "image" {
   default     = "aws/codebuild/standard:5.0"
 }
 
+variable "image_build" {
+  description = "codebuild image to be used in the build step"
+  default     = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+}
+
 variable "image_pull_credentials_type" {
   default = "CODEBUILD"
 }

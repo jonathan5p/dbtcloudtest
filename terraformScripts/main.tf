@@ -306,6 +306,16 @@ data "aws_iam_policy_document" "policy_ecs" {
 
   statement {
     actions = [
+      "events:PutEvents"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:aws:events:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:event-bus/default"
+    ]
+  }
+
+  statement {
+    actions = [
       "dynamodb:BatchGetItem",
       "dynamodb:DescribeTable",
       "dynamodb:GetItem",

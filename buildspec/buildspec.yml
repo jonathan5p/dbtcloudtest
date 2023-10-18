@@ -16,7 +16,5 @@ phases:
     commands:
       - "echo Build started on `date`"
       - "aws sts get-caller-identity"
-      - mkdir ${HOME}/.pip
-      - JF_FILE_PARSED=$(sed -e 's/^"//' -e 's/"$//' -e 's/\\n/\n/g' <<<"${JF_PIP_FILE}")
-      - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
-      - pip install boto3
+      - cd containers/tests
+      - docker build -t tests --build-arg JF_PIP_FILE="${JF_PIP_FILE}" .
