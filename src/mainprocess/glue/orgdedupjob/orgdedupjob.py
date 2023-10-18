@@ -248,6 +248,37 @@ def generate_globalids_and_native_records(
     return output_df
 
 
+def write_table(
+    input_df: DataFrame,
+    data_bucket: str,
+    data_layer: str,
+    table: str,
+    database: str,
+    max_records_per_file: int,
+    partition_col: str,
+    partition_value: str,
+):
+    writer_df = (
+        input_df.withColumn(partition_col, F.lit(partition_value))
+        .write.format("parquet")
+        .option(
+            "path",
+            f"s3://{data_bucket}/{data_layer}/{database}/{table}/",
+        )
+        .option("maxRecordsPerFile", max_records_per_file)
+        .option("compression", "snappy")
+        .partitionBy(partition_col)
+    )
+
+    table_exists = spark.catalog._jcatalog.tableExists(f"{database}.{table}")
+
+    if table_exists:
+        writer_df.mode("append").save()
+        spark.sql(f"MSCK REPAIR TABLE {database}.{table} DROP PARTITIONS;")
+    else:
+        writer_df.mode("overwrite").saveAsTable(f"{database}.{table}")
+
+
 if __name__ == "__main__":
     params = [
         "JOB_NAME",
@@ -376,61 +407,38 @@ if __name__ == "__main__":
     partition_col = "dt_utc"
     partition_value = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
-    clusters_df.withColumn(partition_col, F.lit(partition_value)).write.mode(
-        "overwrite"
-    ).format("parquet").option(
-        "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_office_cluster/",
-    ).option(
-        "overwriteSchema", "true"
-    ).option(
-        "compression", "snappy"
-    ).partitionBy(
-        partition_col
-    ).saveAsTable(
-        f"{args['glue_db']}.splink_office_cluster_df"
+    write_table(
+        clusters_df,
+        args["data_bucket"],
+        "consume_data",
+        "splink_office_cluster",
+        args["glue_db"],
+        int(args.get("max_records_per_file", 1000)),
+        partition_col,
+        partition_value,
     )
 
-    dedup_team_df.withColumn(partition_col, F.lit(partition_value)).write.mode(
-        "overwrite"
-    ).format("parquet").option(
-        "path",
-        f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/splink_team_cluster/",
-    ).option(
-        "overwriteSchema", "true"
-    ).option(
-        "compression", "snappy"
-    ).partitionBy(
-        partition_col
-    ).saveAsTable(
-        f"{args['glue_db']}.splink_team_cluster_df"
+    write_table(
+        dedup_team_df,
+        args["data_bucket"],
+        "consume_data",
+        "splink_team_cluster",
+        args["glue_db"],
+        int(args.get("max_records_per_file", 1000)),
+        partition_col,
+        partition_value,
     )
 
-    org_writer = (
-        organizations_df.withColumn(partition_col, F.lit(partition_value))
-        .write.format("parquet")
-        .option(
-            "path",
-            f"s3://{args['data_bucket']}/consume_data/{args['alaya_glue_db']}/organizations/",
-        )
-        .option("maxRecordsPerFile", int(args.get("max_records_per_file", 1000)))
-        .option("compression", "snappy")
-        .partitionBy(partition_col)
+    write_table(
+        organizations_df,
+        args["data_bucket"],
+        "consume_data",
+        "organizations",
+        args["alaya_glue_db"],
+        int(args.get("max_records_per_file", 1000)),
+        partition_col,
+        partition_value,
     )
-
-    table_exists = spark.catalog._jcatalog.tableExists(
-        f"{args['alaya_glue_db']}.organizations"
-    )
-
-    if table_exists:
-        org_writer.mode("append").save()
-        spark.sql(
-            f"MSCK REPAIR TABLE {args['alaya_glue_db']}.organizations DROP PARTITIONS;"
-        )
-    else:
-        org_writer.mode("overwrite").saveAsTable(
-            f"{args['alaya_glue_db']}.organizations"
-        )
 
     # Write data to the Aurora PostgreSQL database
     glueContext.write_dynamic_frame.from_options(
