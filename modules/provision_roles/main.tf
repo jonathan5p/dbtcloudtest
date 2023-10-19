@@ -191,52 +191,6 @@ module "lambda_config_loader_naming" {
   purpose     = join("", [var.project_prefix, "-", "configloader"])
 }
 
-module "lambda_enrich_caar_agent_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "enrichagent"])
-}
-
-module "lambda_enrich_caar_office_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "enrichoffice"])
-}
-
-module "lambda_caar_enrich_agent_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "enrichagent"])
-}
-
-module "lambda_caar_enrich_office_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "enrichoffice"])
-}
-
-#----------------------------------
-# Staging Glue Crawler names
-#----------------------------------
-
-module "crawler_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
-}
-
-module "staging_crawler_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "glr"
-  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
-}
-
 #----------------------------------
 # ECS Role & Policy
 #----------------------------------
@@ -603,27 +557,6 @@ module "cron_trigger_policy_naming" {
   purpose     = join("", [var.project_prefix, "-", "etltrigger"])
 }
 
-module "lambda_enrich_agent_policy_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "enrichagent"])
-}
-
-module "lambda_enrich_office_policy_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "enrichoffice"])
-}
-
-module "staging_glue_crawler_policy_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "stagingcrawlerpolicy"])
-}
-
 # ------------------------------------------------------------------------------
 # Create Role for Dev Account for Deployments
 # ------------------------------------------------------------------------------
@@ -954,11 +887,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_org_dedup_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.glue_getgeoinfo_job_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_config_loader_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_agent_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.lambda_enrich_caar_office_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.sfn_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.trigger_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.crawler_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_execution_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_register_role_naming.name}",
@@ -994,11 +924,8 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_org_dedup_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.glue_getgeoinfo_job_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_config_loader_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_agent_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.lambda_enrich_office_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.elt_sfn_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.cron_trigger_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.staging_glue_crawler_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_ecs_task_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_register_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_schedule_policy_naming.name}",
@@ -1024,8 +951,6 @@ data "aws_iam_policy_document" "dev_deploy3" {
     actions = ["lambda:*"]
     resources = [
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_config_loader_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_caar_enrich_agent_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_caar_enrich_office_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy:*",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy",
       "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310:*",
@@ -1078,21 +1003,6 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection/*",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:connection",
-    ]
-  }
-
-  statement {
-    actions = [
-      "glue:GetCrawler",
-      "glue:DeleteCrawler",
-      "glue:UpdateCrawler",
-      "glue:CreateCrawler",
-      "glue:GetTags"
-    ]
-    effect = "Allow"
-    resources = [
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/${module.staging_crawler_naming.name}",
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:crawler/aue1d1z1glroidhoidh-staginggluecrawler"
     ]
   }
 
