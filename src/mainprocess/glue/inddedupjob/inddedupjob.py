@@ -228,7 +228,7 @@ def write_table(
     if table_exists:
         writer_df.mode("append").save()
         spark.sql(
-            f"ALTER TABLE {database}.{table} ADD IF NOT EXISTS PARTITION ({partition_col}={partition_value});"
+            f"ALTER TABLE {database}.{table} ADD IF NOT EXISTS PARTITION ({partition_col}='{partition_value}');"
         )
     else:
         writer_df.mode("overwrite").saveAsTable(f"{database}.{table}")
