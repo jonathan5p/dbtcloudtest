@@ -8,11 +8,7 @@
       ],
       "Resource": [
         "${config_loader_lambda}",
-        "${config_loader_lambda}:*",
-        "${staging_agent_lambda}",
-        "${staging_agent_lambda}:*",
-        "${staging_office_lambda}",
-        "${staging_office_lambda}:*"
+        "${config_loader_lambda}:*"
       ]
     },
     {
@@ -43,8 +39,7 @@
         "arn:aws:glue:${region}:${account_id}:job/${glue_cleaning_job}",
         "arn:aws:glue:${region}:${account_id}:job/${glue_ind_dedup_job}",
         "arn:aws:glue:${region}:${account_id}:job/${glue_org_dedup_job}",
-        "arn:aws:glue:${region}:${account_id}:job/${glue_geoinfo_job}",
-        "arn:aws:glue:${region}:${account_id}:crawler/${glue_staging_crawler}"
+        "arn:aws:glue:${region}:${account_id}:job/${glue_geoinfo_job}"
       ]
     }
   ]
