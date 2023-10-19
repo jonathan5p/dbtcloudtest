@@ -238,9 +238,12 @@ def generate_globalids_and_native_records(
         lambda pair: True if pair in county_list else False, BooleanType()
     )
 
+    native_cond = (
+        check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))) == True
+    ) & (F.col("orgtype").isin(office_types))
+
     bright_participants_df = global_id_df.withColumn(
-        "orgcanbenative",
-        check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))),
+        "orgcanbenative", F.when(native_cond == True, True).otherwise(False)
     )
     bright_participants_df.createOrReplaceTempView("bright_participants_df")
 
@@ -274,7 +277,9 @@ def write_table(
 
     if table_exists:
         writer_df.mode("append").save()
-        spark.sql(f"MSCK REPAIR TABLE {database}.{table} DROP PARTITIONS;")
+        spark.sql(
+            f"ALTER TABLE {database}.{table} ADD IF NOT EXISTS PARTITION ({partition_col}={partition_value});"
+        )
     else:
         writer_df.mode("overwrite").saveAsTable(f"{database}.{table}")
 
@@ -325,22 +330,14 @@ if __name__ == "__main__":
     office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
-    # Filter agents
-    dedup_records = office_df.where(F.col("type").isin(office_types))
-
     # Run splink model over office and team data
-    dedup_office_df = deduplicate_entity(
+    clusters_df = deduplicate_entity(
         entity="office",
-        spark_df=dedup_records,
+        spark_df=office_df,
         spark=spark,
         splink_model_path="/tmp/office_splink_model.json",
     )
 
-    clusters_df = office_df.join(
-        dedup_office_df, office_df["dlid"] == dedup_office_df["dlid"], how="leftouter"
-    ).select(
-        office_df["*"], dedup_office_df["cluster_id"], dedup_office_df["tf_postalcode"]
-    )
     clusters_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
