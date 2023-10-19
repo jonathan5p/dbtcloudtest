@@ -381,98 +381,98 @@ module "org_dedup_job" {
 # # Glue Crawler for Staging
 # #------------------------------------------------------------------------------
 
-module "staging_crawler_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
-}
-resource "aws_iam_role" "staging_crawler_role" {
-  name = module.staging_crawler_role_naming.name
-  tags = module.staging_crawler_role_naming.tags
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = ["sts:AssumeRole"]
-        Effect = "Allow"
-        Sid    = "GlueAssumeRole"
-        Principal = {
-          Service = "glue.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
+# module "staging_crawler_role_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = var.base_naming
+#   type        = "iro"
+#   purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
+# }
+# resource "aws_iam_role" "staging_crawler_role" {
+#   name = module.staging_crawler_role_naming.name
+#   tags = module.staging_crawler_role_naming.tags
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = ["sts:AssumeRole"]
+#         Effect = "Allow"
+#         Sid    = "GlueAssumeRole"
+#         Principal = {
+#           Service = "glue.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+# }
 
-module "staging_crawler_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
-  type        = "glr"
-  purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
-}
-resource "aws_glue_crawler" "staging_crawler" {
-  database_name = aws_glue_catalog_database.dedup_process_glue_db.name
-  name          = module.staging_crawler_naming.name
-  tags          = module.staging_crawler_naming.tags
-  role          = aws_iam_role.staging_crawler_role.arn
+# module "staging_crawler_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = var.base_naming
+#   type        = "glr"
+#   purpose     = join("", [var.project_prefix, "-", "stagingcrawler"])
+# }
+# resource "aws_glue_crawler" "staging_crawler" {
+#   database_name = aws_glue_catalog_database.dedup_process_glue_db.name
+#   name          = module.staging_crawler_naming.name
+#   tags          = module.staging_crawler_naming.tags
+#   role          = aws_iam_role.staging_crawler_role.arn
 
-  delta_target {
-    write_manifest            = false
-    create_native_delta_table = true
-    delta_tables = [
-      "s3://${var.project_objects.data_bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.project_objects.lambda_ec_office_target_table_name}/",
-      "s3://${var.project_objects.data_bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.project_objects.lambda_ec_agent_target_table_name}/"
-    ]
-  }
-}
+#   delta_target {
+#     write_manifest            = false
+#     create_native_delta_table = true
+#     delta_tables = [
+#       "s3://${var.project_objects.data_bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.project_objects.lambda_ec_office_target_table_name}/",
+#       "s3://${var.project_objects.data_bucket_id}/staging_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/${var.project_objects.lambda_ec_agent_target_table_name}/"
+#     ]
+#   }
+# }
 
-data "aws_iam_policy_document" "staging_glue_crawler_policy" {
-  statement {
-    sid    = "s3readandwrite"
-    effect = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject"
-    ]
-    resources = [var.project_objects.data_bucket_arn,
-    "${var.project_objects.data_bucket_arn}/*"]
-  }
+# data "aws_iam_policy_document" "staging_glue_crawler_policy" {
+#   statement {
+#     sid    = "s3readandwrite"
+#     effect = "Allow"
+#     actions = [
+#       "s3:GetObject",
+#       "s3:PutObject"
+#     ]
+#     resources = [var.project_objects.data_bucket_arn,
+#     "${var.project_objects.data_bucket_arn}/*"]
+#   }
 
-  statement {
-    sid    = "kmsread"
-    effect = "Allow"
-    actions = [
-      "kms:DescribeKey",
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:ReEncrypt*",
-      "kms:GenerateDataKey*",
-      "kms:CreateGrant"
-    ]
-    resources = [var.project_objects.data_key_arn]
-  }
-}
+#   statement {
+#     sid    = "kmsread"
+#     effect = "Allow"
+#     actions = [
+#       "kms:DescribeKey",
+#       "kms:Encrypt",
+#       "kms:Decrypt",
+#       "kms:ReEncrypt*",
+#       "kms:GenerateDataKey*",
+#       "kms:CreateGrant"
+#     ]
+#     resources = [var.project_objects.data_key_arn]
+#   }
+# }
 
-module "staging_glue_crawler_policy_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
-  type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "stagingcrawlerpolicy"])
-}
-resource "aws_iam_policy" "staging_glue_crawler_policy" {
-  name        = module.staging_glue_crawler_policy_naming.name
-  tags        = module.staging_glue_crawler_policy_naming.tags
-  description = "IAM Policy for the Glue crawler that registers the staging tables"
-  policy      = data.aws_iam_policy_document.staging_glue_crawler_policy.json
-}
+# module "staging_glue_crawler_policy_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = var.base_naming
+#   type        = "ipl"
+#   purpose     = join("", [var.project_prefix, "-", "stagingcrawlerpolicy"])
+# }
+# resource "aws_iam_policy" "staging_glue_crawler_policy" {
+#   name        = module.staging_glue_crawler_policy_naming.name
+#   tags        = module.staging_glue_crawler_policy_naming.tags
+#   description = "IAM Policy for the Glue crawler that registers the staging tables"
+#   policy      = data.aws_iam_policy_document.staging_glue_crawler_policy.json
+# }
 
-resource "aws_iam_role_policy_attachment" "staging_glue_crawler_policy_attachement" {
-  role       = aws_iam_role.staging_crawler_role.name
-  policy_arn = aws_iam_policy.staging_glue_crawler_policy.arn
-}
+# resource "aws_iam_role_policy_attachment" "staging_glue_crawler_policy_attachement" {
+#   role       = aws_iam_role.staging_crawler_role.name
+#   policy_arn = aws_iam_policy.staging_glue_crawler_policy.arn
+# }
 
-resource "aws_iam_role_policy_attachment" "staging_glue_crawler_service_policy_attachement" {
-  role       = aws_iam_role.staging_crawler_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
-}
+# resource "aws_iam_role_policy_attachment" "staging_glue_crawler_service_policy_attachement" {
+#   role       = aws_iam_role.staging_crawler_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+# }
