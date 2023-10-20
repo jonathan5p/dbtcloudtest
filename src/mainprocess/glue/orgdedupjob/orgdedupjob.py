@@ -305,12 +305,6 @@ if __name__ == "__main__":
 
     args = getResolvedOptions(sys.argv, params)
 
-    conn_ops = {
-        "useConnectionProperties": "True",
-        "dbtable": args["aurora_table"],
-        "connectionName": args["aurora_connection_name"],
-    }
-
     s3 = boto3.client("s3")
 
     sc = SparkContext()
@@ -364,6 +358,11 @@ if __name__ == "__main__":
 
     # Get current organizations table from Aurora
     try:
+        conn_ops = {
+            "useConnectionProperties": "True",
+            "dbtable": args["aurora_table"],
+            "connectionName": args["aurora_connection_name"],
+        }
         cur_org_df = glueContext.create_dynamic_frame_from_options(
             connection_type="postgresql", connection_options=conn_ops
         ).toDF()
@@ -438,11 +437,15 @@ if __name__ == "__main__":
     )
 
     # Write data to the Aurora PostgreSQL database
-    glueContext.write_dynamic_frame.from_options(
-        frame=DynamicFrame.fromDF(organizations_df, glueContext, "organizations"),
-        connection_type="postgresql",
-        connection_options=conn_ops,
-    )
+    conn = glueContext.extract_jdbc_conf(args["aurora_connection_name"])
+
+    organizations_df.write.format("jdbc").option("url", conn["fullUrl"]).option(
+        "dbtable", args["aurora_table"]
+    ).option("user", conn["user"]).option("password", conn["password"]).option(
+        "driver", "org.postgresql.Driver"
+    ).mode(
+        "overwrite"
+    ).save()
 
     # Trigger update alaya process
     update_alaya_payload = {
