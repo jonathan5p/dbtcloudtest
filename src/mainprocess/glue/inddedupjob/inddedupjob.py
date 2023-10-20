@@ -286,6 +286,11 @@ if __name__ == "__main__":
 
     # Get current Individuals table from Aurora
     try:
+        conn_ops = {
+            "useConnectionProperties": "True",
+            "dbtable": args["aurora_table"],
+            "connectionName": args["aurora_connection_name"],
+        }
         cur_ind_df = glueContext.create_dynamic_frame_from_options(
             connection_type="postgresql", connection_options=conn_ops
         ).toDF()
