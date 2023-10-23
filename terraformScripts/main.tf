@@ -194,6 +194,7 @@ module "mainprocess" {
 # ECS Configuration
 #------------------------------------------------------------------------------
 
+/*
 module "ecr_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -466,6 +467,14 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   assume_role_policy  = data.aws_iam_policy_document.ecs_task_execution_role.json
   managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"]
   tags                = module.iro_ecs_task_execution_naming.tags
+}
+*/
+
+module "ect_task_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ect"
+  purpose     = join("", [var.project_prefix, "-", "alayapush"])
 }
 
 data "aws_ssm_parameter" "ecs_cluster_name" {
