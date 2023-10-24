@@ -10,6 +10,4 @@ RUN mkdir ${HOME}/.pip
 RUN pip3 install boto3
 RUN rm -rf ${HOME}/.pip/pip.conf
 
-COPY app.py /
-
-CMD ["python", "/app.py", "--s3_path", "abc"]
+#CMD ["python"]
