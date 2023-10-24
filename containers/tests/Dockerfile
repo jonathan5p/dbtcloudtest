@@ -1,9 +1,9 @@
 FROM public.ecr.aws/glue/aws-glue-libs:glue_libs_4.0.0_image_01
 
-ARG JF_PIP_FILE
+#ARG JF_PIP_FILE
 RUN mkdir ${HOME}/.pip
 
-RUN echo "$JF_PIP_FILE" >> ${HOME}/.pip/pip.conf
+#RUN echo "$JF_PIP_FILE" >> ${HOME}/.pip/pip.conf
 
 RUN sed -i 's/^"//' ${HOME}/.pip/pip.conf;sed -i 's/"$//' ${HOME}/.pip/pip.conf;sed -i 's/\\n/\n/g' ${HOME}/.pip/pip.conf
 
