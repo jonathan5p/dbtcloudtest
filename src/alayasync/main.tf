@@ -57,6 +57,7 @@ module "lambdas" {
     project_objects     = merge(var.project_objects, module.tables.primary_keys,
     {
         "dynamo_table_register" = "${module.dynamo.table_naming.name}"
+        "task_definition" = "${module.ecs.alayapush_task_definition}"
     })
 }
 

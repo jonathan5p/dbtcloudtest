@@ -493,18 +493,20 @@ module "alayasync" {
   zone              = var.zone
 
   project_objects = {
+    "alayasyncdb" : module.mainprocess.alayasync_db
+    "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
+    "alayatrigger_key": var.alaya_trigger_key
+    "athena_bucket_id": module.athena.bucket_id
     "bucket_id" : module.s3_data_bucket.bucket_id
     "bucket_arn" : module.s3_data_bucket.bucket_arn
+    "concurrent_tasks" : var.concurrent_tasks
     "data_key_id" : module.data_key.key_id
     "data_key_arn" : module.data_key.key_arn
     "ecs_cluster" : data.aws_ssm_parameter.ecs_cluster_name.value
-    "task_definition" : module.ect_task_naming.name
     "ecs_subnets" : var.ecs_subnets
-    "alayasyncdb" : module.mainprocess.alayasync_db
-    "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
-    "concurrent_tasks" : var.concurrent_tasks
-    "alaya_trigger_key": var.alaya_trigger_key
-    "athena_bucket_id": module.athena.bucket_id
+    #"task_definition" : module.ect_task_naming.name
+    "ecs_task_alaya_cpu" : var.ecs_task_alaya_cpu
+    "ecs_task_alaya_memory" : var.ecs_task_alaya_memory
   }
 }
 
