@@ -18,7 +18,7 @@
       },
       {
         "name": "oidh_table",
-        "value": "dynamo_table_register"
+        "value": "${dynamo_table_register}"
       }
     ]
   }
