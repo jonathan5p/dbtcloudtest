@@ -92,6 +92,25 @@ module "lambdas_execution" {
     })
 }
 
+module "ecs" {
+  source = "./ecs"
+
+  environment         = var.environment
+  project_app_group   = var.project_app_group
+  project_ledger      = var.project_ledger
+  project_prefix      = var.project_prefix
+  site                = var.site
+  tier                = var.tier
+  zone                = var.zone
+
+  project_objects     = merge(var.project_objects, 
+  {
+      "dynamo_table_register" = "${module.dynamo.table_naming.name}",
+      "sfn_alaya_sync" = "${module.step_functions.sfn_alaya_sync_arn}"
+  })
+
+}
+
 resource "aws_lambda_event_source_mapping" "register" {
   event_source_arn = module.sqs.sqs_register_queue_arn
   function_name    = module.lambdas.functions_mapping.register_lambda
