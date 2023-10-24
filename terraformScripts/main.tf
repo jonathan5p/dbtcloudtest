@@ -470,13 +470,6 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 }
 */
 
-module "ect_task_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ect"
-  purpose     = join("", [var.project_prefix, "-", "alayapush"])
-}
-
 data "aws_ssm_parameter" "ecs_cluster_name" {
   name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
 }
@@ -504,7 +497,6 @@ module "alayasync" {
     "data_key_arn" : module.data_key.key_arn
     "ecs_cluster" : data.aws_ssm_parameter.ecs_cluster_name.value
     "ecs_subnets" : var.ecs_subnets
-    #"task_definition" : module.ect_task_naming.name
     "ecs_task_alaya_cpu" : var.ecs_task_alaya_cpu
     "ecs_task_alaya_memory" : var.ecs_task_alaya_memory
   }
