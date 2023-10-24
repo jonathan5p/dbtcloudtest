@@ -1,5 +1,5 @@
 module "ecs_alaya_sync" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//ecs?ref=PI-296"
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//ecs?ref=v0.0.9"
     
     environment         = var.environment
     task_path         = "../src/alayasync/ecs"
