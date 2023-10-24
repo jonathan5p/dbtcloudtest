@@ -64,6 +64,15 @@
       "Resource": [
         "arn:aws:iam::${account_id}:role/*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "${gethubids_lambda}"
+      ]
     }
   ]
 }
