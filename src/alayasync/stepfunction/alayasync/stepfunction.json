@@ -43,7 +43,7 @@
                           },
                           "Wait_Send": {
                             "Type": "Wait",
-                            "Seconds": 30,
+                            "Seconds": 5,
                             "Next": "Send_status"
                           },
                           "Send_status": {
@@ -119,6 +119,16 @@
               "ItemSelector": {
                 "index.$": "$$.Map.Item.Index",
                 "value.$": "$$.Map.Item.Value"
+              },
+              "ItemReader": {
+                "Resource": "arn:aws:states:::s3:getObject",
+                "ReaderConfig": {
+                  "InputType": "JSON"
+                },
+                "Parameters": {
+                  "Bucket.$": "$.payload_bucket",
+                  "Key.$": "$.payload_key"
+                }
               }
             },
             "Gathering results": {

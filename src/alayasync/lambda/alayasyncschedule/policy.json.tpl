@@ -14,24 +14,6 @@
     {
       "Effect" : "Allow",
       "Action" : [
-        "sqs:DeleteMessage",
-        "sqs:DeleteMessageBatch",
-        "sqs:GetQueueAttributes",
-        "sqs:GetQueueUrl",
-        "sqs:ListQueues",
-        "sqs:ListDeadLetterSourceQueues",
-        "sqs:ListQueueTags",
-        "sqs:ReceiveMessage",
-        "sqs:SendMessage",
-        "sqs:SendMessageBatch"
-      ],
-      "Resource" : [
-        "arn:aws:sqs:${region}:${account_id}:*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
-      "Action" : [
         "dynamodb:BatchGetItem",
         "dynamodb:DescribeTable",
         "dynamodb:GetItem",
@@ -63,24 +45,6 @@
       ]
     },
     {
-      "Effect" : "Allow",
-      "Action" : [
-        "ecs:RunTask"
-      ],
-      "Resource": [
-        "arn:aws:ecs:${region}:${account_id}:task-definition/*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
-      "Action" : [
-        "ecs:DescribeTasks"
-      ],
-      "Resource": [
-        "arn:aws:ecs:${region}:${account_id}:task/*"
-      ]
-    },
-    {
       "Effect": "Allow",
       "Action": [
         "s3:GetObject",
@@ -93,6 +57,8 @@
       "Resource" : [
         "arn:aws:s3:::${bucket_id}",
         "arn:aws:s3:::${bucket_id}/*",
+        "arn:aws:s3:::${artifacts_bucket_id}",
+        "arn:aws:s3:::${artifacts_bucket_id}/*",
         "arn:aws:s3:::${athena_bucket_id}/*",
         "arn:aws:s3:::${athena_bucket_id}"
       ]

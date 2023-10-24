@@ -16,28 +16,31 @@ def lambda_handler(event, context):
     
     task_id = event['run_async_id']['task_id']
     
-    response = ecs_client.describe_tasks(
-        cluster=cluster_name,
-        tasks=[task_id])
+    # response = ecs_client.describe_tasks(
+    #     cluster=cluster_name,
+    #     tasks=[task_id])
         
-    logger.info(f'response received from task: {response}')
-    
-    status = response['tasks'][0]['lastStatus']
+    # logger.info(f'response received from task: {response}')
+
+    #status = response['tasks'][0]['lastStatus']
     task_status = event.get('run_async_status',{'task_status': []})['task_status']
+    status = "DEFAULT" if len(task_status)<0 else "STOPPED"
     logger.info(f'Task status: {task_status}')
     logger.info(f'Status: {status}')
-        
+    
     task_status.append(status)
     logger.info(f'After Status: {task_status}')
     
-    exit_code = response['tasks'][0]['containers'][0].get('exitCode',-1)
+    exit_code = 0
+    #exit_code = response['tasks'][0]['containers'][0].get('exitCode',-1)
     logger.info(f'ExitCode:{exit_code}')
     
     if exit_code > 0 and status == 'STOPPED':
         raise ValueError('Container failed executing Python code. Check Cloudwatch LogGroup.')
         
-    stop_code = response['tasks'][0].get('stopCode', '')
-    
+    #stop_code = response['tasks'][0].get('stopCode', '')
+    stop_code = ''
+
     if stop_code not in ['', 'EssentialContainerExited']:
         raise ValueError(f'Container failed with StopCode: {stop_code}')
     

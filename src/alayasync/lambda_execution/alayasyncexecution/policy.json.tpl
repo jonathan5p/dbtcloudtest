@@ -22,43 +22,6 @@
     },
     {
       "Effect" : "Allow",
-      "Action" : [
-        "sqs:DeleteMessage",
-        "sqs:DeleteMessageBatch",
-        "sqs:GetQueueAttributes",
-        "sqs:GetQueueUrl",
-        "sqs:ListQueues",
-        "sqs:ListDeadLetterSourceQueues",
-        "sqs:ListQueueTags",
-        "sqs:ReceiveMessage",
-        "sqs:SendMessage",
-        "sqs:SendMessageBatch"
-      ],
-      "Resource" : [
-        "arn:aws:sqs:${region}:${account_id}:*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
-      "Action" : [
-        "dynamodb:BatchGetItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:Query",
-        "dynamodb:Scan",
-        "dynamodb:BatchWriteItem",
-        "dynamodb:DeleteItem",
-        "dynamodb:UpdateItem",
-        "dynamodb:PutItem"
-      ],
-      "Resource" : [
-        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_register}",
-        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_register}/*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
       "Action": [
         "kms:DescribeKey",
         "kms:Encrypt",
@@ -88,8 +51,8 @@
         "s3:DeleteObject*"
       ],
       "Resource" : [
-        "arn:aws:s3:::${bucket_id}",
-        "arn:aws:s3:::${bucket_id}/*"
+        "arn:aws:s3:::${artifacts_bucket_id}",
+        "arn:aws:s3:::${artifacts_bucket_id}/*"
       ]
     }
   ]

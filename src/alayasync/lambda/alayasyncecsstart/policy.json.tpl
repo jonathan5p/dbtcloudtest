@@ -45,24 +45,6 @@
       ]
     },
     {
-      "Effect" : "Allow",
-      "Action" : [
-        "ecs:RunTask"
-      ],
-      "Resource": [
-        "arn:aws:ecs:${region}:${account_id}:task-definition/*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
-      "Action" : [
-        "ecs:DescribeTasks"
-      ],
-      "Resource": [
-        "arn:aws:ecs:${region}:${account_id}:task/*"
-      ]
-    },
-    {
       "Effect": "Allow",
       "Action": [
         "s3:GetObject*",

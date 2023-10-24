@@ -1,25 +1,5 @@
 data "aws_region" "current" {}
 
-module "lambda_alaya_sync_register" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
-    
-    environment         = var.environment
-    lambda_name         = "alayasyncregister"
-    lambda_path         = "../src/alayasync/lambda"
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
-
-    policy_variables = var.project_objects
-    
-    environment_variables = {
-      "OIDH_TABLE" = var.project_objects.dynamo_table_register
-    }
-}
-
 module "lambda_alaya_sync_scheduling" {
     source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.6"
 
@@ -39,31 +19,13 @@ module "lambda_alaya_sync_scheduling" {
     environment_variables = {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
       "ATHENA_BUCKET" = var.project_objects.athena_bucket_id
+      "PAYLOAD_BUCKET" = var.project_objects.artifacts_bucket_id
+      "PAYLOAD_TRIGGER_KEY" = join("/",[var.project_objects.payload_trigger_key,"schedule_executions"])
     }
 
     layers = [
       "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python310:4"
     ]
-}
-
-module "lambda_alaya_sync_processing" {
-    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
-
-    environment         = var.environment
-    lambda_name         = "alayasyncprocessing"
-    lambda_path         = "../src/alayasync/lambda"
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
-
-    policy_variables = var.project_objects
-    
-    environment_variables = {
-      "OIDH_TABLE" = var.project_objects.dynamo_table_register
-    }
 }
 
 module "lambda_alaya_sync_reduce" {
@@ -131,4 +93,20 @@ module "lambda_alaya_sync_ecs_status" {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
       "ECS_CLUSTER" = var.project_objects.ecs_cluster
     }
+}
+
+module "lambda_get_hubids" {
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
+
+    environment         = var.environment
+    lambda_name         = "gethubids"
+    lambda_path         = "../src/alayasync/lambda"
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    zone                = var.zone
+
+    policy_variables = var.project_objects
 }

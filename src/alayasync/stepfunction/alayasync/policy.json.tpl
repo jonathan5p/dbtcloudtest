@@ -8,7 +8,6 @@
       ],
       "Resource": [
         "${schedule_lambda}",
-        "${processing_lambda}",
         "${reduce_lambda}",
         "${ecs_start}",
         "${ecs_status}"
@@ -25,8 +24,8 @@
         "s3:DeleteObject"
       ],
       "Resource" : [
-        "arn:aws:s3:::${bucket_id}/consume_data/resultData",
-        "arn:aws:s3:::${bucket_id}/consume_data/resultData/*"
+        "arn:aws:s3:::${artifacts_bucket_id}/consume_data/resultData",
+        "arn:aws:s3:::${artifacts_bucket_id}/consume_data/resultData/*"
       ]
     },
     {

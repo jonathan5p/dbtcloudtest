@@ -20,7 +20,7 @@ def read_from_s3(bucket, key):
     return json_content
 
 def lambda_handler(event, context):
-    
+         
     logger.info(f'Event received:{event}')
 
     record = event['Records'][0]

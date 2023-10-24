@@ -1,194 +1,90 @@
-import awswrangler as wr
-import boto3
 import json
-import logging
 import os
-import time
+import logging
+import boto3
+import awswrangler as wr
 
-from boto3.dynamodb.conditions import Key, Attr
-from datetime import datetime
-
-chunk_size = 500
-max_records = 5000
-
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-athena_client = boto3.client('athena')
-#athena_bucket = 'aue1d1z1s3boidhoidh-athena'
-athena_bucket = os.environ['ATHENA_BUCKET']
+max_clusters = 5000
 
-dynamodb = boto3.resource('dynamodb')
-register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
+athena_client = boto3.client("athena")
+athena_bucket = os.environ["ATHENA_BUCKET"]
 
-projection_expression = "#i, #t, #p, #b, #tbl, #bckt, #k, #db"
-index_name = 'scheduling-index'
-expression_attributes_names = {"#i": "id", "#t":"last_modified_date", "#p": "status", "#b": "batch", "#tbl": "table", "#bckt": "bucket", "#k": "key", "#db": "database"}
+payload_bucket = os.environ["PAYLOAD_BUCKET"]
+payload_trigger_key = os.environ["PAYLOAD_TRIGGER_KEY"]
 
-query_parameters = {
-        'ProjectionExpression': projection_expression,
-        'IndexName': index_name,
-        'ExpressionAttributeNames': expression_attributes_names
-    }
-    
-def execute_query(query, athena_bucket, athena_path):
+s3_client = boto3.client("s3")
 
-    response = athena_client.start_query_execution(
-        QueryString=query,
-        ResultConfiguration={
-            'OutputLocation': f's3://{athena_bucket}/{athena_path}/',
-        }
+
+def execute_query(query, athena_path):
+    query_exec_id = wr.athena.start_query_execution(
+        sql=query, s3_output=athena_path, wait=True
     )
+    return query_exec_id
 
-    return response['QueryExecutionId']
 
-def get_from_dynamo(table, query_parameters):
-
-    response = table.query(**query_parameters)
-    logger.info(f'Response:{response}')
-    
-    validate_response(response)
-    records = response.get('Items')
-
-    return records
-    
-def get_ids_from_payload(payload: list):
-
-    ids = []
-    for item in payload:
-        ids.append(item['id'])
-
-    return ids
-    
-def get_query_state(id):
-
-    response = wr.athena.get_query_execution(query_execution_id=id)
-
-    return response['Status']['State']
-    
-    
-def get_records(database, table, dt_utc, athena_bucket, ids):
-
+def get_clusters(database, table, batch, athena_path):
     query = f""" 
-        select 
-            "$path" as id, dt_utc, count(*) as num_records 
-            from {database}.{table}
-            group by 1,2
-            having dt_utc = '{dt_utc}'
-            and "$path" in ({ids})
-            order by num_records desc;
+        SELECT 
+            distinct cluster_id
+        FROM {database}.{table}
+        WHERE dt_utc = '{batch}';
         """
-    #print(f"query:{query}")
 
     try:
-        query_id = execute_query(query, athena_bucket, "initial_query")
-
-        wait_on_query(query_id)
-        print(f'Done with query {query_id}')
+        response = execute_query(query, athena_path)
+        print(f"Done with query {query}")
 
     except Exception as e:
+        error = f"Error getting records to transmit: {repr(e)}"
+        raise ValueError(f"Initial Query Failed. {error}")
 
-        error = f'Error getting records to transmit: {repr(e)}'
-        raise ValueError(f'Initial Query Failed. {error}')
+    return response["QueryExecutionId"]
 
-    return query_id
-    
-def process_records(dfs, payload):
 
-    records = []
+def prepare_sf_input(dfs, payload):
+    sf_input = []
 
-    try:
+    for df in dfs:
+        batch = {
+            **payload,
+            "ids": json.dumps(df["cluster_id"].to_list()),
+        }
+        sf_input.append(batch)
 
-        list_id = []
-        num_records = 0
-        
-        for df in dfs:
-            for index, row in df.iterrows():
-                
-                num_records += row['num_records']
-                list_id.append(row['id'])
-                
-                if (num_records > max_records) or (index+1 == df.shape[0]):
-
-                    print(f'n:{num_records}, i:{index}, s:{df.shape[0]}')
-                    print(f'l:{",".join(list_id)}')
-                    tmp = {'id': ",".join(list_id)}
-                    record = {**payload, **tmp}
-                    records.append(record)
-                    
-                    num_records = 0
-                    list_id = []
-
-    except Exception as e:
-
-        error = f'Error in initial iteration: {repr(e)}'
-        raise ValueError(f'Failed calculating load records. {error}')
-
-    return records
-
-def validate_response(response):
-
-    try:
-        status = response.get('ResponseMetadata', {}).get('HTTPStatusCode')
-
-        if status == 200:
-            return None
-
-    except Exception as e:
-        logger.error(f'Error checking Dynamo response: {repr(e)}')
-        raise e
-        
-def wait_on_query(id):
-
-    try:
-        
-        stop_states = ['SUCCEEDED']
-        continue_states = ['QUEUED','RUNNING']
-        failed_states = ['FAILED','CANCELLED']
-
-        status = 'QUEUED'
-        
-        while status in continue_states:
-            status = get_query_state(id)
-            time.sleep(20)
-            print(f'Query ID: {id} Status: {status}')
-
-        if status in failed_states:
-            raise ValueError(f'Query with id: {id} failed')
-
-    except Exception as e:
-        raise ValueError(f'Failure waiting for query:{id}. Error: {repr(e)}')
-
-    return status
+    return sf_input
 
 
 def lambda_handler(event, context):
+    logger.info(f"Event:{event}")
 
-    logger.info(f'Event:{event}')
+    payload = {
+        "database": event["database"],
+        "table": event["table"],
+        "batch": event["batch"],
+    }
 
-    query_parameters['KeyConditionExpression'] = (Key('batch').eq(event['batch']) & Key('status').eq(event.get('status', 'JUST_ARRIVED')))
-    query_parameters['FilterExpression'] = (Attr('table').eq(event['table']) & Attr('database').eq(event['database']))
+    athena_path = f"s3://{athena_bucket}/initial_query"
+    query_id = get_clusters(
+        event["database"], event["table"], event["batch"], athena_path
+    )
+    dfs = wr.athena.get_query_results(
+        query_execution_id=query_id, chunksize=max_clusters
+    )
 
-    records = get_from_dynamo(register_table, query_parameters)
-    ids = get_ids_from_payload(records)
-    
-    if ids:
-        
-        payload = {
-            'batch': event['batch'],
-            'bucket': records[0]['bucket'],
-            'database': event['database'],
-            'status': event['status'],
-            'table': event['table'],
-        }
-        
-        list_ids = f""" '{"','".join(ids)}' """
-        
-        query_id = get_records(event['database'], event['table'], event['batch'], athena_bucket, list_ids)
-        dfs = wr.athena.get_query_results(query_execution_id=query_id,chunksize = chunk_size)
+    sf_input = prepare_sf_input(dfs, payload)
+    logger.info(f"Map input: {sf_input}")
 
-        records = process_records(dfs, payload)
+    payload_key = f"{payload_trigger_key}/{event['table']}_{event['batch']}.json"
 
-    logger.info(f'Response: {records}')
-    
-    return records
+    s3_client.put_object(
+        Bucket=payload_bucket,
+        Body=json.dumps(sf_input),
+        Key=payload_key,
+    )
+
+    response = {"payload_bucket": payload_bucket, "payload_key": payload_key}
+
+    return response

@@ -12,21 +12,6 @@ module "tables" {
     project_objects     = var.project_objects
 }
 
-module "sqs" {
-    source = "./sqs"
-
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    queue_name          = "alayasyncregister"
-    tier                = var.tier
-    zone                = var.zone
-
-    project_objects     = var.project_objects
-}
-
 module "dynamo" {
     source = "./dynamo"
 
@@ -35,7 +20,7 @@ module "dynamo" {
     project_ledger      = var.project_ledger
     project_prefix      = var.project_prefix
     site                = var.site
-    table_name          = "alayasync"  
+    table_name          = "gethubids"  
     tier                = var.tier
     zone                = var.zone
 
@@ -92,43 +77,21 @@ module "lambdas_execution" {
     })
 }
 
-resource "aws_lambda_event_source_mapping" "register" {
-  event_source_arn = module.sqs.sqs_register_queue_arn
-  function_name    = module.lambdas.functions_mapping.register_lambda
-  batch_size       = 1
-  enabled          = true
-}
-
 resource "aws_lambda_permission" "allow_events" {
   statement_id  = "AllowExecutionFromS3BucketToLambda"
   action        = "lambda:InvokeFunction"
   function_name = module.lambdas_execution.functions_mapping.execution_lambda
   principal     = "s3.amazonaws.com"
-  source_arn    = var.project_objects.bucket_arn
+  source_arn    = var.project_objects.artifacts_bucket_arn
 }
 
 resource "aws_s3_bucket_notification" "register" {
-  bucket = var.project_objects.bucket_id
-
-  queue {
-    queue_arn = module.sqs.sqs_register_queue_arn
-    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    filter_prefix = trimprefix("${var.project_objects.alayasyncdb_path}/individuals/", "s3://${var.project_objects.bucket_id}/")
-    filter_suffix = ".parquet"
-  }
-
-  queue {
-    queue_arn = module.sqs.sqs_register_queue_arn
-    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
-    filter_prefix = trimprefix("${var.project_objects.alayasyncdb_path}/organizations/", "s3://${var.project_objects.bucket_id}/")
-    filter_suffix = ".parquet"
-  }
+  bucket = var.project_objects.artifacts_bucket_id
 
   lambda_function {
     lambda_function_arn = module.lambdas_execution.functions_mapping.execution_lambda
     events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "consume_data/resultData/executions/"
-    #filter_prefix       = var.alaya_trigger_key
+    filter_prefix       = join("/",[var.project_objects.payload_trigger_key,"start_executions"])
     filter_suffix       = ".json"
   }
 }
@@ -173,22 +136,4 @@ module "cwa_alaya_sync_register_naming" {
   base_object = module.base_naming
   type        = "cwa"
   purpose     = join("", [var.project_prefix, "-", "alayasyncregister"])
-}
-
-resource "aws_cloudwatch_metric_alarm" "register" {
-  alarm_name                = module.cwa_alaya_sync_register_naming.name
-  comparison_operator       = "GreaterThanThreshold"
-  evaluation_periods        = 1
-  metric_name               = "ApproximateNumberOfMessagesVisible"
-  namespace                 = "AWS/SQS"
-  period                    = 60
-  statistic                 = "Average"
-  threshold                 = 0
-  alarm_description         = "Monitors Failed registration processes for AlayaSync"
-  treat_missing_data        = "ignore"
-  insufficient_data_actions = []
-  tags                      = module.cwa_alaya_sync_register_naming.tags
-  dimensions = {
-    QueueName=module.sqs.sqs_names.registration_dlq
-  }
 }

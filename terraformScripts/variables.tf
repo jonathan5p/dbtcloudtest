@@ -20,7 +20,7 @@ variable "project_ledger" {
 
 variable "project_prefix" {
   description = "This is part of bright naming convention belongs to project repo and resources purpose"
-  default     = "oidh"
+  default     = "oidhbrtest"
 }
 
 variable "region" {
@@ -86,27 +86,6 @@ variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
 }
 
-# Lambda enrich caar data parameters
-variable "lambda_ec_agent_source_table_name" {
-  description = "Name of the agent table registered in the S3 Raw layer"
-  default     = "bright_raw_agent_latest"
-}
-
-variable "lambda_ec_agent_target_table_name" {
-  description = "Name of the agent table registered in the S3 Staging layer"
-  default     = "bright_staging_agent_latest"
-}
-
-variable "lambda_ec_office_source_table_name" {
-  description = "Name of the office table registered in the S3 Raw layer"
-  default     = "bright_raw_office_latest"
-}
-
-variable "lambda_ec_office_target_table_name" {
-  description = "Name of the office table registered in the S3 Staging layer"
-  default     = "bright_staging_office_latest"
-}
-
 # Glue max records per file
 variable "glue_max_records_per_file" {
   description = "Maximum number of records per parquet file write in the deduplication jobs"
@@ -114,20 +93,9 @@ variable "glue_max_records_per_file" {
 }
 
 # Update alaya triggers
-variable "alaya_trigger_key" {
-  description = "S3 key of the file that will trigger the update to alaya process"
-  default     = "consume_data/resultData/executions_1"
-}
-
-# Event bridge cron trigger
-variable "cron_trigger_enabled" {
-  description = "Boolean variable to activate/deactivate the etl cron trigger"
-  default     = false
-}
-
-variable "cron_schedule" {
-  description = "Cron expresion applied to the EvenBridge scheduled rule"
-  default     = "cron(0 23 * * ? *)"
+variable "payload_trigger_key" {
+  description = "S3 key of the prefix where the gethubid process will save and load its execution files"
+  default     = "gethubid"
 }
 
 # ECS parameters
@@ -144,27 +112,6 @@ variable "ecs_task_alaya_memory" {
 variable "retention_days_ecs_alaya_logs" {
   description = "Retention days for logs in cloudwatch"
   default     = 30
-}
-
-# Aurora serverlessv2 postgresql db
-variable "aurora_backup_retention_period" {
-  description = "Admin tool aurora postgresql database retention period"
-  default     = 30
-}
-
-variable "aurora_preferred_backup_window" {
-  description = "Admin tool aurora postgresql database preferred backup window"
-  default     = "21:00-00:00"
-}
-
-variable "aurora_max_capacity" {
-  description = "Admin tool aurora postgresql max capacity"
-  default     = 4
-}
-
-variable "aurora_min_capacity" {
-  description = "Admin tool aurora postgresql min capacity"
-  default     = 2
 }
 
 variable "ecs_subnets" {
