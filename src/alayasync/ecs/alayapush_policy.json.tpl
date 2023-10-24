@@ -84,7 +84,7 @@
         "dynamodb:PutItem"
       ],
       "Resource": [
-        "arn:aws:dynamodb:${region}:${account_id}:table/dynamo_table_register"
+        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_register}"
       ]
     },
     {
