@@ -20,7 +20,7 @@ phases:
       - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
       - pip3 install boto3
       - pip3 install clean==1.0.9
-      #- rm -rf ${HOME}/.pip/pip.conf
+      - rm -rf ${HOME}/.pip/pip.conf
       #- python3 --version
       #- pip3 install -r tests/glue_requirements.txt
 
