@@ -988,7 +988,8 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "glue:GetTags",
       "glue:CreateTable",
       "glue:DeleteTable",
-      "glue:GetTable"
+      "glue:GetTable",
+      "glue:UpdateTable"
     ]
     effect = "Allow"
     resources = [

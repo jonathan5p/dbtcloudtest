@@ -87,6 +87,11 @@ resource "aws_glue_catalog_table" "table_failed" {
         type = local.json_data.primary_key.type
     }
 
+    columns {
+      name = "status"
+      type = "string"
+    }
+
   }
 }
 
