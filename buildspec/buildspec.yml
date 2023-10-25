@@ -18,7 +18,7 @@ phases:
       - "echo Build started on `date`"
       - "aws sts get-caller-identity"
       - cd containers/tests
-      - docker images
       - docker build -t tests --build-arg JF_PIP_FILE="${JF_PIP_FILE}" .
-      - docker run -e DISABLE_SSL=true -v $PWD:/home/glue_user/workspace/ --rm tests:latest -c "python3 -m tests/test/test_glue.py"
+      - docker images
+      - docker run -e DISABLE_SSL=true -v $PWD:/home/glue_user/workspace/ --rm tests:latest -c "python3 -m tests/test/test_glue"
 
