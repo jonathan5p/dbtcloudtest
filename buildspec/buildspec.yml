@@ -4,7 +4,6 @@ env:
   variables:
     TF_VERSION: "1.3.7"
     JF_PIP_FILE: "test.txt"
-    WORKSPACE_LOCATION: "${HOME}"
   # parameter-store:
   #   JF_PYRC_FILE: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/bright_pypi_pypirc'
   #   JF_PIP_FILE: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/bright_pypi_pipconf'
@@ -22,5 +21,5 @@ phases:
       - "aws sts get-caller-identity"
       - cd containers/tests
       - docker build -t tests --build-arg JF_PIP_FILE="${JF_PIP_FILE}" .
-      - docker run -e DISABLE_SSL=true -v $WORKSPACE_LOCATION:/home/glue_user/workspace/ --rm tests:latest -c "python3 -m tests/test/test_glue.py"
+      - docker run -e DISABLE_SSL=true -v $HOME:/home/glue_user/workspace/ --rm tests:latest -c "python3 -m tests/test/test_glue.py"
 
