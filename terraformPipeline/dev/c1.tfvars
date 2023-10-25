@@ -5,6 +5,5 @@ zone                             = "z1"
 environment_devops               = "c1"
 environment_dev                  = "d1"
 code_source_branch               = "develop"
-image_build                      = "public.ecr.aws/glue/aws-glue-libs:glue_libs_4.0.0_image_01"
 enable_codepipeline_notification = true
 create_s3_bucket                 = true
