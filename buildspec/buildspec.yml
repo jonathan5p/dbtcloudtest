@@ -17,7 +17,6 @@ phases:
     commands:
       - echo "Install dependencies"
       - python3 --version
-      - git config 
       - pip3 install -r tests/glue_requirements.txt
      
   build:
