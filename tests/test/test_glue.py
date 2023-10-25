@@ -24,8 +24,8 @@ for file in parent_folder.glob("*job"):
     sys.path.append(job_path)
     logger.info(f"Path added to python path: {job_path}")
 
-from utils import *
-from ingestjob import unique_by_merge_key, full_load, incremental_load
+#from utils import *
+#from ingestjob import unique_by_merge_key, full_load, incremental_load
 
 def test_test():
     assert True, "Test test"
