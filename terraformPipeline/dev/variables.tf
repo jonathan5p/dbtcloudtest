@@ -68,7 +68,7 @@ variable "image" {
 
 variable "image_build" {
   description = "codebuild image to be used in the build step"
-  default     = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+  default     = "public.ecr.aws/glue/aws-glue-libs:glue_libs_4.0.0_image_01"
 }
 
 variable "image_pull_credentials_type" {

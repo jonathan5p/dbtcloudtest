@@ -11,10 +11,20 @@ phases:
   install:
     runtime-versions:
       python: 3.9
-     
+  
+  pre_build:
+    commands:
+      - echo "Install dependencies"
+      - mkdir ${HOME}/.pip
+      - echo "$JF_PIP_FILE" >> ${HOME}/.pip/pip.conf
+      - sed -i 's/^"//' ${HOME}/.pip/pip.conf;sed -i 's/"$//' ${HOME}/.pip/pip.conf;sed -i 's/\\n/\n/g' ${HOME}/.pip/pip.conf
+      - pip3 install boto3
+      - rm -rf ${HOME}/.pip/pip.conf
+      - python3 --version
+      - pip3 install -r tests/glue_requirements.txt
+
   build:
     commands:
       - "echo Build started on `date`"
       - "aws sts get-caller-identity"
-      - cd containers/tests
-      - docker build -t tests --build-arg JF_PIP_FILE="${JF_PIP_FILE}" .
+      - "python3 -m pytest tests/test/test_glue.py"

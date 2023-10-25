@@ -94,7 +94,7 @@ module "codepipeline" {
   project_app_group                 = var.project_app_group
   project_ledger                    = var.project_ledger
   project_prefix                    = var.project_prefix
-  privileged_mode_build             = true 
+  privileged_mode_build             = true
   s3_bucket_name                    = var.s3_bucket_name
   site                              = var.site
   sns_arn_codepipeline_notification = var.sns_arn_codepipeline_notification
