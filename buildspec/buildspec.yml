@@ -12,6 +12,12 @@ phases:
   install:
     runtime-versions:
       python: 3.9
+  
+  pre_build:
+    commands:
+      - echo "Install dependencies"
+      - python --version
+      - pip install -r tests/glue_requirements.txt
      
   build:
     commands:
@@ -19,6 +25,7 @@ phases:
       - "echo $PWD"
       - "ls"
       - "aws sts get-caller-identity"
+      - "pytest tests/test/test_glue.py"
       #- cd containers/tests
       #- docker build -t tests --build-arg JF_PIP_FILE="${JF_PIP_FILE}" .
       #- docker run -e DISABLE_SSL=true -v $PWD:/home/glue_user/workspace/ --rm tests:latest -c "pytest tests/test/test_glue.py"
