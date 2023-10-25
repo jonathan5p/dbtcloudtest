@@ -16,8 +16,8 @@ phases:
   pre_build:
     commands:
       - echo "Install dependencies"
-      - python --version
-      - pip install -r tests/glue_requirements.txt
+      - python3 --version
+      - pip3 install -r tests/glue_requirements.txt
      
   build:
     commands:
