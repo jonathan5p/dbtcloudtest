@@ -18,14 +18,13 @@ phases:
       - mkdir ${HOME}/.pip
       - JF_FILE_PARSED=$(sed -e 's/^"//' -e 's/"$//' -e 's/\\n/\n/g' <<<"${JF_PIP_FILE}")
       - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
+      - python3 --version
       - pip3 install boto3
-      - pip3 install clean==1.0.9
+      - pip3 install -r tests/glue_requirements.txt
       - rm -rf ${HOME}/.pip/pip.conf
-      #- python3 --version
-      #- pip3 install -r tests/glue_requirements.txt
 
   build:
     commands:
       - "echo Build started on `date`"
       - "aws sts get-caller-identity"
-      #- "python3 -m pytest tests/test/test_glue.py"
+      - "python3 -m pytest tests/test/test_glue.py"
