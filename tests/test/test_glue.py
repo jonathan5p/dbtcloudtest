@@ -27,7 +27,7 @@ for file in parent_folder.glob("*job"):
 
 
 def test_test():
-    assert True, "Test test"
+    assert False, "Test test"
 
 # from utils import *
 # from ingestjob import unique_by_merge_key, full_load, incremental_load
