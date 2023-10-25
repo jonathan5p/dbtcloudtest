@@ -12,14 +12,21 @@ import sys
 import uuid
 import pathlib
 
+import logging
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 base_dir = pathlib.Path(__file__).parent.parent.resolve()
+parent_folder = pathlib.Path(f"{base_dir}/../src/mainprocess/glue")
 
-sys.path.append(f"{base_dir}/../src/glue/scripts")
-
-print(f"{base_dir}/src/glue/scripts")
+for file in parent_folder.glob("*job"):
+    job_path = str(file.absolute()) + "/"
+    sys.path.append(job_path)
+    logger.info(f"Path added to python path: {job_path}")
 
 from utils import *
-from ingest_job import unique_by_merge_key, full_load, incremental_load
+from ingestjob import unique_by_merge_key, full_load, incremental_load
 
 
 @pytest.fixture(scope="module", autouse=True)

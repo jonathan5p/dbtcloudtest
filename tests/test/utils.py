@@ -2,8 +2,8 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import NullType
 import json
-from cleaning_job import clean_splink_data
-from ind_dedupe_job import deduplicate_entity as dedup_ind
+from cleaningjob import clean_splink_data
+from inddedupjob import deduplicate_entity as dedup_ind
 
 
 def assert_schema(df1: DataFrame, df2: DataFrame, check_nullable=False):
