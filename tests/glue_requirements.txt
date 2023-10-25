@@ -1,3 +1,6 @@
-git+https://github.com/BrightMLS/DataHub.Clean.git
+clean==1.0.9
 delta-spark==2.3.0
+pyspark[sql]==3.3.0
 splink==3.9.2
+pytest-cov==4.1.0
+pytest==7.4.3
