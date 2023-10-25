@@ -3,3 +3,4 @@ delta-spark==2.3.0
 splink==3.9.2
 pytest-cov
 pytest
+pandas
