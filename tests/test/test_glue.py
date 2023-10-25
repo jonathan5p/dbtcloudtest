@@ -28,7 +28,7 @@ for file in parent_folder.glob("*job"):
 #from ingestjob import unique_by_merge_key, full_load, incremental_load
 
 def test_test():
-    assert True, "Test test"
+    assert False, "Test test"
 
 # @pytest.fixture(scope="module", autouse=True)
 # def glue_context():
