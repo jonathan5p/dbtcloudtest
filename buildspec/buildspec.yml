@@ -16,8 +16,9 @@ phases:
   build:
     commands:
       - "echo Build started on `date`"
-      - "echo $WORKSPACE_LOCATION"
+      - "echo $HOME"
       - "ls"
+      - "pwd"
       - "aws sts get-caller-identity"
       - cd containers/tests
       - docker build -t tests --build-arg JF_PIP_FILE="${JF_PIP_FILE}" .
