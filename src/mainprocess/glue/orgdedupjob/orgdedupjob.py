@@ -61,7 +61,8 @@ team_sql_map_query = """
         dof.tradingas as orgtradingasname,
         string(dtf.key) as orgalternatesourcerecordkey,
         string(dof.dateadded) as sourcesystemcreatedtms,
-        string(dtf.modificationtimestamp) as sourcesystemmodtms
+        string(dtf.modificationtimestamp) as sourcesystemmodtms,
+        false as orgcanbenative
     FROM dedup_team_df as dtf
     LEFT JOIN dedup_office_df as dof ON dtf.mlsid__office = dof.mlsid
     """
@@ -112,7 +113,8 @@ office_sql_map_query = """
         dedup_office_df.tradingas as orgtradingasname,
         string(dedup_office_df.key) as orgalternatesourcerecordkey,
         string(dedup_office_df.dateadded) as sourcesystemcreatedtms,
-        string(dedup_office_df.modificationtimestamp) as sourcesystemmodtms
+        string(dedup_office_df.modificationtimestamp) as sourcesystemmodtms,
+        canbenative as orgcanbenative
     FROM dedup_office_df
     """
 
@@ -159,6 +161,30 @@ office_types = [
 ]
 
 
+def generate_canbenative_col(source_df: DataFrame, county_list: list, types: list):
+    check_pairs = F.udf(
+        lambda pair: True if pair in county_list else False, BooleanType()
+    )
+
+    pairs_df = source_df.filter(
+        check_pairs(F.array(F.col("county"), F.col("stateorprovince")))
+    )
+    print("Pairs df count: ", pairs_df.count())
+
+    types_df = source_df.filter(F.col("type").isin(types))
+    print("Types df count: ", types_df.count())
+
+    native_cond = (check_pairs(F.array(F.col("county"), F.col("stateorprovince")))) & (
+        F.col("type").isin(types)
+    )
+
+    output_df = source_df.withColumn(
+        "canbenative", F.when(native_cond == True, True).otherwise(False)
+    )
+
+    return output_df
+
+
 # Helper function to run splink model over a dataframe
 def deduplicate_entity(
     entity: str,
@@ -200,7 +226,7 @@ def deduplicate_entity(
 
 
 def generate_globalids_and_native_records(
-    source_df: DataFrame, county_list: list, order_key: str = "orghubid"
+    source_df: DataFrame, order_key: str = "orghubid"
 ):
     null_global_ids_df = source_df.where(source_df["orgglobalidentifier"].isNull())
     not_null_count = source_df.where(
@@ -234,18 +260,7 @@ def generate_globalids_and_native_records(
         .drop("new_orgglobalidentifier")
     )
 
-    check_pairs = F.udf(
-        lambda pair: True if pair in county_list else False, BooleanType()
-    )
-
-    native_cond = (
-        check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))) == True
-    ) & (F.col("orgtype").isin(office_types))
-
-    bright_participants_df = global_id_df.withColumn(
-        "orgcanbenative", F.when(native_cond == True, True).otherwise(False)
-    )
-    bright_participants_df.createOrReplaceTempView("bright_participants_df")
+    global_id_df.createOrReplaceTempView("bright_participants_df")
 
     output_df = spark.sql(native_records_query)
     return output_df
@@ -332,7 +347,18 @@ if __name__ == "__main__":
         splink_model_path="/tmp/office_splink_model.json",
     )
 
-    clusters_df.createOrReplaceTempView("dedup_office_df")
+    # Retrieve native record county rules from s3
+    # and generate a county list with all the counties that are Bright Participants
+    county_df = ps.read_csv(args["county_info_s3_path"])
+
+    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
+    county_list = (
+        bright_participants[["Upper County", "State"]].values.tolist()
+        + bright_participants[["County Name", "State"]].values.tolist()
+    )
+
+    native_df = generate_canbenative_col(clusters_df, county_list, office_types)
+    native_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
         entity="team",
@@ -384,20 +410,8 @@ if __name__ == "__main__":
             print("Aurora Exception: ", str(e))
             raise e
 
-    # Retrieve native record county rules from s3
-    # and generate a county list with all the counties that are Bright Participants
-    county_df = ps.read_csv(args["county_info_s3_path"])
-
-    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
-    county_list = (
-        bright_participants[["Upper County", "State"]].values.tolist()
-        + bright_participants[["County Name", "State"]].values.tolist()
-    )
-
     # Generate global ids and final organizations df
-    organizations_df = generate_globalids_and_native_records(
-        org_changes_df, county_list
-    )
+    organizations_df = generate_globalids_and_native_records(org_changes_df)
 
     # Write data to S3
     partition_col = "dt_utc"
