@@ -1,3 +1,8 @@
+locals{
+  glue_module_source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+  naming_module_source = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+}
+
 #------------------------------------------------------------------------------
 # Upload S3 Data
 #------------------------------------------------------------------------------
@@ -16,7 +21,7 @@ resource "aws_s3_object" "glue_jars" {
 #------------------------------------------------------------------------------
 
 module "glue_db_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = local.naming_module_source
   base_object = var.base_naming
   type        = "gld"
   purpose     = join("", [var.project_prefix, "_", "oidhdb"])
@@ -29,7 +34,7 @@ resource "aws_glue_catalog_database" "dedup_process_glue_db" {
 }
 
 module "glue_alayasyncdb_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = local.naming_module_source
   base_object = var.base_naming
   type        = "gld"
   purpose     = join("", [var.project_prefix, "_", "alayasync"])
@@ -46,7 +51,7 @@ resource "aws_glue_catalog_database" "alayasync_process_glue_db" {
 #------------------------------------------------------------------------------
 
 module "glue_secconfig_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = local.naming_module_source
   base_object = var.base_naming
   type        = "gls"
   purpose     = join("", [var.project_prefix, "-", "securityconfig"])
@@ -130,7 +135,7 @@ data "aws_subnet" "connection_subnet" {
 }
 
 module "conn_sg_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = local.naming_module_source
   base_object = var.base_naming
   type        = "sgp"
   purpose     = join("", [var.project_prefix, "-", "glueconnsg"])
@@ -175,7 +180,7 @@ module "aurora_connection" {
 #------------------------------------------------------------------------------
 
 module "ingest_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = local.glue_module_source
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
@@ -247,7 +252,7 @@ locals {
 }
 
 module "cleaning_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = local.glue_module_source
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -290,7 +295,7 @@ locals {
 }
 
 module "ind_dedup_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = local.glue_module_source
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -338,7 +343,7 @@ locals {
 }
 
 module "org_dedup_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = local.glue_module_source
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
