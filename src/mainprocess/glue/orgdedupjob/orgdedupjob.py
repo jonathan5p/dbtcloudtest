@@ -64,7 +64,7 @@ team_sql_map_query = """
         string(dtf.modificationtimestamp) as sourcesystemmodtms,
         false as orgcanbenative
     FROM dedup_team_df as dtf
-    LEFT JOIN dedup_office_df as dof ON dtf.mlsid__office = dof.mlsid
+    LEFT JOIN dedup_office_df as dof ON dtf.unique_id__office = dof.key
     """
 
 # Map offices to organizations structure query

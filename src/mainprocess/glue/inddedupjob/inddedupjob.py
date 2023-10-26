@@ -63,7 +63,7 @@ SELECT
     string(current_timestamp()) as indlastmodifiedts,
     canbenative as indcanbenative
 FROM ind_clusters_df as cs
-LEFT JOIN office_df as odf ON cs.officemlsid = odf.officemlsid
+LEFT JOIN office_df as odf ON cs.officekey = odf.key
 """
 
 # Query that gets native records for each cluster
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
     clean_df = spark.read.format("delta").load(splink_clean_data_s3_path)
 
-    office_data_s3_path = f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/"
+    office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = spark.read.format("delta").load(office_data_s3_path)
     office_df.createOrReplaceTempView("office_df")
 
