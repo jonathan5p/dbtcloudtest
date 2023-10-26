@@ -20,15 +20,15 @@ team_sql_map_query = """
     SELECT 
         dtf.dlid as bdmporgkey,
         dof.uniqueorgid as orgsourceresouoi,
-        dtf.cluster_id as orghubid,
+        string(dtf.cluster_id) as orghubid,
         CASE WHEN dtf.subsystemlocale = 'BRIGHT_CAAR'
         THEN 'CAAR'
         ELSE 'BrightMls'
         END as orgsourcename,
         dof.mlsid as orgsourcerecordid,
-        dtf.key as orgsourcerecordkey,
-        dtf.dlingestionts as orgcreatedts,
-        current_timestamp() as orglastmodifiedts,
+        string(dtf.key) as orgsourcerecordkey,
+        string(dtf.dlingestionts) as orgcreatedts,
+        string(current_timestamp()) as orglastmodifiedts,
         dof.orgsourcetype as orgsourcetype,
         dof.type||' '||dof.branchtype as orgtype,
         dof.status as orgstatus,
@@ -42,26 +42,26 @@ team_sql_map_query = """
         THEN 'USA' 
         ELSE upper(dof.country) END as orgcountry,
         dof.phone as orgprimaryphone,
-        dof.phoneext as orgprimaryphoneext,
+        int(dof.phoneext) as orgprimaryphoneext,
         dof.phoneother as orgsecondaryphone,
         dof.fax as orgfax,
         dof.email as orgemail,
         dof.socialmediawebsiteurlorid as orgurl,
         dof.corporatelicense as orglicensenumber,
-        dof.dateterminated as orglicenseexpirationdate,
+        string(dof.dateterminated) as orglicenseexpirationdate,
         dof.nationalassociationid as orgnrdsid,
         dof.mainname as orgparentorgname,
         dof.mainmlsid as orgparentorgsourcerecordid,
-        dof.mainkey as orgparentorgsourcerecordkey,
+        string(dof.mainkey) as orgparentorgsourcerecordkey,
         dof.brokermlsid as orgindividualbrokerid,
-        dof.brokerkey as orgindividualbrokerkey,
-        dof.dateadded as orgstartdate,
-        dof.dateterminated as orgexpirationdate,
+        string(dof.brokerkey) as orgindividualbrokerkey,
+        string(dof.dateadded) as orgstartdate,
+        string(dof.dateterminated) as orgexpirationdate,
         'OIDH' as orgsourcetransport,
         dof.tradingas as orgtradingasname,
-        dtf.key as orgalternatesourcerecordkey,
-        dof.dateadded as sourcesystemcreatedtms,
-        dtf.modificationtimestamp as sourcesystemmodtms
+        string(dtf.key) as orgalternatesourcerecordkey,
+        string(dof.dateadded) as sourcesystemcreatedtms,
+        string(dtf.modificationtimestamp) as sourcesystemmodtms
     FROM dedup_team_df as dtf
     LEFT JOIN dedup_office_df as dof ON dtf.mlsid__office = dof.mlsid
     """
@@ -71,15 +71,15 @@ office_sql_map_query = """
     SELECT 
         dedup_office_df.dlid as bdmporgkey,
         dedup_office_df.uniqueorgid as orgsourceresouoi,
-        dedup_office_df.cluster_id as orghubid,
+        string(dedup_office_df.cluster_id) as orghubid,
         CASE WHEN dedup_office_df.subsystemlocale = 'BRIGHT_CAAR'
         THEN 'CAAR'
         ELSE 'BrightMls'
         END as orgsourcename,
         dedup_office_df.mlsid as orgsourcerecordid,
-        dedup_office_df.key as orgsourcerecordkey,
-        dedup_office_df.dlingestionts as orgcreatedts,
-        current_timestamp() as orglastmodifiedts,
+        string(dedup_office_df.key) as orgsourcerecordkey,
+        string(dedup_office_df.dlingestionts) as orgcreatedts,
+        string(current_timestamp()) as orglastmodifiedts,
         dedup_office_df.orgsourcetype as orgsourcetype,
         dedup_office_df.type||' '||dedup_office_df.branchtype as orgtype,
         dedup_office_df.status as orgstatus,
@@ -93,26 +93,26 @@ office_sql_map_query = """
         THEN 'USA' 
         ELSE upper(dedup_office_df.country) END as orgcountry,
         dedup_office_df.phone as orgprimaryphone,
-        dedup_office_df.phoneext as orgprimaryphoneext,
+        int(dedup_office_df.phoneext) as orgprimaryphoneext,
         dedup_office_df.phoneother as orgsecondaryphone,
         dedup_office_df.fax as orgfax,
         dedup_office_df.email as orgemail,
         dedup_office_df.socialmediawebsiteurlorid as orgurl,
         dedup_office_df.corporatelicense as orglicensenumber,
-        dedup_office_df.dateterminated as orglicenseexpirationdate,
+        string(dedup_office_df.dateterminated) as orglicenseexpirationdate,
         dedup_office_df.nationalassociationid as orgnrdsid,
         dedup_office_df.mainname as orgparentorgname,
         dedup_office_df.mainmlsid as orgparentorgsourcerecordid,
-        dedup_office_df.mainkey as orgparentorgsourcerecordkey,
+        string(dedup_office_df.mainkey) as orgparentorgsourcerecordkey,
         dedup_office_df.brokermlsid as orgindividualbrokerid,
-        dedup_office_df.brokerkey as orgindividualbrokerkey,
-        dedup_office_df.dateadded as orgstartdate,
-        dedup_office_df.dateterminated as orgexpirationdate,
+        string(dedup_office_df.brokerkey) as orgindividualbrokerkey,
+        string(dedup_office_df.dateadded) as orgstartdate,
+        string(dedup_office_df.dateterminated) as orgexpirationdate,
         'OIDH' as orgsourcetransport,
         dedup_office_df.tradingas as orgtradingasname,
-        dedup_office_df.key as orgalternatesourcerecordkey,
-        dedup_office_df.dateadded as sourcesystemcreatedtms,
-        dedup_office_df.modificationtimestamp as sourcesystemmodtms
+        string(dedup_office_df.key) as orgalternatesourcerecordkey,
+        string(dedup_office_df.dateadded) as sourcesystemcreatedtms,
+        string(dedup_office_df.modificationtimestamp) as sourcesystemmodtms
     FROM dedup_office_df
     """
 

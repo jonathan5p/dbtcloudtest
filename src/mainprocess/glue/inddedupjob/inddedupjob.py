@@ -18,12 +18,12 @@ import json
 # Generate individuals table query
 sql_map_query = """ 
 SELECT 
-    cs.dlid as bdmpindkey,
-    cs.mlsid as indsourcerecordid,
-    cs.key as indsourcerecordkey,
-    cs.officekey as indorgid,
-    cs.officemlsid as indorgsourcerecordid,
-    cs.cluster_id as indhubid,
+    string(cs.dlid) as bdmpindkey,
+    string(cs.mlsid) as indsourcerecordid,
+    string(cs.key) as indsourcerecordkey,
+    string(cs.officekey) as indorgid,
+    string(cs.officemlsid) as indorgsourcerecordid,
+    string(cs.cluster_id) as indhubid,
     cs.firstname as indfirstname,
     cs.lastname||' '||cs.namesuffix  as indlastname,
     cs.middleinitial as indmiddleinitial,
@@ -41,26 +41,26 @@ SELECT
     cs.privateemail as indprivateemail,
     cs.socialmediawebsiteurlorid as indurl,
     cs.preferredphone as indprimaryphone,
-    cs.preferredphoneext as indprimaryphoneext,
+    int(cs.preferredphoneext) as indprimaryphoneext,
     cs.directphone as indsecondaryphone,
     cs.mobilephone as indmobilephone,
     cs.officephone as indofficephone,
-    cs.officephoneext as indofficephoneext,
+    int(cs.officephoneext) as indofficephoneext,
     cs.nationalassociationid as indnrdsid,
     cs.type||' '||cs.subtype as indtype,
     cs.status as indstatus,
-    cs.joindate as indjoindate,
-    cs.terminationdate as indterminateddate,
-    cs.dateadded as sourcesystemcreatedtms,
-    cs.modificationtimestamp as sourcesystemmodtms,
+    string(cs.joindate) as indjoindate,
+    string(cs.terminationdate) as indterminateddate,
+    string(cs.dateadded) as sourcesystemcreatedtms,
+    string(cs.modificationtimestamp) as sourcesystemmodtms,
     'OIDH' as indsourcetransport,
     CASE WHEN cs.subsystemlocale = 'BRIGHT_CAAR'
     THEN 'CAAR'
     ELSE 'BrightMls' END as indsourcename,
     cs.uniqueorgid as indsourceresouoi,
     '' as indexpirationdate,
-    cs.dlingestionts as indcreatedts,
-    current_timestamp() as indlastmodifiedts
+    string(cs.dlingestionts) as indcreatedts,
+    string(current_timestamp()) as indlastmodifiedts
 FROM ind_clusters_df as cs
 LEFT JOIN office_df as odf ON cs.officemlsid = odf.officemlsid
 """
