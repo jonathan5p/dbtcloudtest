@@ -20,10 +20,10 @@ sql_map_query = """
 SELECT 
     cs.dlid as bdmpindkey,
     cs.mlsid as indsourcerecordid,
-    cs.key as indsourcerecordkey,
+    string(cs.key) as indsourcerecordkey,
     cs.officekey as indorgid,
     cs.officemlsid as indorgsourcerecordid,
-    cs.cluster_id as indhubid,
+    string(cs.cluster_id) as indhubid,
     cs.firstname as indfirstname,
     cs.lastname||' '||cs.namesuffix  as indlastname,
     cs.middleinitial as indmiddleinitial,

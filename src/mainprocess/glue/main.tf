@@ -16,7 +16,7 @@ resource "aws_s3_object" "glue_jars" {
 #------------------------------------------------------------------------------
 
 module "glue_db_naming" {
-  source      = local."git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "gld"
   purpose     = join("", [var.project_prefix, "_", "oidhdb"])
@@ -29,7 +29,7 @@ resource "aws_glue_catalog_database" "dedup_process_glue_db" {
 }
 
 module "glue_alayasyncdb_naming" {
-  source      = local."git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "gld"
   purpose     = join("", [var.project_prefix, "_", "alayasync"])
@@ -46,7 +46,7 @@ resource "aws_glue_catalog_database" "alayasync_process_glue_db" {
 #------------------------------------------------------------------------------
 
 module "glue_secconfig_naming" {
-  source      = local."git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "gls"
   purpose     = join("", [var.project_prefix, "-", "securityconfig"])
@@ -130,7 +130,7 @@ data "aws_subnet" "connection_subnet" {
 }
 
 module "conn_sg_naming" {
-  source      = local."git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = var.base_naming
   type        = "sgp"
   purpose     = join("", [var.project_prefix, "-", "glueconnsg"])
@@ -175,7 +175,7 @@ module "aurora_connection" {
 #------------------------------------------------------------------------------
 
 module "ingest_job" {
-  source              = local."git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
@@ -247,7 +247,7 @@ locals {
 }
 
 module "cleaning_job" {
-  source              = local."git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -272,7 +272,7 @@ module "cleaning_job" {
     "--office_table_name"               = "bright_staging_office_latest"
     "--team_table_name"                 = "bright_raw_team_latest"
     "--datalake-formats"                = "delta"
-    "--python-modules-installer-option" = local.jfrog_url
+    "--python-modules-installer-option" = jfrog_url
     "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
     "--model_version"                   = "1"
@@ -290,13 +290,13 @@ locals {
 }
 
 module "ind_dedup_job" {
-  source              = local."git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
   timeout             = 60
   worker_type         = "G.1X"
-  number_of_workers   = local.ind_dedup_job_workers + 1
+  number_of_workers   = ind_dedup_job_workers + 1
   retry_max_attempts  = 0
   retry_interval      = 2
   retry_backoff_rate  = 2
@@ -307,7 +307,7 @@ module "ind_dedup_job" {
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
   job_arguments = {
-    "--conf"                      = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.default.parallelism=${local.ind_dedup_job_workers * 4 * 5} --conf spark.sql.shuffle.partitions=${local.ind_dedup_job_workers * 4 * 5}"
+    "--conf"                      = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.default.parallelism=${ind_dedup_job_workers * 4 * 5} --conf spark.sql.shuffle.partitions=${ind_dedup_job_workers * 4 * 5}"
     "--extra-jars"                = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["scala-udf-similarity-0.1.1_spark3.x.jar"].id}"
     "--job-bookmark-option"       = "job-bookmark-disable"
     "--config_bucket"             = var.project_objects.artifacts_bucket_id
@@ -316,7 +316,7 @@ module "ind_dedup_job" {
     "--office_table_name"         = "bright_staging_office_latest"
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
-    "--county_info_s3_path"       = local.counties_path
+    "--county_info_s3_path"       = counties_path
     "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
@@ -338,13 +338,13 @@ locals {
 }
 
 module "org_dedup_job" {
-  source              = local."git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
   timeout             = 60
   worker_type         = "G.1X"
-  number_of_workers   = local.org_dedup_job_workers + 1
+  number_of_workers   = org_dedup_job_workers + 1
   retry_max_attempts  = 0
   retry_interval      = 2
   retry_backoff_rate  = 2
@@ -355,7 +355,7 @@ module "org_dedup_job" {
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
   job_arguments = {
-    "--conf"                      = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.default.parallelism=${local.org_dedup_job_workers * 4 * 5} --conf spark.sql.shuffle.partitions=${local.org_dedup_job_workers * 4 * 5}"
+    "--conf"                      = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.default.parallelism=${org_dedup_job_workers * 4 * 5} --conf spark.sql.shuffle.partitions=${org_dedup_job_workers * 4 * 5}"
     "--extra-jars"                = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["scala-udf-similarity-0.1.1_spark3.x.jar"].id}"
     "--job-bookmark-option"       = "job-bookmark-disable"
     "--config_bucket"             = var.project_objects.artifacts_bucket_id
@@ -364,7 +364,7 @@ module "org_dedup_job" {
     "--team_table_name"           = "clean_splink_team_data"
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
-    "--county_info_s3_path"       = local.counties_path
+    "--county_info_s3_path"       = counties_path
     "--max_records_per_file"      = var.project_objects.max_records_per_file
     "--model_version"             = 1
     "--datalake-formats"          = "delta"
