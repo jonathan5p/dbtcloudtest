@@ -206,7 +206,7 @@ module "ingest_job" {
 #------------------------------------------------------------------------------
 
 module "geo_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=develop"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
@@ -214,7 +214,7 @@ module "geo_job" {
   worker_type         = "G.1X"
   number_of_workers   = 5
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "getgeoinfojob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
@@ -258,7 +258,7 @@ module "cleaning_job" {
   retry_interval      = 2
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "cleaningjob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
@@ -302,7 +302,7 @@ module "ind_dedup_job" {
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
   connections         = [module.aurora_connection.conn_name]
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "inddedupjob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
@@ -350,7 +350,7 @@ module "org_dedup_job" {
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
   connections         = [module.aurora_connection.conn_name]
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "orgdedupjob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
