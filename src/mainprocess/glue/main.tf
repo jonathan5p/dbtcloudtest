@@ -313,7 +313,7 @@ module "ind_dedup_job" {
     "--config_bucket"             = var.project_objects.artifacts_bucket_id
     "--data_bucket"               = var.project_objects.data_bucket_id
     "--agent_table_name"          = "clean_splink_agent_data"
-    "--office_table_name"         = "bright_staging_office_latest"
+    "--office_table_name"         = "clean_splink_office_data"
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
     "--county_info_s3_path"       = local.counties_path

@@ -60,9 +60,10 @@ SELECT
     cs.uniqueorgid as indsourceresouoi,
     '' as indexpirationdate,
     string(cs.dlingestionts) as indcreatedts,
-    string(current_timestamp()) as indlastmodifiedts
+    string(current_timestamp()) as indlastmodifiedts,
+    canbenative as indcanbenative
 FROM ind_clusters_df as cs
-LEFT JOIN office_df as odf ON cs.officemlsid = odf.officemlsid
+LEFT JOIN office_df as odf ON cs.officekey = odf.key
 """
 
 # Query that gets native records for each cluster
@@ -107,6 +108,22 @@ agent_types = [
 ]
 
 
+def generate_canbenative_col(source_df: DataFrame, county_list: list, types: list):
+    check_pairs = F.udf(
+        lambda pair: True if pair in county_list else False, BooleanType()
+    )
+
+    native_cond = (check_pairs(F.array(F.col("county"), F.col("stateorprovince")))) & (
+        F.col("type").isin(types)
+    )
+
+    output_df = source_df.withColumn(
+        "canbenative", F.when(native_cond == True, True).otherwise(False)
+    )
+
+    return output_df
+
+
 # Helper function to run splink model over a dataframe
 def deduplicate_entity(
     entity: str,
@@ -148,7 +165,7 @@ def deduplicate_entity(
 
 
 def generate_globalids_and_native_records(
-    source_df: DataFrame, county_list: list, order_key: str = "indhubid"
+    source_df: DataFrame, order_key: str = "indhubid"
 ):
     null_global_ids_df = source_df.where(source_df["indglobalidentifier"].isNull())
     not_null_count = source_df.where(
@@ -182,20 +199,7 @@ def generate_globalids_and_native_records(
         .drop("new_indglobalidentifier")
     )
 
-    check_pairs = F.udf(
-        lambda pair: True if pair in county_list else False, BooleanType()
-    )
-
-    native_cond = (
-        check_pairs(F.array(F.col("indaddresscounty"), F.col("indaddressstate")))
-        == True
-    ) & (F.col("indtype").isin(agent_types))
-
-    bright_participants_df = global_id_df.withColumn(
-        "indcanbenative", F.when(native_cond == True, True).otherwise(False)
-    )
-
-    bright_participants_df.createOrReplaceTempView("ind_bright_participants")
+    global_id_df.createOrReplaceTempView("ind_bright_participants")
 
     output_df = spark.sql(native_records_query)
     return output_df
@@ -267,7 +271,7 @@ if __name__ == "__main__":
     splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
     clean_df = spark.read.format("delta").load(splink_clean_data_s3_path)
 
-    office_data_s3_path = f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/"
+    office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
     office_df = spark.read.format("delta").load(office_data_s3_path)
     office_df.createOrReplaceTempView("office_df")
 
@@ -279,7 +283,18 @@ if __name__ == "__main__":
         splink_model_path="/tmp/agent_splink_model.json",
     )
 
-    clusters_df.createOrReplaceTempView("ind_clusters_df")
+    # # Retrieve native record county rules from s3
+    # # and generate a county list with all the counties that are Bright Participants
+    county_df = ps.read_csv(args["county_info_s3_path"])
+
+    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
+    county_list = (
+        bright_participants[["Upper County", "State"]].values.tolist()
+        + bright_participants[["County Name", "State"]].values.tolist()
+    )
+
+    native_df = generate_canbenative_col(clusters_df, county_list, agent_types)
+    native_df.createOrReplaceTempView("ind_clusters_df")
 
     # Generate new individuals table
     individuals_changes_df = spark.sql(sql_map_query)
@@ -312,18 +327,8 @@ if __name__ == "__main__":
             print("Aurora Exception: ", str(e))
             raise e
 
-    # # Retrieve native record county rules from s3
-    # # and generate a county list with all the counties that are Bright Participants
-    county_df = ps.read_csv(args["county_info_s3_path"])
-
-    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
-    county_list = (
-        bright_participants[["Upper County", "State"]].values.tolist()
-        + bright_participants[["County Name", "State"]].values.tolist()
-    )
-
     # # Generate global ids and final individuals df
-    individuals_df = generate_globalids_and_native_records(ind_changes_df, county_list)
+    individuals_df = generate_globalids_and_native_records(ind_changes_df)
 
     # Write data to S3
     partition_col = "dt_utc"
