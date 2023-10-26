@@ -108,18 +108,10 @@ agent_types = [
 ]
 
 
-def generate_canbenative_col(source_df: DataFrame, county_list: list, types:list):
+def generate_canbenative_col(source_df: DataFrame, county_list: list, types: list):
     check_pairs = F.udf(
         lambda pair: True if pair in county_list else False, BooleanType()
     )
-
-    pairs_df = source_df.filter(
-        check_pairs(F.array(F.col("county"), F.col("stateorprovince")))
-    )
-    print("Pairs df count: ", pairs_df.count())
-
-    types_df = source_df.filter(F.col("type").isin(types))
-    print("Types df count: ", types_df.count())
 
     native_cond = (check_pairs(F.array(F.col("county"), F.col("stateorprovince")))) & (
         F.col("type").isin(types)
