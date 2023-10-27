@@ -33,7 +33,7 @@ SELECT
     upper(cs.city) as indaddresscity,
     cs.stateorprovince as indaddressstate,
     cs.postalcode as indaddresspostalcode,
-    odf.officecounty as indaddresscounty,
+    odf.county as indaddresscounty,
     CASE WHEN cs.country = 'US' 
     THEN 'USA' 
     ELSE upper(cs.country) END as indaddresscountry,
