@@ -2,6 +2,10 @@
 zone               = "z1"
 environment_devops = "c1"
 
+environment = "d1"
+role_arn = "s"
+site = "aue1"
+
 # S3 parameters
 s3_bucket_tmp_expiration_days     = 15
 s3_bucket_objects_expiration_days = 180
@@ -13,6 +17,9 @@ kms_data_users  = ["arn:aws:iam::497607366324:role/databricks-workspace-stack-ac
 
 # Glue KMS Admins and Users
 kms_glue_admins = ["arn:aws:iam::497607366324:role/aue1q1z1irodevopsqueryeadmin"]
+
+# Glue geosvc subnet id
+glue_geosvc_subnetid = "subnet-0d27b3488255277ea"
 
 # Eventbridge trigger parameters
 cron_schedule = "cron(0 23 * * ? *)"

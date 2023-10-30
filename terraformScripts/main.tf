@@ -1,9 +1,10 @@
 provider "aws" {
   region = var.region[var.site]
-  assume_role {
-    role_arn     = var.role_arn
-    session_name = "oidh"
-  }
+  profile = "bright_datascience_queryadmin"
+  # assume_role {
+  #   role_arn     = var.role_arn
+  #   session_name = "oidh"
+  # }
 }
 
 provider "archive" {}
@@ -187,6 +188,7 @@ module "mainprocess" {
     "aurora_min_capacity"                = var.aurora_min_capacity
     "max_records_per_file"               = var.glue_max_records_per_file
     "alaya_trigger_key"                  = var.alaya_trigger_key
+    "glue_geosvc_subnetid" = var.glue_geosvc_subnetid
   }
 }
 
