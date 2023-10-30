@@ -10,7 +10,7 @@ output "functions_mapping" {
 }
 
 output "glue_conn_sg_id" {
-  value = aws_security_group.conn_sg.id
+  value = module.aurora_connection.conn_sg_id
 }
 
 output "alayasyncdb_path" {

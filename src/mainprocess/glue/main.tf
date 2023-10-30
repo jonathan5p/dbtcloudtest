@@ -122,52 +122,18 @@ data "aws_ssm_parameter" "aurora_conn_password" {
 }
 
 #------------------------------------------------------------------------------
-# Glue Aurora Connection Security Group
-#------------------------------------------------------------------------------
-
-data "aws_subnet" "connection_subnet" {
-  id = var.project_objects.aurora_subnetid
-}
-
-module "conn_sg_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
-  type        = "sgp"
-  purpose     = join("", [var.project_prefix, "-", "glueconnsg"])
-}
-
-resource "aws_security_group" "conn_sg" {
-  name   = module.conn_sg_naming.name
-  tags   = module.conn_sg_naming.tags
-  vpc_id = data.aws_subnet.connection_subnet.vpc_id
-}
-
-resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress" {
-  security_group_id            = aws_security_group.conn_sg.id
-  ip_protocol                  = -1
-  referenced_security_group_id = aws_security_group.conn_sg.id
-}
-
-resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
-  security_group_id = aws_security_group.conn_sg.id
-  ip_protocol       = -1
-  cidr_ipv4         = "0.0.0.0/0"
-}
-
-#------------------------------------------------------------------------------
 # Glue Aurora Connection
 #------------------------------------------------------------------------------
 
 module "aurora_connection" {
-  source                 = "../../../modules/glue_connection"
-  base_naming            = var.base_naming
-  project_prefix         = var.project_prefix
-  conn_name              = "auroraconn"
-  password               = data.aws_ssm_parameter.aurora_conn_password.value
-  username               = data.aws_ssm_parameter.aurora_conn_username.value
-  jdbc_url               = var.project_objects.aurora_jdbc_url
-  subnet_id              = var.project_objects.aurora_subnetid
-  security_group_id_list = [aws_security_group.conn_sg.id]
+  source         = "../../../modules/glue_connection"
+  base_naming    = var.base_naming
+  project_prefix = var.project_prefix
+  conn_name      = "auroraconn"
+  password       = data.aws_ssm_parameter.aurora_conn_password.value
+  username       = data.aws_ssm_parameter.aurora_conn_username.value
+  jdbc_url       = var.project_objects.aurora_jdbc_url
+  subnet_id      = var.project_objects.aurora_subnetid
 }
 
 #------------------------------------------------------------------------------
@@ -202,6 +168,19 @@ module "ingest_job" {
 }
 
 #------------------------------------------------------------------------------
+# Glue GeoSvc Network Connection
+#------------------------------------------------------------------------------
+
+module "geosvc_connection" {
+  source          = "../../../modules/glue_connection"
+  connection_type = "NETWORK"
+  base_naming     = var.base_naming
+  project_prefix  = var.project_prefix
+  conn_name       = "geosvcconn"
+  subnet_id       = var.project_objects.glue_geosvc_subnetid
+}
+
+#------------------------------------------------------------------------------
 # Glue Get Geo Info Job
 #------------------------------------------------------------------------------
 
@@ -218,14 +197,15 @@ module "geo_job" {
   job_name            = "getgeoinfojob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
+  connections         = [module.geosvc_connection.conn_name]
   job_arguments = {
-    "--data_bucket"                     = var.project_objects.data_bucket_id
-    "--conf" = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+    "--data_bucket" = var.project_objects.data_bucket_id
+    "--conf"        = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
     "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
-    "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
-    "--job-bookmark-option" = "job-bookmark-disable"
-    "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
+    "--extra-py-files"            = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
+    "--job-bookmark-option"       = "job-bookmark-disable"
+    "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--additional-python-modules" = "geopy"
   }
 }

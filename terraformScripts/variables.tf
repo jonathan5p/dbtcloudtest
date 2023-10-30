@@ -113,6 +113,12 @@ variable "glue_max_records_per_file" {
   default     = 5000
 }
 
+# Glue geosvc subnet id
+variable "glue_geosvc_subnetid"{
+  description = "Subnet id used to create the glue connection to acces the GeoSvc API endpoint"
+  type = string
+}
+
 # Update alaya triggers
 variable "alaya_trigger_key" {
   description = "S3 key of the file that will trigger the update to alaya process"
