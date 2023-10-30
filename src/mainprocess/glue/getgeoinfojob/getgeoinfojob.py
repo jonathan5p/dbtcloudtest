@@ -192,9 +192,8 @@ def incremental_load(
 
     target_df.alias("target").merge(
         upsert_df.alias("updates"), f"target.{merge_key} = updates.{merge_key}"
-    ).whenMatchedUpdate(
-        condition=(F.col("_change_type") == "update_postimage"),
-        set={f"{entity}county": f"updates.{entity}county"},
+    ).whenMatchedUpdateAll(
+        condition=(F.col("_change_type") == "update_postimage")
     ).whenMatchedDelete(
         condition=(F.col("_change_type") == "delete")
     ).whenNotMatchedInsertAll().execute()
