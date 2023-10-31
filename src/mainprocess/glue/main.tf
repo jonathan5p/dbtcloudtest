@@ -1,3 +1,19 @@
+data "aws_ssm_parameter" "ds_clean_library_version" {
+  name = "/parameter/${var.site}/${var.environment}/codebuild/bright_clean_version"
+}
+
+data "aws_ssm_parameter" "bright_pypi_pipconf" {
+  name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
+}
+
+locals {
+  parameter_path        = "parameter/${var.site}/${var.environment}/geosvc/api_uri"
+  ind_dedup_job_workers = 20
+  org_dedup_job_workers = 30
+  counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
+  jfrog_url             = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
+}
+
 #------------------------------------------------------------------------------
 # Upload S3 Data
 #------------------------------------------------------------------------------
@@ -191,12 +207,12 @@ module "geo_job" {
   max_concurrent_runs = 4
   timeout             = 60
   worker_type         = "G.1X"
-  number_of_workers   = 5
+  number_of_workers   = 21
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
   glue_path           = "../src/mainprocess/glue"
   job_name            = "getgeoinfojob"
   script_bucket       = var.project_objects.glue_bucket_id
-  policy_variables    = var.project_objects
+  policy_variables    = merge(var.project_objects, { "parameter_name" = local.parameter_path })
   connections         = [module.geosvc_connection.conn_name]
   job_arguments = {
     "--data_bucket"       = var.project_objects.data_bucket_id
@@ -213,18 +229,6 @@ module "geo_job" {
 #------------------------------------------------------------------------------
 # Glue Cleaning Job
 #------------------------------------------------------------------------------
-
-data "aws_ssm_parameter" "ds_clean_library_version" {
-  name = "/parameter/${var.site}/${var.environment}/codebuild/bright_clean_version"
-}
-
-data "aws_ssm_parameter" "bright_pypi_pipconf" {
-  name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
-}
-
-locals {
-  jfrog_url = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
-}
 
 module "cleaning_job" {
   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
@@ -263,11 +267,6 @@ module "cleaning_job" {
 #------------------------------------------------------------------------------
 # Glue Splink Individuals Job
 #------------------------------------------------------------------------------
-
-locals {
-  ind_dedup_job_workers = 20
-  counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
-}
 
 module "ind_dedup_job" {
   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
@@ -312,10 +311,6 @@ module "ind_dedup_job" {
 #------------------------------------------------------------------------------
 # Glue Splink Organizations Job
 #------------------------------------------------------------------------------
-
-locals {
-  org_dedup_job_workers = 30
-}
 
 module "org_dedup_job" {
   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
