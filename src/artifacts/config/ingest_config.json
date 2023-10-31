@@ -5,7 +5,7 @@
     "catalog_table": "bright_raw_agent_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
-    "getgeoinfo" : false,
+    "getgeoinfo": false,
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
@@ -44,7 +44,13 @@
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
       },
       "geoinfo_config": {
-        "geoinfo_cols": "officecity,officestateorprovince",
+        "geoinfo_cols": {
+          "address": "officeaddress1",
+          "city": "officecity",
+          "county": "officecounty",
+          "state": "officestateorprovince",
+          "postalcode": "officepostalcode"
+        },
         "entity": "office"
       }
     }
