@@ -47,11 +47,11 @@ def get_geo_info(address, city, county, state, postalcode, country="US"):
     return output
 
 
-def get_geo_info_df(geo_cols: dict, input_df: DataFrame):
+def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int):
     if geo_cols not in [{}, None]:
         try:
             geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
-            output_df = input_df.repartition(36).withColumn(
+            output_df = input_df.repartition(repartition_num).withColumn(
                 "geo_info", get_geo_info(*geo_cols)
             )
         except KeyError as e:
@@ -69,16 +69,19 @@ def first_load(
     target_path: str,
     target_table: str,
     geo_cols: str,
+    repartition_num: int,
     compression: str = "snappy",
     database: str = "default",
     source_table: str = "test_table",
     test: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
-    insert_df = get_geo_info_df(geo_cols, input_df)
+    insert_df = get_geo_info_df(geo_cols, input_df, repartition_num)
+    number_of_files = int(repartition_num // 10) if repartition_num // 10 != 0 else 1
 
     write_df = (
-        insert_df.write.mode("overwrite")
+        insert_df.coalesce(number_of_files)
+        .write.mode("overwrite")
         .format("delta")
         .option("path", target_path)
         .option("overwriteSchema", "true")
@@ -149,6 +152,7 @@ if __name__ == "__main__":
     options = json.loads(args["options"])
     geo_cols = options["geoinfo_config"]["geoinfo_cols"]
     entity = options["geoinfo_config"]["entity"]
+    repartition_num = int(options["geoinfo_config"]["repartition_num"])
 
     write_options = options["write_options"]
     merge_key = write_options.get("merge_key")
@@ -165,6 +169,7 @@ if __name__ == "__main__":
             geo_cols=geo_cols,
             database=args["database"],
             source_table=args["table"],
+            repartition_num=repartition_num,
         )
     elif table_exists:
         cdc_df = (
