@@ -205,7 +205,7 @@ module "geo_job" {
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
-  timeout             = 60
+  timeout             = 180
   worker_type         = "G.1X"
   number_of_workers   = 21
   security_config_id  = aws_glue_security_configuration.glue_security_config.id

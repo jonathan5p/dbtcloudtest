@@ -46,6 +46,6 @@
             "Effect":"Allow",
             "Action": ["ssm:GetParameter"],
             "Resource": ["arn:aws:ssm:${region}:${account_id}:parameter/${parameter_name}"]
-        },
+        }
     ]
 }
