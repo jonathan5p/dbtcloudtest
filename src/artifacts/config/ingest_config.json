@@ -51,7 +51,8 @@
           "state": "officestateorprovince",
           "postalcode": "officepostalcode"
         },
-        "entity": "office"
+        "entity": "office",
+        "repartition_num": 36
       }
     }
   },
