@@ -50,7 +50,11 @@ def get_geo_info(address, city, county, state, postalcode, country="US"):
 def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int = None):
     if geo_cols not in [{}, None]:
         try:
-            paritioned_df = input_df.repartition(repartition_num) if repartition_num != None else input_df
+            paritioned_df = (
+                input_df.repartition(repartition_num)
+                if repartition_num != None
+                else input_df
+            )
             geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
             output_df = paritioned_df.repartition(repartition_num).withColumn(
                 "geo_info", get_geo_info(*geo_cols)
@@ -104,7 +108,7 @@ def incremental_load(
     latest_df: DataFrame,
     database: str,
     table: str,
-    merge_key: str
+    merge_key: str,
 ):
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
