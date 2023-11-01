@@ -80,7 +80,7 @@ def first_load(
     number_of_files = int(repartition_num // 10) if repartition_num // 10 != 0 else 1
 
     write_df = (
-        insert_df.coalesce(number_of_files)
+        insert_df.repartition(number_of_files)
         .write.mode("overwrite")
         .format("delta")
         .option("path", target_path)
