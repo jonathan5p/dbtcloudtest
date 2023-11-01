@@ -47,11 +47,12 @@ def get_geo_info(address, city, county, state, postalcode, country="US"):
     return output
 
 
-def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int):
+def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int = None):
     if geo_cols not in [{}, None]:
         try:
+            paritioned_df = input_df.repartition(repartition_num) if repartition_num != None else input_df
             geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
-            output_df = input_df.repartition(repartition_num).withColumn(
+            output_df = paritioned_df.repartition(repartition_num).withColumn(
                 "geo_info", get_geo_info(*geo_cols)
             )
         except KeyError as e:
@@ -103,14 +104,13 @@ def incremental_load(
     latest_df: DataFrame,
     database: str,
     table: str,
-    merge_key: str,
-    repartition_num:int
+    merge_key: str
 ):
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
     )
     delete_df = latest_df.filter(F.col("_change_type") == "delete")
-    updates_df = get_geo_info_df(geo_cols, changes_df,repartition_num)
+    updates_df = get_geo_info_df(geo_cols, changes_df)
     upsert_df = updates_df.unionByName(delete_df, allowMissingColumns=True)
     target_df = DeltaTable.forName(spark, f"{database}.{table}")
 
