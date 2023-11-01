@@ -216,7 +216,7 @@ module "geo_job" {
   connections         = [module.geosvc_connection.conn_name]
   job_arguments = {
     "--data_bucket"       = var.project_objects.data_bucket_id
-    "--geo_api_parameter" = "parameter/${var.site}/${var.environment}/geosvc/api_uri"
+    "--geo_api_parameter" = "/${local.parameter_path}"
     "--conf"              = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.network.timeout=3600"
     "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
