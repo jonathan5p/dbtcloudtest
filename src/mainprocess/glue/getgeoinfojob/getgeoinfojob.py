@@ -47,13 +47,16 @@ def get_geo_info(address, city, county, state, postalcode, country="US"):
     return output
 
 
-def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int):
+def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int = None):
     if geo_cols not in [{}, None]:
         try:
-            geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
-            output_df = input_df.repartition(repartition_num).withColumn(
-                "geo_info", get_geo_info(*geo_cols)
+            paritioned_df = (
+                input_df.repartition(repartition_num)
+                if repartition_num != None
+                else input_df
             )
+            geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
+            output_df = paritioned_df.withColumn("geo_info", get_geo_info(*geo_cols))
         except KeyError as e:
             raise KeyError(
                 f"Key {str(e)} not found in geo_cols argument.\nThe geo_cols argument must contain the keys [address,city,county,state,postalcode] with their respective value."
@@ -151,7 +154,6 @@ if __name__ == "__main__":
 
     options = json.loads(args["options"])
     geo_cols = options["geoinfo_config"]["geoinfo_cols"]
-    entity = options["geoinfo_config"]["entity"]
     repartition_num = int(options["geoinfo_config"]["repartition_num"])
 
     write_options = options["write_options"]

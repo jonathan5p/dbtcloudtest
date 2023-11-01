@@ -75,14 +75,14 @@ if __name__ == "__main__":
     job.init(args["JOB_NAME"], args)
 
     # Load delta tables for agents, offices and teams
-    agent_df = spark.read.format("delta").load(
-        f"s3://{args['data_bucket']}/raw_data/{args['glue_db']}/{args['agent_table_name']}/"
+    agent_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['agent_table_name']}"
     )
-    office_df = spark.read.format("delta").load(
-        f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/"
+    office_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['office_table_name']}"
     )
-    team_df = spark.read.format("delta").load(
-        f"s3://{args['data_bucket']}/raw_data/{args['glue_db']}/{args['team_table_name']}/"
+    team_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['team_table_name']}"
     )
 
     # Download config files for agents, offices and team
