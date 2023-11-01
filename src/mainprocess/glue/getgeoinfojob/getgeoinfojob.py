@@ -56,9 +56,7 @@ def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int = 
                 else input_df
             )
             geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
-            output_df = paritioned_df.repartition(repartition_num).withColumn(
-                "geo_info", get_geo_info(*geo_cols)
-            )
+            output_df = paritioned_df.withColumn("geo_info", get_geo_info(*geo_cols))
         except KeyError as e:
             raise KeyError(
                 f"Key {str(e)} not found in geo_cols argument.\nThe geo_cols argument must contain the keys [address,city,county,state,postalcode] with their respective value."
