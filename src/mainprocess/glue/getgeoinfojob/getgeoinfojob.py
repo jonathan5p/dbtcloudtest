@@ -154,7 +154,6 @@ if __name__ == "__main__":
 
     options = json.loads(args["options"])
     geo_cols = options["geoinfo_config"]["geoinfo_cols"]
-    entity = options["geoinfo_config"]["entity"]
     repartition_num = int(options["geoinfo_config"]["repartition_num"])
 
     write_options = options["write_options"]

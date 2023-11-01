@@ -5,7 +5,7 @@
     "catalog_table": "bright_raw_agent_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
-    "getgeoinfo": false,
+    "getgeoinfo": true,
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
@@ -19,6 +19,16 @@
         "merge_key": "memberkey",
         "precombine_keys": "modificationtimestamp",
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
+      },
+      "geoinfo_config": {
+        "geoinfo_cols": {
+          "address": "memberaddress1",
+          "city": "membercity",
+          "county": "membercounty",
+          "state": "memberstateorprovince",
+          "postalcode": "memberpostalcode"
+        },
+        "repartition_num": 36
       }
     }
   },
@@ -51,7 +61,6 @@
           "state": "officestateorprovince",
           "postalcode": "officepostalcode"
         },
-        "entity": "office",
         "repartition_num": 36
       }
     }
