@@ -104,12 +104,13 @@ def incremental_load(
     database: str,
     table: str,
     merge_key: str,
+    repartition_num:int
 ):
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
     )
     delete_df = latest_df.filter(F.col("_change_type") == "delete")
-    updates_df = get_geo_info_df(geo_cols, changes_df)
+    updates_df = get_geo_info_df(geo_cols, changes_df,repartition_num)
     upsert_df = updates_df.unionByName(delete_df, allowMissingColumns=True)
     target_df = DeltaTable.forName(spark, f"{database}.{table}")
 
