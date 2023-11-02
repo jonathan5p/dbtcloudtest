@@ -27,5 +27,4 @@ phases:
     commands:
       - "echo Build started on `date`"
       - aws sts get-caller-identity
-      - python3 tests/generatedata/data_gen.py
       - python3 -m pytest tests/test/test_glue.py
