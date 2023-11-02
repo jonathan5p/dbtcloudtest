@@ -6,12 +6,7 @@ import boto3
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-if os.environ.get("TEST") is None:
-
-    etl_config_key = os.environ["ETL_CONFIG_KEY"]
-    artifact_bucket = os.environ["ARTIFACTS_BUCKET"]
-
-    s3_client = boto3.client("s3")
+s3_client = boto3.client("s3")
 
 
 def dict_to_json(dict_to_convert: dict):
@@ -40,6 +35,8 @@ def prepare_sf_input(tables_list: dict):
 
 
 def lambda_handler(event, context):
+    etl_config_key = event["ETL_CONFIG_KEY"]
+    artifact_bucket = event["ARTIFACTS_BUCKET"]
     try:
         # Retrieve data flow config json from the artifacts bucket
         response = s3_client.get_object(Bucket=artifact_bucket, Key=etl_config_key)

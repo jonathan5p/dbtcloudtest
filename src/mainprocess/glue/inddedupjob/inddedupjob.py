@@ -29,7 +29,7 @@ SELECT
     cs.middleinitial as indmiddleinitial,
     cs.fullname as indfullname,
     cs.preferredfirstname||' '||cs.preferredlastname as indalternatename,
-    upper(cs.address) as indrawstreetaddress,
+    upper(cs.address) as indstreetaddress,
     upper(cs.city) as indaddresscity,
     cs.stateorprovince as indaddressstate,
     cs.postalcode as indaddresspostalcode,

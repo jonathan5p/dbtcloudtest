@@ -59,6 +59,10 @@ resource "aws_cloudwatch_event_target" "etl_sfn" {
   target_id = "StartStateMachine"
   arn       = module.stepfunction.sfn_arn
   role_arn  = aws_iam_role.crontrigger_role.arn
+  input = {
+    "ETL_CONFIG_KEY"   = var.policy_variables.trigger_bucket
+    "ARTIFACTS_BUCKET" = var.trigger_bucket_key
+  }
 }
 
 # Cron trigger policies
