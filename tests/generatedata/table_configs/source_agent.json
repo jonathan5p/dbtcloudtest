@@ -1,0 +1,433 @@
+{
+    "name": "source_data/bright_raw_agent_latest",
+    "pk": "memberkey",
+    "n_rows": 100,
+    "output_format": "parquet",
+    "fields": {
+        "jobtitle": {
+            "dynamic": false,
+            "default_value": "SAMPLETITLE",
+            "type": "string"
+        },
+        "memberaddress1": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberaddress2": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberboxnumber": {
+            "dynamic": false,
+            "default_value": "SAMPLEBOX",
+            "type": "string"
+        },
+        "membercity": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membercountry": {
+            "dynamic": false,
+            "default_value": "US",
+            "type": "string"
+        },
+        "membercounty": {
+            "dynamic": false,
+            "default_value": "Baltimore County",
+            "type": "string"
+        },
+        "memberdesignation": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberdirectphone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberemail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberfax": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberfirstname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberfullname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberfullrolelist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberjoindate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "date"
+        },
+        "memberkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "long"
+        },
+        "memberlastname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberlicenseexpirationdate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "date"
+        },
+        "memberloginid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membermiddleinitial": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membermiddlename": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membermlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membermobilephone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membernameprefix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membernamesuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membernationalassociationid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membernickname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membernumviolations": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "integer"
+        },
+        "memberofficephone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberofficephoneext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "integer"
+        },
+        "memberpager": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpostalcode": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpostalcodeplus4": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpreferredphone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpreferredphoneext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "integer"
+        },
+        "memberprivateemail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberrateplugflag": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "boolean"
+        },
+        "memberreinstatementdate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "date"
+        },
+        "memberrolelist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstatelicense": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstatelicensestate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstateorprovince": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstatus": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstreetdirsuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstreetexception": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstreetname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberstreetnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "integer"
+        },
+        "memberstreetsuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberterminationdate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "date"
+        },
+        "membertype": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersubtype": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberunitdesignation": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberunitnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membervoicemailext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membervoicemail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "modificationtimestamp": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "officekey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "long"
+        },
+        "officemlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokerkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "long"
+        },
+        "officename": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokermlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberdateadded": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "socialmediablogurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediafacebookurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmedialinkedinurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediatwitterurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediawebsiteurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediayoutubeurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersourceinput": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersourcerecordkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersourcerecordid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersourcebusinesspartner": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersourcetransport": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "syndicateto": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersubsystemlocale": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "membersystemlocale": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpreferredfirstname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpreferredlastname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberbrightconvertedyn": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "boolean"
+        },
+        "memberassociationprimary": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberassociationsfulllist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "memberpreviewyn": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "boolean"
+        },
+        "sourcemodificationtimestamp": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "memberstreetdirprefix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "datetimeinsertedtoredshift": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        }
+    }
+}
