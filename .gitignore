@@ -46,4 +46,3 @@ terraform.rc
 tests/.pytest*/
 tests/tmp/
 tests/sample_data/
-tests/generatedata/
