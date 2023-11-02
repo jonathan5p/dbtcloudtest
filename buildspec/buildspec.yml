@@ -21,6 +21,7 @@ phases:
       - python3 --version
       - pip3 install boto3
       - pip3 install -r tests/glue_requirements.txt
+      - pip3 list
       - rm -rf ${HOME}/.pip/pip.conf
 
   build:
