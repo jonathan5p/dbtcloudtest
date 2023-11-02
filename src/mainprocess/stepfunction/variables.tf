@@ -22,6 +22,11 @@ variable "environment_devops" {
   default     = {}
 }
 
+variable "trigger_bucket_key" {
+  description = "Etl cron config bucket key"
+  default     = "config/ingest_config.json"
+}
+
 variable "project_app_group" {
   description = "This is Bright's specified value"
   default     = {}

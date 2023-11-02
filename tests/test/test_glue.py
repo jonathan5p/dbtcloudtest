@@ -25,13 +25,11 @@ for file in parent_folder.glob("*job"):
     sys.path.append(job_path)
     logger.info(f"Path added to python path: {job_path}")
 
+from utils import *
+from ingestjob import unique_by_merge_key, full_load, incremental_load
 
 def test_test():
     assert True, "Test test"
-
-# from utils import *
-# from ingestjob import unique_by_merge_key, full_load, incremental_load
-
 
 # @pytest.fixture(scope="module", autouse=True)
 # def glue_context():
@@ -51,7 +49,7 @@ def test_test():
 #     )
 #     conf.set(
 #         "spark.jars",
-#         f"{similarity_jar_location()},/home/glue_user/workspace/src/glue/jars/delta-core_2.12-2.3.0.jar,/home/glue_user/workspace/src/glue/jars/delta-storage-2.3.0.jar",
+#         f"{similarity_jar_location()},{str(parent_folder)}/jars/delta-core_2.12-2.3.0.jar,{str(parent_folder)}/jars/delta-storage-2.3.0.jar",
 #     )
 
 #     sc = SparkContext.getOrCreate(conf=conf)
@@ -122,6 +120,9 @@ def test_test():
 #             ).otherwise(0)
 #         )
 #     ).collect()[0][0]
+
+#     reference_df.printSchema()
+#     writed_df.printSchema()
 
 #     assert (
 #         writed_count == ref_count

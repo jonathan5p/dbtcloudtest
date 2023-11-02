@@ -78,6 +78,7 @@ module "stepfunction" {
     "glue_geoinfo_job"     = module.glue_resources.functions_mapping.geojob.job_id
     "config_loader_lambda" = module.lambda_resources.functions_mapping.config_loader.lambda_arn
     "data_key_arn"         = var.project_objects.data_key_arn
+    "trigger_bucket"       = var.project_objects.data_bucket_id
   }
 }
 

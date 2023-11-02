@@ -1,5 +1,5 @@
-clean==1.0.9
 delta-spark==2.3.0
+deltalake==0.12.0
 pyspark[sql]==3.3.0
 splink==3.9.2
 pytest-cov==4.1.0

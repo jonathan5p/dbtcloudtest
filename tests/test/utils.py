@@ -1,12 +1,23 @@
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
-from pyspark.sql.types import NullType
+from pyspark.sql.types import *
 import json
-from cleaningjob import clean_splink_data
+
 from inddedupjob import deduplicate_entity as dedup_ind
 
 
+def _change_timestamp_types(df: DataFrame):
+    for field in df.schema:
+        if field.dataType in [NullType()]:
+            df = df.withColumn(field.name, F.col(field.name).cast("string"))
+
+    return df
+
+
 def assert_schema(df1: DataFrame, df2: DataFrame, check_nullable=False):
+    df1 = _change_timestamp_types(df1)
+    df2 = _change_timestamp_types(df2)
+
     field_list = lambda fields: (fields.name, fields.dataType, fields.nullable)
     fields1 = [*map(field_list, df1.schema.fields)]
     fields2 = [*map(field_list, df2.schema.fields)]
@@ -90,9 +101,9 @@ def helper_test_splink_dedup_data(
         spark=spark,
     )
 
-    if entity=='office':
+    if entity == "office":
         cluster_df = cluster_df.withColumn("orgsourcetype", F.lit("OFFICE"))
-    elif entity=='team':
+    elif entity == "team":
         cluster_df = cluster_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     cluster_reference_df = spark.read.parquet(
@@ -104,7 +115,9 @@ def helper_test_splink_dedup_data(
 
     for field in cluster_df.schema.fields:
         if field.dataType == NullType():
-            cluster_df = cluster_df.withColumn(field.name,F.col(field.name).cast('string'))
+            cluster_df = cluster_df.withColumn(
+                field.name, F.col(field.name).cast("string")
+            )
 
     assert (
         raw_count == assert_counts["raw"]

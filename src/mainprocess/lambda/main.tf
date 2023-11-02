@@ -19,9 +19,4 @@ module "lambda_config_loader" {
   runtime           = "python3.10"
 
   policy_variables = var.project_objects
-
-  environment_variables = {
-    "ARTIFACTS_BUCKET" = var.project_objects.artifacts_bucket_id
-    "ETL_CONFIG_KEY"   = "config/ingest_config.json"
-  }
 }
