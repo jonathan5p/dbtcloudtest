@@ -108,6 +108,7 @@ module "lambda_alaya_sync_ecs_start" {
       "ECS_SUBNETS" = var.project_objects.ecs_subnets
       "INDIVIDUALS" = var.project_objects.individuals
       "ORGANIZATIONS" = var.project_objects.organizations
+      "STATE_TABLE" = var.project_objects.dynamo_table_async
   }
 }
 
@@ -130,5 +131,39 @@ module "lambda_alaya_sync_ecs_status" {
     environment_variables = {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
       "ECS_CLUSTER" = var.project_objects.ecs_cluster
+      "STATE_TABLE" = var.project_objects.dynamo_table_async
     }
+}
+
+
+module "lambda_alaya_sync_async" {
+    source = "git::ssh://git@github-gilcamilo.com/gilcamilo/terraform_cicd_pipeline.git//lambdas?ref=v0.0.6"
+
+    environment         = var.environment
+    lambda_name         = "alayasyncasync"
+    lambda_path         = "../src/alayasync/lambda"
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    timeout             = 900
+    zone                = var.zone
+
+    policy_variables = var.project_objects
+    
+    environment_variables = {
+      "ATHENA_BUCKET" = var.project_objects.athena_bucket_id
+      "OIDH_TABLE" = var.project_objects.dynamo_table_register
+      "STATE_TABLE" = var.project_objects.dynamo_table_async
+      "TIMEOUT" = var.project_objects.async_lambda_timeout
+      "INDIVIDUALS" = var.project_objects.individuals
+      "ORGANIZATIONS" = var.project_objects.organizations
+    }
+
+    layers = [
+      "arn:aws:lambda:${data.aws_region.current.name}:336392948345:layer:AWSSDKPandas-Python39:10",
+      var.project_objects.alaya_utils_layer,
+      var.project_objects.alaya_sync_layer
+    ]
 }

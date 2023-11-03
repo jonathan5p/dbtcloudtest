@@ -54,7 +54,9 @@ module "lambdas" {
     tier                = var.tier
     zone                = var.zone
 
-    project_objects     = merge(var.project_objects, module.tables.primary_keys,
+    project_objects     = merge(var.project_objects, 
+      module.tables.primary_keys,
+      module.layers.layers_mapping,
     {
         "dynamo_table_register" = "${module.dynamo.table_naming.name}"
         "task_definition" = "${module.ecs.alayapush_task_definition}"
@@ -109,7 +111,20 @@ module "ecs" {
       "dynamo_table_register" = "${module.dynamo.table_naming.name}",
       "sfn_alaya_sync" = "${module.step_functions.sfn_alaya_sync_arn}"
   })
+}
 
+module "layers" {
+    source = "./layers"
+    
+    environment         = var.environment
+    project_app_group   = var.project_app_group
+    project_ledger      = var.project_ledger
+    project_prefix      = var.project_prefix
+    site                = var.site
+    tier                = var.tier
+    zone                = var.zone
+
+    project_objects     = var.project_objects
 }
 
 resource "aws_lambda_event_source_mapping" "register" {
