@@ -12,11 +12,11 @@ from sync import alaya
 logger = logging.getLogger()
 logger.setLevel('INFO')
 
-dynamo_resource = boto3.resource('dynamodb')
-table = dynamo_resource.Table(STATE_TABLE)
-
 STATE_TABLE = os.getenv('STATE_TABLE')
 TIMEOUT = os.getenv('TIMEOUT')
+
+dynamo_resource = boto3.resource('dynamodb')
+table = dynamo_resource.Table(STATE_TABLE)
 
 def put_item(request_id, state, payload):
     response = table.put_item(
