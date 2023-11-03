@@ -2,8 +2,6 @@ import boto3
 import os
 import time
 
-import awswrangler as wr
-
 WAIT_TIME = 20
 
 class AthenaInterface:

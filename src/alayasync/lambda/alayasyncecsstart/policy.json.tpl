@@ -27,7 +27,9 @@
       ],
       "Resource" : [
         "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_register}",
-        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_register}/*"
+        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_register}/*",
+        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_async}",
+        "arn:aws:dynamodb:${region}:${account_id}:table/${dynamo_table_async}/*"
       ]
     },
     {
@@ -81,6 +83,15 @@
       ],
       "Resource": [
         "arn:aws:iam::${account_id}:role/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "${alaya_sync_async}"
       ]
     }
   ]

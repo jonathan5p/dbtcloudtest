@@ -99,13 +99,16 @@ module "lambda_alaya_sync_ecs_start" {
     tier                = var.tier
     zone                = var.zone
 
-    policy_variables = var.project_objects
+    policy_variables = merge(var.project_objects, {
+      "alaya_sync_async" = module.lambda_alaya_sync_async.lambda_arn
+    })
     
     environment_variables = {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
       "ECS_CLUSTER"= var.project_objects.ecs_cluster
       "TASK_DEFINITION"= var.project_objects.task_definition
       "ECS_SUBNETS" = var.project_objects.ecs_subnets
+      "FUNCTION_NAME" = module.lambda_alaya_sync_async.lambda_arn
       "INDIVIDUALS" = var.project_objects.individuals
       "ORGANIZATIONS" = var.project_objects.organizations
       "STATE_TABLE" = var.project_objects.dynamo_table_async

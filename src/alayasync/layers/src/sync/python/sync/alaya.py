@@ -1,11 +1,12 @@
 from datetime import datetime
 
-from ..utils.commons import get_key, get_source_file
-from ..interfaces.athena_interface import AthenaInterface
+from .utils.commons import get_key, get_source_file
+from .interfaces.athena_interface import AthenaInterface
+from .interfaces.dynamo_interface import DynamoInterface
 from jsonschema import validate, exceptions
 
 import awswrangler as wr
-import datalake.json_data as json_data
+import sync.json_data as json_data
 import importlib.resources
 import json
 import pandas as pd
@@ -53,8 +54,7 @@ def process_records(dfs, source_file, primary_key, event, id, file_name):
         }
 
         print(f'Info:{records}')
-        #update_record(register_table, payload)
-
+        update_record("OIDH_TABLE", payload)
 
 
     except recordsFailedException as e:
@@ -118,6 +118,20 @@ def upload_parquet(bucket, key, data):
         error = f'Error uploading file to s3: {repr(e)}'
         raise ValueError(f'Failed sending files to s3://{bucket}/{key}. Error:{error}')
     
+    return None
+
+def update_record(table, payload):
+
+    query_parameters = {
+        'Key': {'id': payload['id']},
+        'UpdateExpression': "set #r=:r, #p=:p",
+        'ExpressionAttributeValues': {':r': payload['records'], ':p': payload['processed_file']},
+        'ExpressionAttributeNames': {"#r": "records", "#p": "processed_file"},
+        'ReturnValues': "UPDATED_NEW"
+    }
+
+    response = DynamoInterface(table).update_item(query_parameters)
+
     return None
 
 
