@@ -108,9 +108,6 @@ def helper_test_splink_dedup_data(
                 field.name, F.col(field.name).cast("string")
             )
 
-    cluster_df.printSchema()
-    cluster_reference_df.printSchema()
-
     assert (
         raw_count == dedup_count
     ), f"Dedup {entity} df count expected to be {dedup_count}, got: {raw_count}"
