@@ -14,6 +14,7 @@ ecs_client = boto3.client('ecs')
 cluster_name = os.environ['ECS_CLUSTER']
 task_definition = os.environ['TASK_DEFINITION']
 subnet_ids = os.environ['ECS_SUBNETS']
+function_name = os.environ['FUNCTION_NAME']
 
 lambda_client = boto3.client('lambda')
 
@@ -72,12 +73,10 @@ def run_ecs(event):
     
 def run_lambda(event):
     
-    FUNCTION_NAME = 'aue1d1z1lmboidhoidh-alayasyncasync'
-    
     task_arguments = event['value']
     
     response = lambda_client.invoke(
-        FunctionName=FUNCTION_NAME,
+        FunctionName=function_name,
         InvocationType='Event',
         Payload=json.dumps(task_arguments))
         
@@ -85,9 +84,9 @@ def run_lambda(event):
     
     if response.get('StatusCode') in [200, 202] and request_id:
         response = put_item(request_id, 'STARTED', task_arguments)
-        logger.info(f'Function {FUNCTION_NAME} started with RequestId: {request_id}')
+        logger.info(f'Function {function_name} started with RequestId: {request_id}')
     else:
-        logger.error(f'Something failed when calling {FUNCTION_NAME}. Check {response}.')
+        logger.error(f'Something failed when calling {function_name}. Check {response}.')
         raise ValueError('Lambda call failed')
 
     return request_id
