@@ -2,21 +2,10 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import *
 import json
-
 from inddedupjob import deduplicate_entity as dedup_ind
 
 
-def _change_timestamp_types(df: DataFrame):
-    for field in df.schema:
-        if field.dataType in [NullType()]:
-            df = df.withColumn(field.name, F.col(field.name).cast("string"))
-
-    return df
-
-
 def assert_schema(df1: DataFrame, df2: DataFrame, check_nullable=False):
-    df1 = _change_timestamp_types(df1)
-    df2 = _change_timestamp_types(df2)
 
     field_list = lambda fields: (fields.name, fields.dataType, fields.nullable)
     fields1 = [*map(field_list, df1.schema.fields)]
@@ -82,7 +71,7 @@ def helper_test_splink_clean_data(
 
 
 def helper_test_splink_dedup_data(
-    entity: str, spark: SparkSession, assert_counts: list, base_dir: str
+    entity: str, spark: SparkSession, base_dir: str
 ):
     local_df = spark.read.parquet(
         f"{base_dir}/sample_data/consume_data/clean_{entity}/"
@@ -107,7 +96,7 @@ def helper_test_splink_dedup_data(
         cluster_df = cluster_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     cluster_reference_df = spark.read.parquet(
-        f"{base_dir}/sample_data/consume_data/dedupe_{entity}_df/"
+        f"{base_dir}/sample_data/consume_data/dedup_{entity}_df/"
     )
 
     raw_count = cluster_df.count()
@@ -120,11 +109,8 @@ def helper_test_splink_dedup_data(
             )
 
     assert (
-        raw_count == assert_counts["raw"]
-    ), f"raw {entity} df count expected to be {assert_counts['raw']}, got: {raw_count}"
-    assert (
-        dedup_count == assert_counts["dedup"]
-    ), f"deduped {entity} df count expected to be {assert_counts['dedup']}, got: {dedup_count}"
+        raw_count == dedup_count
+    ), f"Dedup {entity} df count expected to be {dedup_count}, got: {raw_count}"
     assert (
         assert_schema(cluster_df, cluster_reference_df) == True
     ), f"{entity} dedup df schema is not the same as the one expected"
