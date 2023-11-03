@@ -7,24 +7,16 @@ import time
 import traceback
 
 from multiprocessing import Process, Pipe, Manager
+from sync.sync import alaya
 
 logger = logging.getLogger()
 logger.setLevel('INFO')
 
 dynamo_resource = boto3.resource('dynamodb')
+table = dynamo_resource.Table(STATE_TABLE)
 
 STATE_TABLE = os.getenv('STATE_TABLE')
 TIMEOUT = os.getenv('TIMEOUT')
-table = dynamo_resource.Table(STATE_TABLE)
-
-from datalake.sync import alaya
-
-events_client = boto3.client('events')
-athena_client = boto3.client('athena')
-athena_bucket = os.environ['ATHENA_BUCKET']
-
-dynamodb = boto3.resource('dynamodb')
-register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
 
 def put_item(request_id, state, payload):
     response = table.put_item(

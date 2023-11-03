@@ -1,11 +1,11 @@
 from datetime import datetime
 
-from ..utils.commons import get_key, get_source_file
-from ..interfaces.athena_interface import AthenaInterface
+from .utils.commons import get_key, get_source_file
+from .interfaces.athena_interface import AthenaInterface
 from jsonschema import validate, exceptions
 
 import awswrangler as wr
-import datalake.json_data as json_data
+import sync.json_data as json_data
 import importlib.resources
 import json
 import pandas as pd
