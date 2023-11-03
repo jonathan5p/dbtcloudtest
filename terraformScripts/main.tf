@@ -221,7 +221,7 @@ module "alayasync" {
     "concurrent_tasks" : var.concurrent_tasks
     "data_key_id" : module.data_key.key_id
     "data_key_arn" : module.data_key.key_arn
-    "dynamo_table_async" : "aue1d1z1dytdatasharedresources-1-lambda-async"
+    "dynamo_table_async" : "tbd"
     "ecs_cluster" : data.aws_ssm_parameter.ecs_cluster_name.value
     "ecs_subnets" : var.ecs_subnets
     "ecs_task_alaya_cpu" : var.ecs_task_alaya_cpu
