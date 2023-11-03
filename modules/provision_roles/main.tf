@@ -8,6 +8,8 @@ terraform {
 
 locals {
   athena_workgroup = "${var.site}${var.environment}z1atw${var.project_app_group}${var.project_prefix}"
+  alaya_sync_layer = "${var.site}${var.environment}${var.zone}lay${var.project_app_group}${var.project_prefix}"
+  alaya_utils_layer = "${var.site}${var.environment}${var.zone}lay${var.project_app_group}${var.project_prefix}-utils"
 }
 
 module "base_naming" {
@@ -393,6 +395,28 @@ module "lambda_ecs_status_naming" {
   base_object = module.base_naming
   type        = "lmb"
   purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+}
+
+# lambdas - alayasync
+module "ipl_lambda_async_policy_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "ipl"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncasync"])
+}
+
+module "iro_lambda_async_role_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "iro"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncasync"])
+}
+
+module "lambda_async_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "lmb"
+  purpose     = join("", [var.project_prefix, "-", "alayasyncasync"])
 }
 
 # dynamo table sync
@@ -899,6 +923,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_ecs_start_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_ecs_status_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_async_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${var.site}${var.environment}${var.zone}iro${var.project_prefix}*"
     ]
     sid = "iamroles"
@@ -934,6 +959,7 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_execution_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_ecs_start_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_ecs_status_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_async_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${var.site}${var.environment}${var.zone}ipl${var.project_prefix}*"
     ]
@@ -953,8 +979,13 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_config_loader_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy:*",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:delta_geopy",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:${local.alaya_sync_layer}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:${local.alaya_sync_layer}:*",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:${local.alaya_utils_layer}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:layer:${local.alaya_utils_layer}:*",
       "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310:*",
-      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310"
+      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-Python310",
+      "arn:aws:lambda:${var.region}:336392948345:layer:AWSSDKPandas-*",
     ]
   }
 
@@ -1051,7 +1082,8 @@ data "aws_iam_policy_document" "dev_deploy4" {
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_reduce_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_execution_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_start_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_status_naming.name}"
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_status_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_async_naming.name}",
     ]
   }
 

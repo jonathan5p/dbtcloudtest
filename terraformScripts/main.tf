@@ -214,12 +214,14 @@ module "alayasync" {
     "alayasyncdb" : module.mainprocess.alayasync_db
     "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
     "alayatrigger_key": var.alaya_trigger_key
+    "async_lambda_timeout" : "890"
     "athena_bucket_id": module.athena.bucket_id
     "bucket_id" : module.s3_data_bucket.bucket_id
     "bucket_arn" : module.s3_data_bucket.bucket_arn
     "concurrent_tasks" : var.concurrent_tasks
     "data_key_id" : module.data_key.key_id
     "data_key_arn" : module.data_key.key_arn
+    "dynamo_table_async" : "tbd"
     "ecs_cluster" : data.aws_ssm_parameter.ecs_cluster_name.value
     "ecs_subnets" : var.ecs_subnets
     "ecs_task_alaya_cpu" : var.ecs_task_alaya_cpu
