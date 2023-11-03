@@ -7,7 +7,7 @@ import time
 import traceback
 
 from multiprocessing import Process, Pipe, Manager
-from sync.sync import alaya
+from sync import alaya
 
 logger = logging.getLogger()
 logger.setLevel('INFO')
