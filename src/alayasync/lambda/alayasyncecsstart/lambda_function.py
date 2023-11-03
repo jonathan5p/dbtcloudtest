@@ -97,15 +97,17 @@ def lambda_handler(event, context):
     logger.info(f'Event received: {event}')
     processing_engine = 'lambda_function'
     
-    id = event['value']['id']
-    response = register_table.update_item(
-        Key={'id': id},
-        UpdateExpression="set #p=:p, #e=:e, #t=:t, #pe=:pe",
-        ExpressionAttributeValues={':p': 'IN_PROGRESS', ':e': '', ':t':'', ':pe': processing_engine},
-        ExpressionAttributeNames={"#p": "status", "#e": "error", "#t":"task_id", "#pe": "processing_engine"},
-        ReturnValues="UPDATED_NEW")
+    ids = event['value']['id']
+    
+    for id in ids.split(','):
+        response = register_table.update_item(
+            Key={'id': id},
+            UpdateExpression="set #p=:p, #e=:e, #t=:t, #pe=:pe",
+            ExpressionAttributeValues={':p': 'IN_PROGRESS', ':e': '', ':t':'', ':pe': processing_engine},
+            ExpressionAttributeNames={"#p": "status", "#e": "error", "#t":"task_id", "#pe": "processing_engine"},
+            ReturnValues="UPDATED_NEW")
 
-    logger.info(f'Response from updates: {response}')
+        logger.info(f'Response from updates: {response}')
     
     if processing_engine == 'ecs':
         task_id = run_ecs(event)
@@ -114,12 +116,16 @@ def lambda_handler(event, context):
     
     logger.info(f'Task initiatted with task_id: {task_id}')
 
-    response = register_table.update_item(
-        Key={'id': id},
-        UpdateExpression="set #t=:t, #pe=:pe",
-        ExpressionAttributeValues={':t': task_id, ':pe': processing_engine},
-        ExpressionAttributeNames={"#t": "task_id", "#pe": "processing_engine"},
-        ReturnValues="UPDATED_NEW")
+    
+    for id in ids.split(','):
+        response = register_table.update_item(
+            Key={'id': id},
+            UpdateExpression="set #t=:t, #pe=:pe",
+            ExpressionAttributeValues={':t': task_id, ':pe': processing_engine},
+            ExpressionAttributeNames={"#t": "task_id", "#pe": "processing_engine"},
+            ReturnValues="UPDATED_NEW")
+            
+        logger.info(f'Response from updates: {response}')
 
     return {
         'statusCode': 200,
