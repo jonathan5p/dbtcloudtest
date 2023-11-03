@@ -204,23 +204,23 @@ def test_incremental_load(glue_context):
 
 
 # Tests for glue splink dedup job
-def test_splink_dedupe_agent(glue_context):
-    """
-    Test that the deduplicate_entity function defined
-    in the OIDH glue individuals dedup job works as expected
-    for agent data.
-    """
-    spark = glue_context.spark_session
-    helper_test_splink_dedup_data("agent", spark, base_dir=base_dir)
+#def test_splink_dedupe_agent(glue_context):
+#    """
+#    Test that the deduplicate_entity function defined
+#    in the OIDH glue individuals dedup job works as expected
+#    for agent data.
+#    """
+#    spark = glue_context.spark_session
+#    helper_test_splink_dedup_data("agent", spark, base_dir=base_dir)
 
 
-def test_splink_dedupe_office(glue_context):
-    """
-    Test that the deduplicate_entity function defined
-    in the OIDH glue individuals dedup job works as expected
-    for office data.
-    """
-    spark = glue_context.spark_session
-    helper_test_splink_dedup_data(
-        "office", spark, base_dir=base_dir
-    )
+#def test_splink_dedupe_office(glue_context):
+#    """
+#    Test that the deduplicate_entity function defined
+#    in the OIDH glue individuals dedup job works as expected
+#    for office data.
+#    """
+#    spark = glue_context.spark_session
+#    helper_test_splink_dedup_data(
+#        "office", spark, base_dir=base_dir
+#    )

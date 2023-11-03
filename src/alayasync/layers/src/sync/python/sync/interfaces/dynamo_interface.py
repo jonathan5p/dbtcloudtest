@@ -12,5 +12,5 @@ class DynamoInterface:
     def update_item(self, query_parameters):
         
         response = self.table.update_item(**query_parameters)
-        return None
+        return response
 
