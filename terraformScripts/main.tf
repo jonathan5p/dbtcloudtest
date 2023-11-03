@@ -199,6 +199,10 @@ data "aws_ssm_parameter" "ecs_cluster_name" {
   name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
 }
 
+data "aws_ssm_parameter" "dynamo_async_name" {
+  name = "/parameter/${var.site}/${var.environment}/data/dynamo_async"
+}
+
 module "alayasync" {
   source = "../src/alayasync"
 
@@ -221,7 +225,7 @@ module "alayasync" {
     "concurrent_tasks" : var.concurrent_tasks
     "data_key_id" : module.data_key.key_id
     "data_key_arn" : module.data_key.key_arn
-    "dynamo_table_async" : "tbd"
+    "dynamo_table_async" : data.aws_ssm_parameter.dynamo_async_name.value
     "ecs_cluster" : data.aws_ssm_parameter.ecs_cluster_name.value
     "ecs_subnets" : var.ecs_subnets
     "ecs_task_alaya_cpu" : var.ecs_task_alaya_cpu
