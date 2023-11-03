@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from ..utils.commons import get_key, get_source_file
-from ..interfaces.athena_interface import AthenaInterface
+from .utils.commons import get_key, get_source_file
+from .interfaces.athena_interface import AthenaInterface
 from jsonschema import validate, exceptions
 
 import awswrangler as wr
