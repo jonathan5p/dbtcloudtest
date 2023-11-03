@@ -137,7 +137,7 @@ module "lambda_alaya_sync_ecs_status" {
 
 
 module "lambda_alaya_sync_async" {
-    source = "git::ssh://git@github-gilcamilo.com/gilcamilo/terraform_cicd_pipeline.git//lambdas?ref=v0.0.6"
+    source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.6"
 
     environment         = var.environment
     lambda_name         = "alayasyncasync"
