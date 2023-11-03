@@ -29,10 +29,6 @@ from utils import *
 from ingestjob import unique_by_merge_key, full_load, incremental_load
 
 
-def test_test():
-    assert True, "Test test"
-
-
 @pytest.fixture(scope="module", autouse=True)
 def glue_context():
     sys.argv.append("--JOB_NAME")
@@ -53,6 +49,7 @@ def glue_context():
         "spark.jars",
         f"{similarity_jar_location()},{str(parent_folder)}/jars/delta-core_2.12-2.3.0.jar,{str(parent_folder)}/jars/delta-storage-2.3.0.jar",
     )
+    conf.set("spark.sql.catalogImplementation", "in-memory")
 
     sc = SparkContext.getOrCreate(conf=conf)
     sc.setCheckpointDir(f"{base_dir}/tmp")
@@ -204,23 +201,21 @@ def test_incremental_load(glue_context):
 
 
 # Tests for glue splink dedup job
-#def test_splink_dedupe_agent(glue_context):
-#    """
-#    Test that the deduplicate_entity function defined
-#    in the OIDH glue individuals dedup job works as expected
-#    for agent data.
-#    """
-#    spark = glue_context.spark_session
-#    helper_test_splink_dedup_data("agent", spark, base_dir=base_dir)
+def test_splink_dedupe_agent(glue_context):
+    """
+    Test that the deduplicate_entity function defined
+    in the OIDH glue individuals dedup job works as expected
+    for agent data.
+    """
+    spark = glue_context.spark_session
+    helper_test_splink_dedup_data("agent", spark, base_dir=base_dir)
 
 
-#def test_splink_dedupe_office(glue_context):
-#    """
-#    Test that the deduplicate_entity function defined
-#    in the OIDH glue individuals dedup job works as expected
-#    for office data.
-#    """
-#    spark = glue_context.spark_session
-#    helper_test_splink_dedup_data(
-#        "office", spark, base_dir=base_dir
-#    )
+def test_splink_dedupe_office(glue_context):
+    """
+    Test that the deduplicate_entity function defined
+    in the OIDH glue individuals dedup job works as expected
+    for office data.
+    """
+    spark = glue_context.spark_session
+    helper_test_splink_dedup_data("office", spark, base_dir=base_dir)
