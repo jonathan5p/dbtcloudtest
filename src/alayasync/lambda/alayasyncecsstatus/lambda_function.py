@@ -20,7 +20,7 @@ query_parameters = {
         'ExpressionAttributeNames': expression_attributes_names
     }
 
-start_timeout_retries = 10
+start_timeout_retries = 6
     
 def get_from_dynamo(table, query_parameters):
 
