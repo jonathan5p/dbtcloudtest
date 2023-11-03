@@ -1,0 +1,473 @@
+{
+    "name": "consume_data/dedup_agent_df",
+    "pk": "key",
+    "n_rows": 100,
+    "output_format":"parquet",
+    "fields": {
+        "cluster_id": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "mlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourcemodificationtimestamp": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "datetimeinsertedtoredshift": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "modificationtimestamp": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "jobtitle": {
+            "dynamic": false,
+            "default_value": "SAMPLEJOBTITLE",
+            "type": "string"
+        },
+        "boxnumber": {
+            "dynamic": false,
+            "default_value": "BOX###",
+            "type": "string"
+        },
+        "country": {
+            "dynamic": false,
+            "default_value": "US",
+            "type": "string"
+        },
+        "designation": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "fax": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "fullrolelist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "joindate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "licenseexpirationdate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "loginid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "middleinitial": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "mobilephone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "nameprefix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "namesuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "nickname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "numviolations": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "double"
+        },
+        "officephone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officephoneext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "double"
+        },
+        "pager": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "postalcodeplus4": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "preferredphone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "preferredphoneext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "double"
+        },
+        "privateemail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "rateplugflag": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "boolean"
+        },
+        "reinstatementdate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "rolelist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "streetdirsuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "streetexception": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "streetsuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "terminationdate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "datetime"
+        },
+        "type": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "subtype": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "unitdesignation": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "unitnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "voicemailext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "voicemail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officemlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officename": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "dateadded": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "socialmediablogurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediafacebookurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmedialinkedinurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediatwitterurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediawebsiteurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediayoutubeurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourceinput": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourcerecordkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourcerecordid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourcebusinesspartner": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourcetransport": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "syndicateto": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "systemlocale": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "preferredfirstname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "preferredlastname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "brightconvertedyn": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "boolean"
+        },
+        "associationprimary": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "associationsfulllist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "previewyn": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "boolean"
+        },
+        "streetdirprefix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "dlid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "dlingestionts": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "dllastmodificationts": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "unique_id": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "stateorprovince": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "county": {
+            "dynamic": false,
+            "default_value": "Baltimore County",
+            "type": "string"
+        },
+        "firstname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "fullname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "key": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "lastname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "middlename": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "nationalassociationid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "streetnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "streetname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "city": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "postalcode": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "directphone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "subsystemlocale": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "statelicense": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "statelicensestate": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "status": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "email": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officekey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokerkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokermlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "address": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "uniqueorgid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "tf_postalcode": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "double"
+        },
+        "dt_utc": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "geo_info": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "map"
+        }
+    }
+}

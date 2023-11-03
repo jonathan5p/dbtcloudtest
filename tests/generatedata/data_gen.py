@@ -1,9 +1,8 @@
-import pandas as pd
-import pyarrow as pa
-import pyarrow.dataset as ds
-from deltalake import write_deltalake
-import random
 from datetime import datetime, timedelta
+from deltalake import write_deltalake
+import pandas as pd
+import numpy as np
+import random
 import pathlib
 import json
 import os
@@ -20,6 +19,8 @@ def generate_data_for_column(data_type, num_rows, default_value, dynamic: bool =
     if dynamic:
         if data_type == "int":
             value = [i for i in range(1, num_rows + 1)]
+        elif data_type in ["double", "float"]:
+            value = np.random.uniform(low=0.0, high=50.5, size=num_rows)
         elif data_type == "string":
             value = [f"SAMPLE{i}" for i in range(1, num_rows + 1)]
         elif data_type == "boolean":
@@ -36,6 +37,8 @@ def generate_data_for_column(data_type, num_rows, default_value, dynamic: bool =
                 (start_date + timedelta(days=random.randint(0, 365)))
                 for _ in range(num_rows)
             ]
+        elif data_type == "map":
+            value = [[("key1", "value1"), ("key2", "value2")]] * num_rows
         else:
             value = ["NOT_VALID_TYPE"] * num_rows
 
