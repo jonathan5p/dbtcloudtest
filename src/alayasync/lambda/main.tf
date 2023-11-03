@@ -99,7 +99,9 @@ module "lambda_alaya_sync_ecs_start" {
     tier                = var.tier
     zone                = var.zone
 
-    policy_variables = var.project_objects
+    policy_variables = merge(var.project_objects, {
+      "alaya_sync_async" = module.lambda_alaya_sync_async.lambda_arn
+    })
     
     environment_variables = {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
