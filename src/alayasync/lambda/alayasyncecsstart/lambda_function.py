@@ -95,9 +95,12 @@ def run_lambda(event):
 def lambda_handler(event, context):
     
     logger.info(f'Event received: {event}')
-    processing_engine = 'lambda_function'
+    
+    table = event['value']['table']
+    event['value']['primary_key'] = os.environ[table.upper()]
     
     ids = event['value']['id']
+    processing_engine = event['value']['processing_engine']
     
     for id in ids.split(','):
         response = register_table.update_item(

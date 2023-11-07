@@ -8,6 +8,8 @@ import time
 from boto3.dynamodb.conditions import Key, Attr
 from datetime import datetime
 
+import random
+
 chunk_size = 500
 max_records = 5000
 
@@ -15,7 +17,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 athena_client = boto3.client('athena')
-#athena_bucket = 'aue1d1z1s3boidhoidh-athena'
 athena_bucket = os.environ['ATHENA_BUCKET']
 
 dynamodb = boto3.resource('dynamodb')
@@ -96,6 +97,7 @@ def get_records(database, table, dt_utc, athena_bucket, ids):
 def process_records(dfs, payload):
 
     records = []
+    processing_options = ['lambda_function', 'ecs']
 
     try:
 
@@ -110,9 +112,9 @@ def process_records(dfs, payload):
                 
                 if (num_records > max_records) or (index+1 == df.shape[0]):
 
-                    print(f'n:{num_records}, i:{index}, s:{df.shape[0]}')
-                    print(f'l:{",".join(list_id)}')
-                    tmp = {'id': ",".join(list_id)}
+                    logger.info(f'n:{num_records}, i:{index}, s:{df.shape[0]}')
+                    logger.info(f'l:{",".join(list_id)}')
+                    tmp = {'id': ",".join(list_id), 'processing_engine': random.choice(processing_options)}
                     record = {**payload, **tmp}
                     records.append(record)
                     

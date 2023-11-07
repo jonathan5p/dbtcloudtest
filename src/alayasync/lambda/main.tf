@@ -160,8 +160,8 @@ module "lambda_alaya_sync_async" {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
       "STATE_TABLE" = var.project_objects.dynamo_table_async
       "TIMEOUT" = var.project_objects.async_lambda_timeout
-      "INDIVIDUALS" = var.project_objects.individuals
-      "ORGANIZATIONS" = var.project_objects.organizations
+      #"INDIVIDUALS" = var.project_objects.individuals
+      #"ORGANIZATIONS" = var.project_objects.organizations
     }
 
     layers = [
