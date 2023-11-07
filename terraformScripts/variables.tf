@@ -183,3 +183,9 @@ variable "concurrent_tasks" {
   description = "number of concurrent tasks for alaya sync"
   default     = 18
 }
+
+variable "ttl_days_async" {
+  type        = number
+  description = "number of days to keep lambda execution when running alaya sync"
+  default     = 2
+}
