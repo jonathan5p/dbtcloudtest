@@ -75,8 +75,6 @@ def main_process(conn, request_id, event, main_response):
         logger.info('Starting logic in main_process ...')
 
         # TODO: place here the business/operations logic.
-        
-        event['primary_key'] = os.environ[event['table'].upper()]
         alaya.transfer(event)
 
         logger.info('Finishing logic in main_process ...')
