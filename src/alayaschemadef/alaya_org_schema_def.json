@@ -31,7 +31,6 @@
                 "orgglobalidentifier": {
                     "type": "string",
                     "pattern": "^ORG[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$"
-
                 },
                 "orglinkedglobalidentifier": {
                     "type": [
@@ -101,37 +100,37 @@
                         "null"
                     ]
                 },
-                "orgstreetaddress": {
+                "orgstreetaddress_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "orgcity": {
+                "orgcity_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "orgstate": {
+                "orgstate_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "orgpostalcode": {
+                "orgpostalcode_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "orgcounty": {
+                "orgcounty_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "orgcountry": {
+                "orgcountry_raw": {
                     "type": [
                         "string",
                         "null"
@@ -265,6 +264,12 @@
                 },
                 "orgcanbenative": {
                     "type": "boolean"
+                },
+                "orgstandardizedaddress": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -282,12 +287,12 @@
                 "orgtype",
                 "orgstatus",
                 "orgname",
-                "orgstreetaddress",
-                "orgcity",
-                "orgstate",
-                "orgpostalcode",
-                "orgcounty",
-                "orgcountry",
+                "orgstreetaddress_raw",
+                "orgcity_raw",
+                "orgstate_raw",
+                "orgpostalcode_raw",
+                "orgcounty_raw",
+                "orgcountry_raw",
                 "orgprimaryphone",
                 "orgprimaryphoneext",
                 "orgsecondaryphone",
@@ -309,7 +314,8 @@
                 "orgalternatesourcerecordkey",
                 "sourcesystemcreatedts",
                 "sourcesystemmodts",
-                "orgcanbenative"
+                "orgcanbenative",
+                "orgstandardizedaddress"
             ]
         }
     },

@@ -33,14 +33,14 @@ team_sql_map_query = """
         dof.type||' '||dof.branchtype as orgtype,
         dof.status as orgstatus,
         dtf.name as orgname,
-        upper(dof.address) as orgstreetaddress,
-        upper(dof.city) as orgcity,
-        dof.stateorprovince as orgstate,
-        dof.postalcode as orgpostalcode,
-        dof.county as orgcounty,
+        upper(dof.address) as orgstreetaddress_raw,
+        upper(dof.city) as orgcity_raw,
+        dof.stateorprovince as orgstate_raw,
+        dof.postalcode as orgpostalcode_raw,
+        dof.county as orgcounty_raw,
         CASE WHEN dof.country = 'US' 
         THEN 'USA' 
-        ELSE upper(dof.country) END as orgcountry,
+        ELSE upper(dof.country) END as orgcountry_raw,
         dof.phone as orgprimaryphone,
         int(dof.phoneext) as orgprimaryphoneext,
         dof.phoneother as orgsecondaryphone,
@@ -62,7 +62,8 @@ team_sql_map_query = """
         string(dtf.key) as orgalternatesourcerecordkey,
         string(dof.dateadded) as sourcesystemcreatedtms,
         string(dtf.modificationtimestamp) as sourcesystemmodtms,
-        false as orgcanbenative
+        false as orgcanbenative,
+        dof.geoinfostr as orgstandardizedaddress
     FROM dedup_team_df as dtf
     LEFT JOIN dedup_office_df as dof ON dtf.unique_id__office = dof.key
     """
@@ -85,14 +86,14 @@ office_sql_map_query = """
         dedup_office_df.type||' '||dedup_office_df.branchtype as orgtype,
         dedup_office_df.status as orgstatus,
         dedup_office_df.name as orgname,
-        upper(dedup_office_df.address) as orgstreetaddress,
-        upper(dedup_office_df.city) as orgcity,
-        dedup_office_df.stateorprovince as orgstate,
-        dedup_office_df.postalcode as orgpostalcode,
-        dedup_office_df.county as orgcounty,
+        upper(dedup_office_df.address) as orgstreetaddress_raw,
+        upper(dedup_office_df.city) as orgcity_raw,
+        dedup_office_df.stateorprovince as orgstate_raw,
+        dedup_office_df.postalcode as orgpostalcode_raw,
+        dedup_office_df.county as orgcounty_raw,
         CASE WHEN dedup_office_df.country = 'US' 
         THEN 'USA' 
-        ELSE upper(dedup_office_df.country) END as orgcountry,
+        ELSE upper(dedup_office_df.country) END as orgcountry_raw,
         dedup_office_df.phone as orgprimaryphone,
         int(dedup_office_df.phoneext) as orgprimaryphoneext,
         dedup_office_df.phoneother as orgsecondaryphone,
@@ -114,7 +115,8 @@ office_sql_map_query = """
         string(dedup_office_df.key) as orgalternatesourcerecordkey,
         string(dedup_office_df.dateadded) as sourcesystemcreatedtms,
         string(dedup_office_df.modificationtimestamp) as sourcesystemmodtms,
-        canbenative as orgcanbenative
+        canbenative as orgcanbenative,
+        geoinfostr as orgstandardizedaddress
     FROM dedup_office_df
     """
 
@@ -166,7 +168,26 @@ def generate_canbenative_col(source_df: DataFrame, county_list: list, types: lis
         lambda pair: True if pair in county_list else False, BooleanType()
     )
 
-    native_cond = (check_pairs(F.array(F.col("county"), F.col("stateorprovince")))) & (
+    county_col = F.when(
+        (F.col("county").isNotNull()) & (F.col("county") != ""), F.col("county")
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == 200),
+            F.col("geo_info.county"),
+        ).otherwise("NA")
+    )
+
+    state_col = F.when(
+        (F.col("stateorprovince").isNotNull()) & (F.col("stateorprovince") != ""),
+        F.col("stateorprovince"),
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == 200),
+            F.col("geo_info.state"),
+        ).otherwise("NA")
+    )
+
+    native_cond = (check_pairs(F.array(county_col, state_col))) & (
         F.col("type").isin(types)
     )
 
@@ -328,7 +349,9 @@ if __name__ == "__main__":
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
     team_df = spark.read.format("delta").load(splink_clean_team_data_s3_path)
 
-    office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
+    office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE")).withColumn(
+        "geoinfostr", F.concat_ws("|", F.map_values("geo_info"))
+    )
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     # Run splink model over office and team data
@@ -339,6 +362,7 @@ if __name__ == "__main__":
         splink_model_path="/tmp/office_splink_model.json",
     )
 
+    clusters_df.printSchema()
     # Retrieve native record county rules from s3
     # and generate a county list with all the counties that are Bright Participants
     county_df = ps.read_csv(args["county_info_s3_path"])
@@ -349,7 +373,10 @@ if __name__ == "__main__":
         + bright_participants[["County Name", "State"]].values.tolist()
     )
 
-    native_df = generate_canbenative_col(clusters_df, county_list, office_types)
+    native_df = generate_canbenative_col(clusters_df, county_list, office_types).drop(
+        "geo_info"
+    )
+    clusters_df = clusters_df.drop("geo_info")
     native_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
@@ -374,96 +401,105 @@ if __name__ == "__main__":
     # Generate new organizations table
     organization_changes_df = org_office_df.unionByName(org_team_df)
 
-    # Get current organizations table from Aurora
-    try:
-        conn_ops = {
-            "useConnectionProperties": "True",
-            "dbtable": args["aurora_table"],
-            "connectionName": args["aurora_connection_name"],
-        }
-        cur_org_df = glueContext.create_dynamic_frame_from_options(
-            connection_type="postgresql", connection_options=conn_ops
-        ).toDF()
+    # # Get current organizations table from Aurora
+    # try:
+    #     conn_ops = {
+    #         "useConnectionProperties": "True",
+    #         "dbtable": args["aurora_table"],
+    #         "connectionName": args["aurora_connection_name"],
+    #     }
+    #     cur_org_df = glueContext.create_dynamic_frame_from_options(
+    #         connection_type="postgresql", connection_options=conn_ops
+    #     ).toDF()
 
-        cur_org_df.createOrReplaceTempView("target_df")
-        organization_changes_df.createOrReplaceTempView("changes_df")
+    #     cur_org_df.createOrReplaceTempView("target_df")
+    #     organization_changes_df.createOrReplaceTempView("changes_df")
 
-        join_query = f"select changes_df.*, target_df.orgglobalidentifier from changes_df left join target_df on changes_df.{merge_key}=target_df.{merge_key}"
-        org_changes_df = spark.sql(join_query)
+    #     join_query = f"select changes_df.*, target_df.orgglobalidentifier from changes_df left join target_df on changes_df.{merge_key}=target_df.{merge_key}"
+    #     org_changes_df = spark.sql(join_query)
 
-    except Exception as e:
-        if 'relation "{table}" does not exist'.format(
-            table=args["aurora_table"]
-        ) in str(e):
-            org_changes_df = organization_changes_df.withColumn(
-                "orgglobalidentifier", F.lit(None)
-            )
-        else:
-            print("Aurora Exception: ", str(e))
-            raise e
+    # except Exception as e:
+    #     if 'relation "{table}" does not exist'.format(
+    #         table=args["aurora_table"]
+    #     ) in str(e):
+    #         org_changes_df = organization_changes_df.withColumn(
+    #             "orgglobalidentifier", F.lit(None)
+    #         )
+    #     else:
+    #         print("Aurora Exception: ", str(e))
+    #         raise e
 
-    # Generate global ids and final organizations df
+    org_changes_df = organization_changes_df.withColumn(
+        "orgglobalidentifier", F.lit(None)
+    )
+    # # Generate global ids and final organizations df
     organizations_df = generate_globalids_and_native_records(org_changes_df)
 
     # Write data to S3
     partition_col = "dt_utc"
     partition_value = str(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
+    print("Cluster schema: ")
+    clusters_df.printSchema()
     write_table(
         clusters_df,
         args["data_bucket"],
         "consume_data",
-        "splink_office_cluster",
+        "splink_office_cluster_test",
         args["glue_db"],
         int(args.get("max_records_per_file", 1000)),
         partition_col,
         partition_value,
     )
 
+    print("Team schema: ")
+    dedup_team_df.printSchema()
     write_table(
         dedup_team_df,
         args["data_bucket"],
         "consume_data",
-        "splink_team_cluster",
+        "splink_team_cluster_test",
         args["glue_db"],
         int(args.get("max_records_per_file", 1000)),
         partition_col,
         partition_value,
     )
 
+    print("Org schema: ")
+    organizations_df.printSchema()
     write_table(
         organizations_df,
         args["data_bucket"],
         "consume_data",
-        "organizations",
-        args["alaya_glue_db"],
+        "organizations_test",
+        args["glue_db"],
         int(args.get("max_records_per_file", 1000)),
         partition_col,
         partition_value,
     )
 
-    # Write data to the Aurora PostgreSQL database
-    conn = glueContext.extract_jdbc_conf(args["aurora_connection_name"])
+    # # Write data to the Aurora PostgreSQL database
+    # conn = glueContext.extract_jdbc_conf(args["aurora_connection_name"])
 
-    organizations_df.write.format("jdbc").option("url", conn["fullUrl"]).option(
-        "dbtable", args["aurora_table"]
-    ).option("user", conn["user"]).option("password", conn["password"]).option(
-        "driver", "org.postgresql.Driver"
-    ).mode(
-        "overwrite"
-    ).save()
+    # organizations_df.write.format("jdbc").option("url", conn["fullUrl"]).option(
+    #     "dbtable", args["aurora_table"]
+    # ).option("user", conn["user"]).option("password", conn["password"]).option(
+    #     "driver", "org.postgresql.Driver"
+    # ).mode(
+    #     "overwrite"
+    # ).save()
 
-    # Trigger update alaya process
-    update_alaya_payload = {
-        "batch": partition_value,
-        "table": "organizations",
-        "database": args["alaya_glue_db"],
-    }
+    # # Trigger update alaya process
+    # update_alaya_payload = {
+    #     "batch": partition_value,
+    #     "table": "organizations",
+    #     "database": args["alaya_glue_db"],
+    # }
 
-    s3.put_object(
-        Bucket=args["data_bucket"],
-        Body=json.dumps(update_alaya_payload),
-        Key=f"{args['alaya_trigger_key']}/organizations_{partition_value}.json",
-    )
+    # s3.put_object(
+    #     Bucket=args["data_bucket"],
+    #     Body=json.dumps(update_alaya_payload),
+    #     Key=f"{args['alaya_trigger_key']}/organizations_{partition_value}.json",
+    # )
 
     job.commit()
