@@ -112,6 +112,7 @@ module "lambda_alaya_sync_ecs_start" {
       "INDIVIDUALS" = var.project_objects.individuals
       "ORGANIZATIONS" = var.project_objects.organizations
       "STATE_TABLE" = var.project_objects.dynamo_table_async
+      "TTL_DAYS" = var.project_objects.ttl_days_async
   }
 }
 
@@ -160,8 +161,7 @@ module "lambda_alaya_sync_async" {
       "OIDH_TABLE" = var.project_objects.dynamo_table_register
       "STATE_TABLE" = var.project_objects.dynamo_table_async
       "TIMEOUT" = var.project_objects.async_lambda_timeout
-      #"INDIVIDUALS" = var.project_objects.individuals
-      #"ORGANIZATIONS" = var.project_objects.organizations
+      "TTL_DAYS" = var.project_objects.ttl_days_async
     }
 
     layers = [

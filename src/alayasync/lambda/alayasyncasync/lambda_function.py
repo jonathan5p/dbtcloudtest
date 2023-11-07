@@ -6,6 +6,7 @@ import sys
 import time
 import traceback
 
+from datetime import datetime, timedelta
 from multiprocessing import Process, Pipe, Manager
 from sync import alaya
 
@@ -14,16 +15,22 @@ logger.setLevel('INFO')
 
 STATE_TABLE = os.getenv('STATE_TABLE')
 TIMEOUT = os.getenv('TIMEOUT')
+ttl_days = int(os.environ['TTL_DAYS'])
 
 dynamo_resource = boto3.resource('dynamodb')
 table = dynamo_resource.Table(STATE_TABLE)
 
+def get_ttl(days):
+
+    return int((datetime.fromtimestamp(int(time.time())) + timedelta(days=days)).timestamp())
+
 def put_item(request_id, state, payload):
     response = table.put_item(
         Item={
+            'payload': payload,
             'request_id': request_id,
             'state': state,
-            'payload': payload
+            'ttl': get_ttl(ttl_days)
         },
     )
 

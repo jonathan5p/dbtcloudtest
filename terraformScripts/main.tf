@@ -230,6 +230,7 @@ module "alayasync" {
     "ecs_subnets" : var.ecs_subnets
     "ecs_task_alaya_cpu" : var.ecs_task_alaya_cpu
     "ecs_task_alaya_memory" : var.ecs_task_alaya_memory
+    "ttl_days_async" : var.ttl_days_async
   }
 }
 

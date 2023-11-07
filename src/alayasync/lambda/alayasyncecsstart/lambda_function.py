@@ -2,6 +2,9 @@ import boto3
 import json
 import logging
 import os
+import time
+
+from datetime import datetime, timedelta
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -17,13 +20,20 @@ subnet_ids = os.environ['ECS_SUBNETS']
 function_name = os.environ['FUNCTION_NAME']
 
 lambda_client = boto3.client('lambda')
+ttl_days = int(os.environ['TTL_DAYS'])
+
+def get_ttl(days):
+
+    return int((datetime.fromtimestamp(int(time.time())) + timedelta(days=days)).timestamp())
+
 
 def put_item(request_id, state, payload):
     response = async_table.put_item(
         Item={
+            'payload': payload,
             'request_id': request_id,
             'state': state,
-            'payload': payload
+            'ttl': get_ttl(ttl_days)
         },
         ConditionExpression='attribute_not_exists(request_id)'
     )
