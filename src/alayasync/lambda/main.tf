@@ -146,6 +146,7 @@ module "lambda_alaya_sync_async" {
     environment         = var.environment
     lambda_name         = "alayasyncasync"
     lambda_path         = "../src/alayasync/lambda"
+    memory_size         = 512
     project_app_group   = var.project_app_group
     project_ledger      = var.project_ledger
     project_prefix      = var.project_prefix

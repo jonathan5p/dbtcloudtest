@@ -32,8 +32,14 @@ def process_records(dfs, source_file, primary_key, event, id, file_name):
             print(f'Sending to Alaya')
             records += df.shape[0]
 
-            df['status'] = df.drop(columns=['dt_utc']).apply(send_to_alaya, args=(schema,), axis = 1)
-            #df['status'] = df.apply(send_to_cloudwatch, axis = 1)
+            if not df.empty:
+
+                df['status'] = df.drop(columns=['dt_utc']).apply(send_to_alaya, args=(schema,), axis = 1)
+                #df['status'] = df.apply(send_to_cloudwatch, axis = 1)
+            
+            else:
+                df['status'] = ""
+            
             df['source_file'] = source_file
 
             succeeded_df = pd.concat([succeeded_df, df.loc[df['status'] == "True"]])
@@ -187,19 +193,19 @@ def transfer(event):
 
         if not succeeded_df.empty:
             upload_parquet(bucket, succeeded_key, succeeded_df)
+
+            query_id = AthenaInterface().run_query(f"""
+                Alter table {database}.{succeeded_table} 
+                    add if not exists partition (dt_utc='{batch}', source_file = '{source_file}'); """,
+                    "add_partition", "Error adding partitions for succeeded table."    
+                )
         
         if not failed_df.empty:
             upload_parquet(bucket, failed_key, failed_df)
 
-        query_id = AthenaInterface().run_query(f"""
-            Alter table {database}.{succeeded_table} 
-                add if not exists partition (dt_utc='{batch}', source_file = '{source_file}'); """,
-            "add_partition", "Error adding partitions for succeeded table."    
-        )
-
-        query_id = AthenaInterface().run_query(f"""
-            Alter table {database}.{failed_table} 
-                add if not exists partition (dt_utc='{batch}', source_file = '{source_file}'); """,
-            "add_partition", "Error adding partitions for succeeded table."    
-        )
+            query_id = AthenaInterface().run_query(f"""
+                Alter table {database}.{failed_table} 
+                    add if not exists partition (dt_utc='{batch}', source_file = '{source_file}'); """,
+                    "add_partition", "Error adding partitions for succeeded table."    
+                )
 
