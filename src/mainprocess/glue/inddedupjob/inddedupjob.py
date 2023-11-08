@@ -4,7 +4,7 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, SparkSession
 from awsglue.dynamicframe import DynamicFrame
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import *
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 from awsglue.context import GlueContext
@@ -117,7 +117,7 @@ def generate_canbenative_col(source_df: DataFrame, county_list: list, types: lis
         (F.col("county").isNotNull()) & (F.col("county") != ""), F.col("county")
     ).otherwise(
         F.when(
-            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == '200'),
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
             F.col("geo_info.county"),
         ).otherwise("NA")
     )
@@ -127,7 +127,7 @@ def generate_canbenative_col(source_df: DataFrame, county_list: list, types: lis
         F.col("stateorprovince"),
     ).otherwise(
         F.when(
-            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == '200'),
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
             F.col("geo_info.state"),
         ).otherwise("NA")
     )
@@ -289,11 +289,15 @@ if __name__ == "__main__":
     # Read clean agent data and enrich office data
     splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
     clean_df = spark.read.format("delta").load(splink_clean_data_s3_path)
-    clean_df = clean_df.withColumn(
-        "geoinfostr", F.concat_ws("|", F.map_values("geo_info"))
-    )
 
-    clean_df.printSchema()
+    clean_df = (
+        clean_df.withColumn(
+            "value_maps",
+            F.expr(f"transform(map_values(geo_info), x -> coalesce(x, 'Null'))"),
+        )
+        .withColumn("geoinfostr", F.concat_ws("|", "value_maps"))
+        .drop("value_maps")
+    )
 
     # Run splink model over office and team data
     clusters_df = deduplicate_entity(
@@ -302,8 +306,6 @@ if __name__ == "__main__":
         spark=spark,
         splink_model_path="/tmp/agent_splink_model.json",
     )
-
-    clusters_df.printSchema()
 
     # Retrieve native record county rules from s3
     # and generate a county list with all the counties that are Bright Participants
@@ -325,36 +327,32 @@ if __name__ == "__main__":
     individuals_changes_df = spark.sql(sql_map_query)
 
     # Get current Individuals table from Aurora
-    # try:
-    #     conn_ops = {
-    #         "useConnectionProperties": "True",
-    #         "dbtable": args["aurora_table"],
-    #         "connectionName": args["aurora_connection_name"],
-    #     }
-    #     cur_ind_df = glueContext.create_dynamic_frame_from_options(
-    #         connection_type="postgresql", connection_options=conn_ops
-    #     ).toDF()
+    try:
+        conn_ops = {
+            "useConnectionProperties": "True",
+            "dbtable": args["aurora_table"],
+            "connectionName": args["aurora_connection_name"],
+        }
+        cur_ind_df = glueContext.create_dynamic_frame_from_options(
+            connection_type="postgresql", connection_options=conn_ops
+        ).toDF()
 
-    #     cur_ind_df.createOrReplaceTempView("target_df")
-    #     individuals_changes_df.createOrReplaceTempView("changes_df")
+        cur_ind_df.createOrReplaceTempView("target_df")
+        individuals_changes_df.createOrReplaceTempView("changes_df")
 
-    #     join_query = f"select changes_df.*, target_df.indglobalidentifier from changes_df left join target_df on changes_df.{merge_key}=target_df.{merge_key}"
-    #     ind_changes_df = spark.sql(join_query)
+        join_query = f"select changes_df.*, target_df.indglobalidentifier from changes_df left join target_df on changes_df.{merge_key}=target_df.{merge_key}"
+        ind_changes_df = spark.sql(join_query)
 
-    # except Exception as e:
-    #     if 'relation "{table}" does not exist'.format(
-    #         table=args["aurora_table"]
-    #     ) in str(e):
-    #         ind_changes_df = individuals_changes_df.withColumn(
-    #             "indglobalidentifier", F.lit(None)
-    #         )
-    #     else:
-    #         print("Aurora Exception: ", str(e))
-    #         raise e
-
-    ind_changes_df = individuals_changes_df.withColumn(
-        "indglobalidentifier", F.lit(None)
-    )
+    except Exception as e:
+        if 'relation "{table}" does not exist'.format(
+            table=args["aurora_table"]
+        ) in str(e):
+            ind_changes_df = individuals_changes_df.withColumn(
+                "indglobalidentifier", F.lit(None)
+            )
+        else:
+            print("Aurora Exception: ", str(e))
+            raise e
 
     #  Generate global ids and final individuals df
     individuals_df = generate_globalids_and_native_records(ind_changes_df)
@@ -367,7 +365,7 @@ if __name__ == "__main__":
         clusters_df,
         args["data_bucket"],
         "consume_data",
-        "splink_agent_cluster_test",
+        "splink_agent_cluster",
         args["glue_db"],
         int(args.get("max_records_per_file", 1000)),
         partition_col,
@@ -378,35 +376,35 @@ if __name__ == "__main__":
         individuals_df,
         args["data_bucket"],
         "consume_data",
-        "individuals_test",
-        args["glue_db"],
+        "individuals",
+        args["alaya_glue_db"],
         int(args.get("max_records_per_file", 1000)),
         partition_col,
         partition_value,
     )
 
-    # # Write data to the Aurora PostgreSQL database
-    # conn = glueContext.extract_jdbc_conf(args["aurora_connection_name"])
+    # Write data to the Aurora PostgreSQL database
+    conn = glueContext.extract_jdbc_conf(args["aurora_connection_name"])
 
-    # individuals_df.write.format("jdbc").option("url", conn["fullUrl"]).option(
-    #     "dbtable", args["aurora_table"]
-    # ).option("user", conn["user"]).option("password", conn["password"]).option(
-    #     "driver", "org.postgresql.Driver"
-    # ).mode(
-    #     "overwrite"
-    # ).save()
+    individuals_df.write.format("jdbc").option("url", conn["fullUrl"]).option(
+        "dbtable", args["aurora_table"]
+    ).option("user", conn["user"]).option("password", conn["password"]).option(
+        "driver", "org.postgresql.Driver"
+    ).mode(
+        "overwrite"
+    ).save()
 
-    # # Trigger update alaya process
-    # update_alaya_payload = {
-    #     "batch": partition_value,
-    #     "table": "individuals",
-    #     "database": args["alaya_glue_db"],
-    # }
+    # Trigger update alaya process
+    update_alaya_payload = {
+        "batch": partition_value,
+        "table": "individuals",
+        "database": args["alaya_glue_db"],
+    }
 
-    # s3.put_object(
-    #     Bucket=args["data_bucket"],
-    #     Body=json.dumps(update_alaya_payload),
-    #     Key=f"{args['alaya_trigger_key']}/individuals_{partition_value}.json",
-    # )
+    s3.put_object(
+        Bucket=args["data_bucket"],
+        Body=json.dumps(update_alaya_payload),
+        Key=f"{args['alaya_trigger_key']}/individuals_{partition_value}.json",
+    )
 
     job.commit()
