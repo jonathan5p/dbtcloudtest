@@ -181,7 +181,7 @@ variable "ecs_subnets" {
 variable "concurrent_tasks" {
   type        = number
   description = "number of concurrent tasks for alaya sync"
-  default     = 18
+  default     = 25
 }
 
 variable "ttl_days_async" {
