@@ -268,7 +268,8 @@
           "user_mentions": "${user_mentions}",
           "executionArn.$": "$$.Execution.Id",
           "executionName.$": "$$.Execution.Name",
-          "sfnName.$": "$$.StateMachine.Name"
+          "sfnName.$": "$$.StateMachine.Name",
+          "stateName.$": "$$.State.Name"
         }
       }
     }
