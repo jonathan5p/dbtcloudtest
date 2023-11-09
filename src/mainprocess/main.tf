@@ -79,6 +79,7 @@ module "stepfunction" {
     "config_loader_lambda" = module.lambda_resources.functions_mapping.config_loader.lambda_arn
     "data_key_arn"         = var.project_objects.data_key_arn
     "trigger_bucket"       = var.project_objects.artifacts_bucket_id
+    "chatbot_lambda"       = var.project_objects.lambda_chatbot_arn
   }
 }
 

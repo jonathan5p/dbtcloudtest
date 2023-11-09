@@ -153,6 +153,10 @@ resource "aws_ssm_parameter" "max_records_param" {
 # Main process
 #------------------------------------------------------------------------------
 
+data "aws_ssm_parameter" "lambda_chatbot_arn" {
+  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/lambda_chatbot_function_arn"
+}
+
 module "mainprocess" {
   source = "../src/mainprocess"
 
@@ -187,7 +191,8 @@ module "mainprocess" {
     "aurora_min_capacity"                = var.aurora_min_capacity
     "max_records_per_file"               = var.glue_max_records_per_file
     "alaya_trigger_key"                  = var.alaya_trigger_key
-    "glue_geosvc_subnetid" = var.glue_geosvc_subnetid
+    "glue_geosvc_subnetid"               = var.glue_geosvc_subnetid
+    "lambda_chatbot_arn"                 = data.aws_ssm_parameter.lambda_chatbot_arn.value
   }
 }
 
@@ -217,9 +222,9 @@ module "alayasync" {
   project_objects = {
     "alayasyncdb" : module.mainprocess.alayasync_db
     "alayasyncdb_path" : module.mainprocess.alayasyncdb_path
-    "alayatrigger_key": var.alaya_trigger_key
+    "alayatrigger_key" : var.alaya_trigger_key
     "async_lambda_timeout" : "890"
-    "athena_bucket_id": module.athena.bucket_id
+    "athena_bucket_id" : module.athena.bucket_id
     "bucket_id" : module.s3_data_bucket.bucket_id
     "bucket_arn" : module.s3_data_bucket.bucket_arn
     "concurrent_tasks" : var.concurrent_tasks
