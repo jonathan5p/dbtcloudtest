@@ -21,7 +21,7 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "FailedState"
+          "Next": "SendNotificactions"
         }
       ],
       "Type": "Task",
@@ -78,7 +78,7 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "FailedState"
+          "Next": "SendNotificactions"
         }
       ]
     },
@@ -140,7 +140,7 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "FailedState"
+          "Next": "SendNotificactions"
         }
       ]
     },
@@ -161,7 +161,7 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "FailedState"
+          "Next": "SendNotificactions"
         }
       ],
       "Type": "Task",
@@ -238,14 +238,38 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "FailedState"
+          "Next": "SendNotificactions"
         }
       ]
     },
-    "FailedState": {
-      "Type": "Fail",
-      "Cause": "Level_Error",
-      "Error": "Level_Error"
+    "SendNotificactions": {
+      "Next": "SendNotificactions",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ClientExecutionTimeoutException",
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException"
+          ],
+          "IntervalSeconds": 0,
+          "MaxAttempts": 2,
+          "BackoffRate": 2
+        }
+      ],
+      "Type": "Task",
+      "OutputPath": "$.Payload",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${chatbot_lambda}",
+        "Payload": {
+          "state_input.$": "$",
+          "format": "stepfunction",
+          "executionArn.$": "$$.Execution.Id",
+          "executionName.$": "$$.Execution.Name",
+          "sfnName.$": "$$.StateMachine.Name"
+        }
+      }
     }
   }
 }
