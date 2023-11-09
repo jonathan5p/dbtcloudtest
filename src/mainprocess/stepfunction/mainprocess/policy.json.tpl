@@ -10,7 +10,7 @@
         "${config_loader_lambda}",
         "${config_loader_lambda}:*",
         "${chatbot_lambda}",
-        "${chatbot_lambda}:*",
+        "${chatbot_lambda}:*"
       ]
     },
     {
