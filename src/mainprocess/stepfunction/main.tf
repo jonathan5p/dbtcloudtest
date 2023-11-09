@@ -1,3 +1,7 @@
+locals {
+  user_mentions = jsondecode(file("../src/mainprocess/stepfunction/mainprocess/user_mentions.json"))
+}
+
 module "stepfunction" {
   source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=v0.1.0"
 
@@ -11,7 +15,7 @@ module "stepfunction" {
   tier              = var.tier
   zone              = var.zone
 
-  policy_variables = var.policy_variables
+  policy_variables = merge(var.policy_variables, local.user_mentions)
 }
 
 # Cron trigger execution role
