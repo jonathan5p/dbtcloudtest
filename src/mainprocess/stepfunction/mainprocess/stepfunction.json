@@ -262,7 +262,13 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "Parameters": {
         "FunctionName": "${chatbot_lambda}",
-        "Payload.$": "$"
+        "Payload": {
+          "state_input.$": "$",
+          "format": "stepfunction",
+          "executionArn.$": "$$.Execution.Id",
+          "executionName.$": "$$.Execution.Name",
+          "sfnName.$": "$$.StateMachine.Name"
+        }
       }
     }
   }
