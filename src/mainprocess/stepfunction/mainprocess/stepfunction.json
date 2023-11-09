@@ -265,6 +265,7 @@
         "Payload": {
           "state_input.$": "$",
           "format": "stepfunction",
+          "user_mentions": "${user_mentions}",
           "executionArn.$": "$$.Execution.Id",
           "executionName.$": "$$.Execution.Name",
           "sfnName.$": "$$.StateMachine.Name"
