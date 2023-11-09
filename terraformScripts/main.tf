@@ -154,7 +154,7 @@ resource "aws_ssm_parameter" "max_records_param" {
 #------------------------------------------------------------------------------
 
 data "aws_ssm_parameter" "lambda_chatbot_arn" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/lambda_chatbot_function_arn"
+  name = "/parameter/${var.site}/${var.environment}/data/lambda_chatbot_function_arn"
 }
 
 module "mainprocess" {
