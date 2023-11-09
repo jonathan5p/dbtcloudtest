@@ -4,7 +4,7 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql import DataFrame, SparkSession
 from awsglue.dynamicframe import DynamicFrame
-from pyspark.sql.types import BooleanType
+from pyspark.sql.types import *
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 from awsglue.context import GlueContext
@@ -29,14 +29,14 @@ SELECT
     cs.middleinitial as indmiddleinitial,
     cs.fullname as indfullname,
     cs.preferredfirstname||' '||cs.preferredlastname as indalternatename,
-    upper(cs.address) as indstreetaddress,
-    upper(cs.city) as indaddresscity,
-    cs.stateorprovince as indaddressstate,
-    cs.postalcode as indaddresspostalcode,
-    odf.county as indaddresscounty,
+    upper(cs.address) as indstreetaddress_raw,
+    upper(cs.city) as indaddresscity_raw,
+    cs.stateorprovince as indaddressstate_raw,
+    cs.postalcode as indaddresspostalcode_raw,
+    cs.county as indaddresscounty_raw,
     CASE WHEN cs.country = 'US' 
     THEN 'USA' 
-    ELSE upper(cs.country) END as indaddresscountry,
+    ELSE upper(cs.country) END as indaddresscountry_raw,
     cs.email as indpublicemail,
     cs.privateemail as indprivateemail,
     cs.socialmediawebsiteurlorid as indurl,
@@ -61,9 +61,9 @@ SELECT
     '' as indexpirationdate,
     string(cs.dlingestionts) as indcreatedts,
     string(current_timestamp()) as indlastmodifiedts,
-    canbenative as indcanbenative
+    canbenative as indcanbenative,
+    geoinfostr as indstandardizedaddress
 FROM ind_clusters_df as cs
-LEFT JOIN office_df as odf ON cs.officekey = odf.key
 """
 
 # Query that gets native records for each cluster
@@ -113,7 +113,26 @@ def generate_canbenative_col(source_df: DataFrame, county_list: list, types: lis
         lambda pair: True if pair in county_list else False, BooleanType()
     )
 
-    native_cond = (check_pairs(F.array(F.col("county"), F.col("stateorprovince")))) & (
+    county_col = F.when(
+        (F.col("county").isNotNull()) & (F.col("county") != ""), F.col("county")
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
+            F.col("geo_info.county"),
+        ).otherwise("NA")
+    )
+
+    state_col = F.when(
+        (F.col("stateorprovince").isNotNull()) & (F.col("stateorprovince") != ""),
+        F.col("stateorprovince"),
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
+            F.col("geo_info.state"),
+        ).otherwise("NA")
+    )
+
+    native_cond = (check_pairs(F.array(county_col, state_col))) & (
         F.col("type").isin(types)
     )
 
@@ -271,9 +290,14 @@ if __name__ == "__main__":
     splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
     clean_df = spark.read.format("delta").load(splink_clean_data_s3_path)
 
-    office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
-    office_df = spark.read.format("delta").load(office_data_s3_path)
-    office_df.createOrReplaceTempView("office_df")
+    clean_df = (
+        clean_df.withColumn(
+            "value_maps",
+            F.expr(f"transform(map_values(geo_info), x -> coalesce(x, 'Null'))"),
+        )
+        .withColumn("geoinfostr", F.concat_ws("|", "value_maps"))
+        .drop("value_maps")
+    )
 
     # Run splink model over office and team data
     clusters_df = deduplicate_entity(
@@ -283,8 +307,8 @@ if __name__ == "__main__":
         splink_model_path="/tmp/agent_splink_model.json",
     )
 
-    # # Retrieve native record county rules from s3
-    # # and generate a county list with all the counties that are Bright Participants
+    # Retrieve native record county rules from s3
+    # and generate a county list with all the counties that are Bright Participants
     county_df = ps.read_csv(args["county_info_s3_path"])
 
     bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
@@ -293,7 +317,10 @@ if __name__ == "__main__":
         + bright_participants[["County Name", "State"]].values.tolist()
     )
 
-    native_df = generate_canbenative_col(clusters_df, county_list, agent_types)
+    native_df = generate_canbenative_col(clusters_df, county_list, agent_types).drop(
+        "geo_info"
+    )
+    clusters_df = clusters_df.drop("geo_info")
     native_df.createOrReplaceTempView("ind_clusters_df")
 
     # Generate new individuals table
@@ -327,7 +354,7 @@ if __name__ == "__main__":
             print("Aurora Exception: ", str(e))
             raise e
 
-    # # Generate global ids and final individuals df
+    #  Generate global ids and final individuals df
     individuals_df = generate_globalids_and_native_records(ind_changes_df)
 
     # Write data to S3

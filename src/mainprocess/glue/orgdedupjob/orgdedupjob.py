@@ -3,7 +3,7 @@ from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql.window import Window
-from pyspark.sql.types import BooleanType, NullType
+from pyspark.sql.types import *
 import pyspark.sql.functions as F
 from awsglue.context import GlueContext
 from awsglue.dynamicframe import DynamicFrame
@@ -33,14 +33,14 @@ team_sql_map_query = """
         dof.type||' '||dof.branchtype as orgtype,
         dof.status as orgstatus,
         dtf.name as orgname,
-        upper(dof.address) as orgstreetaddress,
-        upper(dof.city) as orgcity,
-        dof.stateorprovince as orgstate,
-        dof.postalcode as orgpostalcode,
-        dof.county as orgcounty,
+        upper(dof.address) as orgstreetaddress_raw,
+        upper(dof.city) as orgcity_raw,
+        dof.stateorprovince as orgstate_raw,
+        dof.postalcode as orgpostalcode_raw,
+        dof.county as orgcounty_raw,
         CASE WHEN dof.country = 'US' 
         THEN 'USA' 
-        ELSE upper(dof.country) END as orgcountry,
+        ELSE upper(dof.country) END as orgcountry_raw,
         dof.phone as orgprimaryphone,
         int(dof.phoneext) as orgprimaryphoneext,
         dof.phoneother as orgsecondaryphone,
@@ -62,7 +62,8 @@ team_sql_map_query = """
         string(dtf.key) as orgalternatesourcerecordkey,
         string(dof.dateadded) as sourcesystemcreatedtms,
         string(dtf.modificationtimestamp) as sourcesystemmodtms,
-        false as orgcanbenative
+        false as orgcanbenative,
+        dof.geoinfostr as orgstandardizedaddress
     FROM dedup_team_df as dtf
     LEFT JOIN dedup_office_df as dof ON dtf.unique_id__office = dof.key
     """
@@ -85,14 +86,14 @@ office_sql_map_query = """
         dedup_office_df.type||' '||dedup_office_df.branchtype as orgtype,
         dedup_office_df.status as orgstatus,
         dedup_office_df.name as orgname,
-        upper(dedup_office_df.address) as orgstreetaddress,
-        upper(dedup_office_df.city) as orgcity,
-        dedup_office_df.stateorprovince as orgstate,
-        dedup_office_df.postalcode as orgpostalcode,
-        dedup_office_df.county as orgcounty,
+        upper(dedup_office_df.address) as orgstreetaddress_raw,
+        upper(dedup_office_df.city) as orgcity_raw,
+        dedup_office_df.stateorprovince as orgstate_raw,
+        dedup_office_df.postalcode as orgpostalcode_raw,
+        dedup_office_df.county as orgcounty_raw,
         CASE WHEN dedup_office_df.country = 'US' 
         THEN 'USA' 
-        ELSE upper(dedup_office_df.country) END as orgcountry,
+        ELSE upper(dedup_office_df.country) END as orgcountry_raw,
         dedup_office_df.phone as orgprimaryphone,
         int(dedup_office_df.phoneext) as orgprimaryphoneext,
         dedup_office_df.phoneother as orgsecondaryphone,
@@ -114,7 +115,8 @@ office_sql_map_query = """
         string(dedup_office_df.key) as orgalternatesourcerecordkey,
         string(dedup_office_df.dateadded) as sourcesystemcreatedtms,
         string(dedup_office_df.modificationtimestamp) as sourcesystemmodtms,
-        canbenative as orgcanbenative
+        canbenative as orgcanbenative,
+        geoinfostr as orgstandardizedaddress
     FROM dedup_office_df
     """
 
@@ -166,7 +168,26 @@ def generate_canbenative_col(source_df: DataFrame, county_list: list, types: lis
         lambda pair: True if pair in county_list else False, BooleanType()
     )
 
-    native_cond = (check_pairs(F.array(F.col("county"), F.col("stateorprovince")))) & (
+    county_col = F.when(
+        (F.col("county").isNotNull()) & (F.col("county") != ""), F.col("county")
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
+            F.col("geo_info.county"),
+        ).otherwise("NA")
+    )
+
+    state_col = F.when(
+        (F.col("stateorprovince").isNotNull()) & (F.col("stateorprovince") != ""),
+        F.col("stateorprovince"),
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
+            F.col("geo_info.state"),
+        ).otherwise("NA")
+    )
+
+    native_cond = (check_pairs(F.array(county_col, state_col))) & (
         F.col("type").isin(types)
     )
 
@@ -328,7 +349,15 @@ if __name__ == "__main__":
     splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
     team_df = spark.read.format("delta").load(splink_clean_team_data_s3_path)
 
-    office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
+    office_df = (
+        office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
+        .withColumn(
+            "value_maps",
+            F.expr(f"transform(map_values(geo_info), x -> coalesce(x, 'Null'))"),
+        )
+        .withColumn("geoinfostr", F.concat_ws("|", "value_maps"))
+        .drop("value_maps")
+    )
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     # Run splink model over office and team data
@@ -339,6 +368,7 @@ if __name__ == "__main__":
         splink_model_path="/tmp/office_splink_model.json",
     )
 
+    clusters_df.printSchema()
     # Retrieve native record county rules from s3
     # and generate a county list with all the counties that are Bright Participants
     county_df = ps.read_csv(args["county_info_s3_path"])
@@ -349,7 +379,10 @@ if __name__ == "__main__":
         + bright_participants[["County Name", "State"]].values.tolist()
     )
 
-    native_df = generate_canbenative_col(clusters_df, county_list, office_types)
+    native_df = generate_canbenative_col(clusters_df, county_list, office_types).drop(
+        "geo_info"
+    )
+    clusters_df = clusters_df.drop("geo_info")
     native_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
@@ -402,7 +435,10 @@ if __name__ == "__main__":
             print("Aurora Exception: ", str(e))
             raise e
 
-    # Generate global ids and final organizations df
+    org_changes_df = organization_changes_df.withColumn(
+        "orgglobalidentifier", F.lit(None)
+    )
+    # # Generate global ids and final organizations df
     organizations_df = generate_globalids_and_native_records(org_changes_df)
 
     # Write data to S3
@@ -436,7 +472,7 @@ if __name__ == "__main__":
         args["data_bucket"],
         "consume_data",
         "organizations",
-        args["alaya_glue_db"],
+        args["glue_db"],
         int(args.get("max_records_per_file", 1000)),
         partition_col,
         partition_value,

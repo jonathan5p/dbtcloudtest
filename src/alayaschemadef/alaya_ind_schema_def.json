@@ -92,37 +92,37 @@
                         "null"
                     ]
                 },
-                "indstreetaddress": {
+                "indstreetaddress_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "indaddresscity": {
+                "indaddresscity_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "indaddressstate": {
+                "indaddressstate_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "indaddresspostalcode": {
+                "indaddresspostalcode_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "indaddresscounty": {
+                "indaddresscounty_raw": {
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "indaddresscountry": {
+                "indaddresscountry_raw": {
                     "type": [
                         "string",
                         "null"
@@ -264,6 +264,12 @@
                 },
                 "indcanbenative": {
                     "type": "boolean"
+                },
+                "indstandardizedaddress": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -280,12 +286,12 @@
                 "indmiddleinitial",
                 "indfullname",
                 "indalternatename",
-                "indstreetaddress",
-                "indaddresscity",
-                "indaddressstate",
-                "indaddresspostalcode",
-                "indaddresscounty",
-                "indaddresscountry",
+                "indstreetaddress_raw",
+                "indaddresscity_raw",
+                "indaddressstate_raw",
+                "indaddresspostalcode_raw",
+                "indaddresscounty_raw",
+                "indaddresscountry_raw",
                 "indpublicemail",
                 "indprivateemail",
                 "indprimaryphone",
@@ -306,7 +312,8 @@
                 "indexpirationdate",
                 "indcreatedts",
                 "indlastmodifiedts",
-                "indcanbenative"
+                "indcanbenative",
+                "indstandardizedaddress"
             ],
             "additionalProperties": false
         }

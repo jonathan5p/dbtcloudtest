@@ -33,9 +33,11 @@ def get_geo_info(address, city, county, state, postalcode, country="US"):
 
     if address != None:
         try:
-            response = requests.get(api_uri, params=payload)
+            response = requests.get(api_uri, params=payload, timeout=15)
             if response.status_code == requests.codes.ok:
-                output = response.json()
+                data = response.json()
+                data["statusCode"] = 200
+                output = data
             else:
                 output = {
                     "statusCode": response.status_code,
