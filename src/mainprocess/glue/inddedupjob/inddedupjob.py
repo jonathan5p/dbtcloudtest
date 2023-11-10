@@ -378,7 +378,7 @@ if __name__ == "__main__":
         "consume_data",
         "individuals",
         args["alaya_glue_db"],
-        int(args.get("max_records_per_file", 1000)),
+        int(args.get("max_records_per_file", 5000)),
         partition_col,
         partition_value,
     )
