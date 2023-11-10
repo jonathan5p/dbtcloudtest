@@ -312,8 +312,8 @@
                 "orgsourcetransport",
                 "orgtradingasname",
                 "orgalternatesourcerecordkey",
-                "sourcesystemcreatedts",
-                "sourcesystemmodts",
+                "sourcesystemcreatedtms",
+                "sourcesystemmodtms",
                 "orgcanbenative",
                 "orgstandardizedaddress"
             ]
