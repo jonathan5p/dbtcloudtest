@@ -176,7 +176,7 @@
     },
     "deduplication-jobs": {
       "Type": "Parallel",
-      "End": true,
+      "Next": "SendNotificactions",
       "Branches": [
         {
           "StartAt": "individuals",
