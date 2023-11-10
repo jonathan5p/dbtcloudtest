@@ -78,12 +78,12 @@ def process_records(dfs, source_file, primary_key, event, id, file_name):
 
 def read_schema(table):
 
-    if table == 'individuals':
-        filename = 'alaya_ind_schema_def.json'
-    elif table == 'organizations':
-        filename = 'alaya_org_schema_def.json'
+    #if table == 'individuals':
+    #    filename = 'alaya_ind_schema_def.json'
+    #elif table == 'organizations':
+    #    filename = 'alaya_org_schema_def.json'
 
-    with importlib.resources.open_text(json_data, filename) as f:
+    with importlib.resources.open_text(json_data, f'{table}.json') as f:
         schema = json.load(f)
 
     return schema
