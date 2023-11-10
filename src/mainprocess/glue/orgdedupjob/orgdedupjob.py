@@ -472,8 +472,8 @@ if __name__ == "__main__":
         args["data_bucket"],
         "consume_data",
         "organizations",
-        args["glue_db"],
-        int(args.get("max_records_per_file", 1000)),
+        args["alaya_glue_db"],
+        int(args.get("max_records_per_file", 5000)),
         partition_col,
         partition_value,
     )
