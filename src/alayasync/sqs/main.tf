@@ -29,8 +29,8 @@ resource "aws_sqs_queue" "register" {
   name                       = module.sqs_register_data_naming.name
   visibility_timeout_seconds = 60
   tags                       = module.sqs_register_data_naming.tags
-  kms_master_key_id          = var.project_objects.data_key_id    
-  
+  kms_master_key_id          = var.project_objects.data_key_id
+
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.register_dlq.arn
     maxReceiveCount     = 1

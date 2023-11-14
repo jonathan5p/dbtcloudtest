@@ -17,43 +17,43 @@ module "dynamodb_sources_naming" {
 
 resource "aws_dynamodb_table" "metadata" {
 
-    name             = module.dynamodb_sources_naming.name
-    billing_mode     = "PAY_PER_REQUEST"
-    hash_key         = "id"
-    stream_enabled   = true
-    stream_view_type = "NEW_AND_OLD_IMAGES"
-    tags             = module.dynamodb_sources_naming.tags
-  
-    attribute {
-      name = "id"
-      type = "S"
-    }
-  
-    attribute {
-      name = "batch"
-      type = "S"
-    }
-  
-    attribute {
-      name = "status"
-      type = "S"
-    }
+  name             = module.dynamodb_sources_naming.name
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "id"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  tags             = module.dynamodb_sources_naming.tags
 
-    ttl {
-      attribute_name = "ttl"
-      enabled        = true
-    }
-  
-    global_secondary_index {
-      name            = "scheduling-index"
-      hash_key        = "batch"
-      range_key       = "status"  
-      projection_type = "ALL"
-    }
-  
-    server_side_encryption {
-      enabled     = true
-      kms_key_arn = var.project_objects.data_key_arn
-    }
+  attribute {
+    name = "id"
+    type = "S"
   }
+
+  attribute {
+    name = "batch"
+    type = "S"
+  }
+
+  attribute {
+    name = "status"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  global_secondary_index {
+    name            = "scheduling-index"
+    hash_key        = "batch"
+    range_key       = "status"
+    projection_type = "ALL"
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = var.project_objects.data_key_arn
+  }
+}
   

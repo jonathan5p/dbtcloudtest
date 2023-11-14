@@ -4,15 +4,15 @@ variable "environment" {
 }
 
 variable "functions_mapping" {
-    type = map(any)
-    description = "Functions to be used in the sm definition."
-    default = {}
+  type        = map(any)
+  description = "Functions to be used in the sm definition."
+  default     = {}
 }
 
 variable "policy_variables" {
-    type = map(string)
-    description = "Policy variables for executor policy"
-    default = {}
+  type        = map(string)
+  description = "Policy variables for executor policy"
+  default     = {}
 }
 
 variable "project_app_group" {
@@ -26,9 +26,9 @@ variable "project_ledger" {
 }
 
 variable "project_objects" {
-    type = map(string)
-    description = "Policy variables for executor policy"
-    default = {}
+  type        = map(string)
+  description = "Policy variables for executor policy"
+  default     = {}
 }
 
 variable "project_prefix" {

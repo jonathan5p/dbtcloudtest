@@ -65,8 +65,8 @@ resource "aws_cloudwatch_event_target" "etl_sfn" {
   role_arn  = aws_iam_role.crontrigger_role.arn
   input = jsonencode(
     {
-      "ARTIFACTS_BUCKET"   = var.policy_variables.trigger_bucket
-      "ETL_CONFIG_KEY" = var.trigger_bucket_key
+      "ARTIFACTS_BUCKET" = var.policy_variables.trigger_bucket
+      "ETL_CONFIG_KEY"   = var.trigger_bucket_key
     }
   )
 }
