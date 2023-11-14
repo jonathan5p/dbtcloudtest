@@ -7,8 +7,8 @@ terraform {
 }
 
 locals {
-  athena_workgroup = "${var.site}${var.environment}z1atw${var.project_app_group}${var.project_prefix}"
-  alaya_sync_layer = "${var.site}${var.environment}${var.zone}lay${var.project_app_group}${var.project_prefix}"
+  athena_workgroup  = "${var.site}${var.environment}z1atw${var.project_app_group}${var.project_prefix}"
+  alaya_sync_layer  = "${var.site}${var.environment}${var.zone}lay${var.project_app_group}${var.project_prefix}"
   alaya_utils_layer = "${var.site}${var.environment}${var.zone}lay${var.project_app_group}${var.project_prefix}-utils"
 }
 
@@ -222,7 +222,7 @@ module "iro_ecs_task_execution_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("-", [var.project_prefix, "alayapush","execution"])
+  purpose     = join("-", [var.project_prefix, "alayapush", "execution"])
 }
 
 #----------------------------------
@@ -633,7 +633,7 @@ data "aws_iam_policy_document" "aurora_deploy" {
     ]
     sid = "clusterpermissions"
   }
-  
+
   statement {
     effect = "Allow"
     actions = [
@@ -649,9 +649,9 @@ data "aws_iam_policy_document" "aurora_deploy" {
       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:db:*"
     ]
     condition {
-      test = "StringEquals"
+      test     = "StringEquals"
       variable = "rds:db-tag/Name"
-      values = ["${module.aurora_cluster_naming.name}"]
+      values   = ["${module.aurora_cluster_naming.name}"]
     }
     sid = "rdsinstancepermissions"
   }
@@ -673,9 +673,9 @@ data "aws_iam_policy_document" "aurora_deploy" {
       "arn:aws:secretsmanager:${var.region}:${var.aws_account_number_env}:secret:*"
     ]
     condition {
-      test = "StringEquals"
+      test     = "StringEquals"
       variable = "secretsmanager:ResourceTag/aws:rds:primaryDBClusterArn"
-      values = ["arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"]
+      values   = ["arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"]
     }
     sid = "clustersecretpermissions"
   }
@@ -1062,7 +1062,7 @@ data "aws_iam_policy_document" "dev_deploy3" {
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_cleaning_job_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_ind_dedup_job_naming.name}",
       "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_org_dedup_job_naming.name}",
-      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_getgeoinfo_job_naming.name}" 
+      "arn:aws:glue:${var.region}:${var.aws_account_number_env}:job/${module.glue_getgeoinfo_job_naming.name}"
     ]
   }
 }

@@ -14,9 +14,9 @@ variable "project_ledger" {
 }
 
 variable "project_objects" {
-    type = map(string)
-    description = "Policy variables for executor policy"
-    default = {}
+  type        = map(string)
+  description = "Policy variables for executor policy"
+  default     = {}
 }
 
 variable "project_prefix" {

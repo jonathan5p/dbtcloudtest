@@ -28,7 +28,7 @@ resource "aws_glue_catalog_table" "table_succeeded" {
     location      = "${var.project_objects.alayasyncdb_path}/${var.table_name}_succeeded"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
-  
+
     ser_de_info {
       name                  = "base-stream"
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
@@ -39,8 +39,8 @@ resource "aws_glue_catalog_table" "table_succeeded" {
     }
 
     columns {
-        name = local.json_data.primary_key.name
-        type = local.json_data.primary_key.type
+      name = local.json_data.primary_key.name
+      type = local.json_data.primary_key.type
     }
 
   }
@@ -72,7 +72,7 @@ resource "aws_glue_catalog_table" "table_failed" {
     location      = "${var.project_objects.alayasyncdb_path}/${var.table_name}_failed"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
-  
+
     ser_de_info {
       name                  = "base-stream"
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
@@ -83,8 +83,8 @@ resource "aws_glue_catalog_table" "table_failed" {
     }
 
     columns {
-        name = local.json_data.primary_key.name
-        type = local.json_data.primary_key.type
+      name = local.json_data.primary_key.name
+      type = local.json_data.primary_key.type
     }
 
     columns {
@@ -110,7 +110,7 @@ resource "aws_glue_catalog_table" "table_results" {
     location      = "${var.project_objects.alayasyncdb_path}/${var.table_name}_results"
     input_format  = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
-  
+
     ser_de_info {
       name                  = "base-stream"
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
@@ -124,7 +124,7 @@ resource "aws_glue_catalog_table" "table_results" {
       name = "id"
       type = "string"
     }
-    
+
     columns {
       name = "task_id"
       type = "string"

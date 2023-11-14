@@ -4,7 +4,7 @@ locals {
     PASSWORD            = var.password
     USERNAME            = var.username
   }
-  sg_cond = length(var.security_group_id_list)==0
+  sg_cond = length(var.security_group_id_list) == 0
 }
 
 data "aws_subnet" "connection_subnet" {
