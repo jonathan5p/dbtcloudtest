@@ -12,12 +12,14 @@ import random
 
 chunk_size = 500
 max_records = 5000
+notification_arn = os.environ['LAMBDA_CHATBOT']
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 athena_client = boto3.client('athena')
 athena_bucket = os.environ['ATHENA_BUCKET']
+lambda_client = boto3.client('lambda')
 
 dynamodb = boto3.resource('dynamodb')
 register_table = dynamodb.Table(os.environ['OIDH_TABLE'])
@@ -175,6 +177,20 @@ def lambda_handler(event, context):
 
     records = get_from_dynamo(register_table, query_parameters)
     ids = get_ids_from_payload(records)
+    
+    payload_notification = {
+        "format": "default",
+        "user_mentions": "@user1,@user2",
+        "additional_information": ["Running scheduling step"],
+        "source": "Alaya Sync",
+        "description": f"Syncronization process started for table {event['table']}"
+    }
+    
+    response = lambda_client.invoke(
+        FunctionName=notification_arn,
+        InvocationType='RequestResponse',
+        Payload=json.dumps(payload_notification)
+    )
     
     if ids:
         
