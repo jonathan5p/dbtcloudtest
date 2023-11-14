@@ -38,8 +38,10 @@ module "lambda_alaya_sync_scheduling" {
 
   environment_variables = {
     "ATHENA_BUCKET" = var.project_objects.athena_bucket_id
+    "INDIVIDUALS"     = var.project_objects.individuals
     "LAMBDA_CHATBOT" = var.project_objects.lambda_chatbot_arn
     "OIDH_TABLE"    = var.project_objects.dynamo_table_register
+    "ORGANIZATIONS"   = var.project_objects.organizations
   }
 
   layers = [
@@ -47,25 +49,25 @@ module "lambda_alaya_sync_scheduling" {
   ]
 }
 
-module "lambda_alaya_sync_processing" {
-  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
+#module "lambda_alaya_sync_processing" {
+#  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
 
-  environment       = var.environment
-  lambda_name       = "alayasyncprocessing"
-  lambda_path       = "../src/alayasync/lambda"
-  project_app_group = var.project_app_group
-  project_ledger    = var.project_ledger
-  project_prefix    = var.project_prefix
-  site              = var.site
-  tier              = var.tier
-  zone              = var.zone
+#  environment       = var.environment
+#  lambda_name       = "alayasyncprocessing"
+#  lambda_path       = "../src/alayasync/lambda"
+#  project_app_group = var.project_app_group
+#  project_ledger    = var.project_ledger
+#  project_prefix    = var.project_prefix
+#  site              = var.site
+#  tier              = var.tier
+#  zone              = var.zone
 
-  policy_variables = var.project_objects
+#  policy_variables = var.project_objects
 
-  environment_variables = {
-    "OIDH_TABLE" = var.project_objects.dynamo_table_register
-  }
-}
+#  environment_variables = {
+#    "OIDH_TABLE" = var.project_objects.dynamo_table_register
+#  }
+#}
 
 module "lambda_alaya_sync_reduce" {
   source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
