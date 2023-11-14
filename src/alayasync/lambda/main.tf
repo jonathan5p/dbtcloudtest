@@ -38,8 +38,10 @@ module "lambda_alaya_sync_scheduling" {
 
   environment_variables = {
     "ATHENA_BUCKET" = var.project_objects.athena_bucket_id
+    "INDIVIDUALS"     = var.project_objects.individuals
     "LAMBDA_CHATBOT" = var.project_objects.lambda_chatbot_arn
     "OIDH_TABLE"    = var.project_objects.dynamo_table_register
+    "ORGANIZATIONS"   = var.project_objects.organizations
   }
 
   layers = [
