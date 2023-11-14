@@ -81,7 +81,7 @@ def get_records(database, table, dt_utc, athena_bucket, ids):
         on 
             a.{primary_key} = b.{primary_key} and
             a.dt_utc = b.dt_utc
-        where b.{primary_key} is null and a.dt_utc = '{dt_utc}'
+        where b.{primary_key} is null and a.dt_utc = '{dt_utc}' and a."$path" in ({ids})
         group by 1,2
         order by num_records desc;
     """
@@ -186,7 +186,7 @@ def lambda_handler(event, context):
         "user_mentions": "@user1,@user2",
         "additional_information": ["Running scheduling step"],
         "source": "Alaya Sync",
-        "description": f"Syncronization process started for table {event['table']}"
+        "description": f"Syncronization process started for table {event['table']}. \n Processing: {len(ids)} Files."
     }
     
     response = lambda_client.invoke(
