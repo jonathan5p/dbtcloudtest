@@ -73,16 +73,6 @@ def get_query_state(id):
 def get_records(database, table, dt_utc, athena_bucket, ids):
 
     primary_key = os.environ[table.upper()]
-
-    #query = f""" 
-    #    select 
-    #        "$path" as id, dt_utc, count(*) as num_records 
-    #        from {database}.{table}
-    #        group by 1,2
-    #        having dt_utc = '{dt_utc}'
-    #        and "$path" in ({ids})
-    #        order by num_records desc;
-    #    """
     
     query = f"""
         select a."$path" as id, a.dt_utc, count(*) as num_records 
@@ -95,7 +85,6 @@ def get_records(database, table, dt_utc, athena_bucket, ids):
         group by 1,2
         order by num_records desc;
     """
-
 
     try:
         query_id = execute_query(query, athena_bucket, "initial_query")
