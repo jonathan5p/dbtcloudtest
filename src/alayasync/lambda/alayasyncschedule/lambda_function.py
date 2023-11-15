@@ -9,6 +9,7 @@ import time
 from boto3.dynamodb.conditions import Key, Attr
 from datetime import datetime
 from sync.interfaces.dynamo_interface import DynamoInterface
+from sync.interfaces.athena_interface import AthenaInterface
 
 chunk_size = 500
 max_records = 5000
@@ -35,17 +36,6 @@ query_parameters = {
         'ExpressionAttributeNames': expression_attributes_names
     }
     
-def execute_query(query, athena_bucket, athena_path):
-
-    response = athena_client.start_query_execution(
-        QueryString=query,
-        ResultConfiguration={
-            'OutputLocation': f's3://{athena_bucket}/{athena_path}/',
-        }
-    )
-
-    return response['QueryExecutionId']
-
 def get_from_dynamo(table, query_parameters):
 
     response = table.query(**query_parameters)
@@ -63,42 +53,6 @@ def get_ids_from_payload(payload: list):
         ids.append(item['id'])
 
     return ids
-    
-def get_query_state(id):
-
-    response = wr.athena.get_query_execution(query_execution_id=id)
-
-    return response['Status']['State']
-    
-    
-def get_records(database, table, dt_utc, athena_bucket, ids):
-
-    primary_key = os.environ[table.upper()]
-    
-    query = f"""
-        select a."$path" as id, a.dt_utc, count(*) as num_records 
-            from {database}.{table} a 
-            left join {database}.{table}_succeeded as b
-        on 
-            a.{primary_key} = b.{primary_key} and
-            a.dt_utc = b.dt_utc
-        where b.{primary_key} is null and a.dt_utc = '{dt_utc}' and a."$path" in ({ids})
-        group by 1,2
-        order by num_records desc;
-    """
-
-    try:
-        query_id = execute_query(query, athena_bucket, "initial_query")
-
-        wait_on_query(query_id)
-        print(f'Done with query {query_id}')
-
-    except Exception as e:
-
-        error = f'Error getting records to transmit: {repr(e)}'
-        raise ValueError(f'Initial Query Failed. {error}')
-
-    return query_id
     
 def process_records(dfs, payload, ids):
 
@@ -146,29 +100,6 @@ def validate_response(response):
     except Exception as e:
         logger.error(f'Error checking Dynamo response: {repr(e)}')
         raise e
-        
-def wait_on_query(id):
-
-    try:
-        
-        stop_states = ['SUCCEEDED']
-        continue_states = ['QUEUED','RUNNING']
-        failed_states = ['FAILED','CANCELLED']
-
-        status = 'QUEUED'
-        
-        while status in continue_states:
-            status = get_query_state(id)
-            time.sleep(20)
-            print(f'Query ID: {id} Status: {status}')
-
-        if status in failed_states:
-            raise ValueError(f'Query with id: {id} failed')
-
-    except Exception as e:
-        raise ValueError(f'Failure waiting for query:{id}. Error: {repr(e)}')
-
-    return status
     
 def update_record(table, payload):
 
@@ -186,13 +117,17 @@ def update_record(table, payload):
 
 
 def lambda_handler(event, context):
-
+    
     logger.info(f'Event:{event}')
 
+    batch = event['batch']
+    database = event['database']
     status = event.get('status', 'JUST_ARRIVED')
+    table = event['table']
+    primary_key = os.environ[table.upper()]
 
-    query_parameters['KeyConditionExpression'] = (Key('batch').eq(event['batch']) & Key('status').eq(status))
-    query_parameters['FilterExpression'] = (Attr('table').eq(event['table']) & Attr('database').eq(event['database']))
+    query_parameters['KeyConditionExpression'] = (Key('batch').eq(batch) & Key('status').eq(status))
+    query_parameters['FilterExpression'] = (Attr('table').eq(table) & Attr('database').eq(database))
 
     records = get_from_dynamo(register_table, query_parameters)
     ids = get_ids_from_payload(records)
@@ -200,7 +135,7 @@ def lambda_handler(event, context):
     payload_notification = {
         "format": "default",
         "source": "Alaya Sync",
-        "description": f"Syncronization process started for table {event['table']}. \n Processing: {len(ids)} Files."
+        "description": f"Syncronization process started for table {table}. \n Processing: {len(ids)} Files."
     }
     
     response = lambda_client.invoke(
@@ -212,16 +147,31 @@ def lambda_handler(event, context):
     if ids:
         
         payload = {
-            'batch': event['batch'],
+            'batch': batch,
             'bucket': records[0]['bucket'],
-            'database': event['database'],
+            'database': database,
             'status': status,
-            'table': event['table'],
+            'table': table,
         }
         
         list_ids = f""" '{"','".join(ids)}' """
         
-        query_id = get_records(event['database'], event['table'], event['batch'], athena_bucket, list_ids)
+        query_id = AthenaInterface().run_query(
+            f"""
+                select a."$path" as id, a.dt_utc, count(*) as num_records 
+                    from {database}.{table} a 
+                    left join {database}.{table}_succeeded as b
+                        on 
+                            a.{primary_key} = b.{primary_key} and
+                            a.dt_utc = b.dt_utc
+                    where b.{primary_key} is null and 
+                    a.dt_utc = '{batch}' 
+                    and a."$path" in ({list_ids})
+                group by 1,2
+                order by num_records desc;
+            """, "select_query", "Error getting records to transmit"
+        )
+
         dfs = wr.athena.get_query_results(query_execution_id=query_id,chunksize = chunk_size)
 
         records, ids_to_update = process_records(dfs, payload, ids)
