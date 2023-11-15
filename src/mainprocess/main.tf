@@ -102,19 +102,3 @@ resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
   to_port                      = 5432
   referenced_security_group_id = module.glue_resources.glue_conn_sg_id
 }
-
-#------------------------------------------------------------------------------
-# ECR Configuration
-#------------------------------------------------------------------------------
-
-resource "aws_ecr_repository" "addgeoinfo" {
-  name                 = module.resource_names.ecr_names.addgeoinfo.name
-  image_tag_mutability = "MUTABLE"
-  tags                 = module.resource_names.ecr_names.addgeoinfo.tags
-}
-
-resource "aws_ssm_parameter" "repository_url" {
-  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/ecr_addgeoinfo_repository_url"
-  type  = "String"
-  value = aws_ecr_repository.addgeoinfo.repository_url
-}

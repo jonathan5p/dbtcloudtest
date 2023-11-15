@@ -7,7 +7,7 @@ data "aws_ssm_parameter" "bright_pypi_pipconf" {
 }
 
 locals {
-  parameter_path        = "parameter/${var.site}/${var.environment}/geosvc/api_uri"
+  parameter_path        = "parameter/${var.site}/${var.environment}/${var.project_app_group}/geosvc/api_uri"
   ind_dedup_job_workers = 20
   org_dedup_job_workers = 30
   counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
