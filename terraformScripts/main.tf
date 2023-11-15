@@ -30,114 +30,114 @@ module "base_naming" {
 # KMS Keys for the S3 Buckets and Glue
 #------------------------------------------------------------------------------
 
-# OIDH Dedup Process Encryption Key
-module "data_key_name" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "kma"
-  purpose     = join("", [var.project_prefix, "-", "datakey"])
-}
-module "data_key" {
-  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
-  key_name           = module.data_key_name.name
-  key_tags           = module.data_key_name.tags
-  key_admins         = var.kms_data_admins
-  key_users          = var.kms_data_users
-  key_description    = "KMS key used for data encryption of all the data in the datahub-dedup process"
-  aws_account_number = data.aws_caller_identity.current.account_id
-}
+# # OIDH Dedup Process Encryption Key
+# module "data_key_name" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = module.base_naming
+#   type        = "kma"
+#   purpose     = join("", [var.project_prefix, "-", "datakey"])
+# }
+# module "data_key" {
+#   source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
+#   key_name           = module.data_key_name.name
+#   key_tags           = module.data_key_name.tags
+#   key_admins         = var.kms_data_admins
+#   key_users          = var.kms_data_users
+#   key_description    = "KMS key used for data encryption of all the data in the datahub-dedup process"
+#   aws_account_number = data.aws_caller_identity.current.account_id
+# }
 
-# Glue Data Encryption Key
-module "glue_enc_key_name" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "kma"
-  purpose     = join("", [var.project_prefix, "-", "glueenckey"])
-}
-module "glue_enc_key" {
-  source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
-  key_name           = module.glue_enc_key_name.name
-  key_tags           = module.glue_enc_key_name.tags
-  key_admins         = var.kms_glue_admins
-  key_users          = var.kms_glue_users
-  key_description    = "KMS key used for data encryption of all the glue resources used in the datahub-dedup process"
-  aws_account_number = data.aws_caller_identity.current.account_id
-}
+# # Glue Data Encryption Key
+# module "glue_enc_key_name" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = module.base_naming
+#   type        = "kma"
+#   purpose     = join("", [var.project_prefix, "-", "glueenckey"])
+# }
+# module "glue_enc_key" {
+#   source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
+#   key_name           = module.glue_enc_key_name.name
+#   key_tags           = module.glue_enc_key_name.tags
+#   key_admins         = var.kms_glue_admins
+#   key_users          = var.kms_glue_users
+#   key_description    = "KMS key used for data encryption of all the glue resources used in the datahub-dedup process"
+#   aws_account_number = data.aws_caller_identity.current.account_id
+# }
 
 #------------------------------------------------------------------------------
 # S3 Buckets
 #------------------------------------------------------------------------------
 
-# Data Bucket
-module "s3b_data_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "s3b"
-  purpose     = join("", [var.project_prefix, "-", "datastorage"])
-}
+# # Data Bucket
+# module "s3b_data_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = module.base_naming
+#   type        = "s3b"
+#   purpose     = join("", [var.project_prefix, "-", "datastorage"])
+# }
 
-module "s3_data_bucket" {
-  source                            = "../modules/s3"
-  s3_bucket                         = module.s3b_data_naming.name
-  s3_bucket_tags                    = module.s3b_data_naming.tags
-  s3_bucket_key_id                  = module.data_key.key_id
-  s3_bucket_key_arn                 = module.data_key.key_arn
-  s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
-  s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
-  s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
-}
+# module "s3_data_bucket" {
+#   source                            = "../modules/s3"
+#   s3_bucket                         = module.s3b_data_naming.name
+#   s3_bucket_tags                    = module.s3b_data_naming.tags
+#   s3_bucket_key_id                  = module.data_key.key_id
+#   s3_bucket_key_arn                 = module.data_key.key_arn
+#   s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
+#   s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
+#   s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+# }
 
-# Artifacts Bucket
-module "s3b_artifacts_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "s3b"
-  purpose     = join("", [var.project_prefix, "-", "artifacts"])
-}
+# # Artifacts Bucket
+# module "s3b_artifacts_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = module.base_naming
+#   type        = "s3b"
+#   purpose     = join("", [var.project_prefix, "-", "artifacts"])
+# }
 
-module "s3_artifacts_bucket" {
-  source                            = "../modules/s3"
-  s3_bucket                         = module.s3b_artifacts_naming.name
-  s3_bucket_tags                    = module.s3b_artifacts_naming.tags
-  s3_bucket_key_id                  = module.data_key.key_id
-  s3_bucket_key_arn                 = module.data_key.key_arn
-  s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
-  s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
-  s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
-}
+# module "s3_artifacts_bucket" {
+#   source                            = "../modules/s3"
+#   s3_bucket                         = module.s3b_artifacts_naming.name
+#   s3_bucket_tags                    = module.s3b_artifacts_naming.tags
+#   s3_bucket_key_id                  = module.data_key.key_id
+#   s3_bucket_key_arn                 = module.data_key.key_arn
+#   s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
+#   s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
+#   s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+# }
 
-# Glue Bucket
-module "s3b_glue_artifacts_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "s3b"
-  purpose     = join("", [var.project_prefix, "-", "glueartifacts"])
-}
+# # Glue Bucket
+# module "s3b_glue_artifacts_naming" {
+#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#   base_object = module.base_naming
+#   type        = "s3b"
+#   purpose     = join("", [var.project_prefix, "-", "glueartifacts"])
+# }
 
-module "s3_glue_artifacts_bucket" {
-  source                            = "../modules/s3"
-  s3_bucket                         = module.s3b_glue_artifacts_naming.name
-  s3_bucket_tags                    = module.s3b_glue_artifacts_naming.tags
-  s3_bucket_key_id                  = module.glue_enc_key.key_id
-  s3_bucket_key_arn                 = module.glue_enc_key.key_arn
-  s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
-  s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
-  s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
-}
+# module "s3_glue_artifacts_bucket" {
+#   source                            = "../modules/s3"
+#   s3_bucket                         = module.s3b_glue_artifacts_naming.name
+#   s3_bucket_tags                    = module.s3b_glue_artifacts_naming.tags
+#   s3_bucket_key_id                  = module.glue_enc_key.key_id
+#   s3_bucket_key_arn                 = module.glue_enc_key.key_arn
+#   s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
+#   s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
+#   s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+# }
 
 #------------------------------------------------------------------------------
 # S3 Data
 #------------------------------------------------------------------------------
 
-resource "aws_s3_object" "artifacts" {
-  bucket                 = module.s3_artifacts_bucket.bucket_id
-  for_each               = fileset("../src/artifacts/", "**")
-  key                    = each.value
-  source                 = "../src/artifacts/${each.value}"
-  server_side_encryption = "AES256"
-  etag                   = filemd5("../src/artifacts/${each.value}")
-  bucket_key_enabled     = true
-}
+# resource "aws_s3_object" "artifacts" {
+#   bucket                 = module.s3_artifacts_bucket.bucket_id
+#   for_each               = fileset("../src/artifacts/", "**")
+#   key                    = each.value
+#   source                 = "../src/artifacts/${each.value}"
+#   server_side_encryption = "AES256"
+#   etag                   = filemd5("../src/artifacts/${each.value}")
+#   bucket_key_enabled     = true
+# }
 
 #------------------------------------------------------------------------------
 # Glue max records per file parameter
