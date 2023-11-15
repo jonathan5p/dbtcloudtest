@@ -200,13 +200,13 @@ module "mainprocess" {
 # Alaya Sync Process
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "ecs_cluster_name" {
-  name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
-}
+#data "aws_ssm_parameter" "ecs_cluster_name" {
+#  name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
+#}
 
-data "aws_ssm_parameter" "dynamo_async_name" {
-  name = "/parameter/${var.site}/${var.environment}/data/dynamo_async"
-}
+#data "aws_ssm_parameter" "dynamo_async_name" {
+#  name = "/parameter/${var.site}/${var.environment}/data/dynamo_async"
+#}
 
 #module "alayasync" {
 #  source = "../src/alayasync"
