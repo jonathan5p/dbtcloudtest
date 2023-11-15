@@ -63,11 +63,13 @@ def process_records(dfs, payload, ids):
 
         list_id = []
         num_records = 0
+        total_records = 0
         
         for df in dfs:
             for index, row in df.iterrows():
                 
                 num_records += row['num_records']
+                total_records += row['num_records']
                 list_id.append(row['id'])
                 ids.remove(row['id'])
                 
@@ -87,7 +89,7 @@ def process_records(dfs, payload, ids):
         error = f'Error in initial iteration: {repr(e)}'
         raise ValueError(f'Failed calculating load records. {error}')
 
-    return records, ids
+    return records, ids, total_records
 
 def validate_response(response):
 
@@ -132,17 +134,9 @@ def lambda_handler(event, context):
     records = get_from_dynamo(register_table, query_parameters)
     ids = get_ids_from_payload(records)
     
-    payload_notification = {
-        "format": "default",
-        "source": "Alaya Sync",
-        "description": f"Syncronization process started for table {table}. \n Processing: {len(ids)} Files."
-    }
-    
-    response = lambda_client.invoke(
-        FunctionName=notification_arn,
-        InvocationType='RequestResponse',
-        Payload=json.dumps(payload_notification)
-    )
+    initial_ids = len(ids)
+    ids_to_update = []
+    total_records = 0
     
     if ids:
         
@@ -174,7 +168,7 @@ def lambda_handler(event, context):
 
         dfs = wr.athena.get_query_results(query_execution_id=query_id,chunksize = chunk_size)
 
-        records, ids_to_update = process_records(dfs, payload, ids)
+        records, ids_to_update, total_records = process_records(dfs, payload, ids)
         logger.info(f'Ids to update:{ids_to_update}')
         
         if ids_to_update:
@@ -193,6 +187,22 @@ def lambda_handler(event, context):
                 }
                 
                 update_record("OIDH_TABLE", payload)
+                
+    payload_notification = {
+        "format": "default",
+        "source": "Alaya Sync",
+        "description": f"""
+            Synchronization process started for table {table}. \n 
+            Processing: {initial_ids} Files, Skipped Files:{len(ids_to_update)} \n
+            dt_utc: {batch} \n
+            Records: {total_records}"""
+    }
+    
+    response = lambda_client.invoke(
+        FunctionName=notification_arn,
+        InvocationType='RequestResponse',
+        Payload=json.dumps(payload_notification)
+    )
 
     logger.info(f'Response: {records}')
     
