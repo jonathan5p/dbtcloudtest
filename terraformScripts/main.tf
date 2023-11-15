@@ -143,58 +143,58 @@ resource "aws_s3_object" "artifacts" {
 # Glue max records per file parameter
 #------------------------------------------------------------------------------
 
-resource "aws_ssm_parameter" "max_records_param" {
-  name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/alayasync/max_records"
-  type  = "String"
-  value = var.glue_max_records_per_file
-}
+# resource "aws_ssm_parameter" "max_records_param" {
+#   name  = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/alayasync/max_records"
+#   type  = "String"
+#   value = var.glue_max_records_per_file
+# }
 
 #------------------------------------------------------------------------------
 # Main process
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "lambda_chatbot_arn" {
-  name = "/parameter/${var.site}/${var.environment}/data/lambda_chatbot_function_arn"
-}
+# data "aws_ssm_parameter" "lambda_chatbot_arn" {
+#   name = "/parameter/${var.site}/${var.environment}/data/lambda_chatbot_function_arn"
+# }
 
-module "mainprocess" {
-  source = "../src/mainprocess"
+# module "mainprocess" {
+#   source = "../src/mainprocess"
 
-  base_naming        = module.base_naming
-  environment        = var.environment
-  environment_devops = var.environment_devops
-  project_app_group  = var.project_app_group
-  project_ledger     = var.project_ledger
-  project_prefix     = var.project_prefix
-  site               = var.site
-  tier               = var.tier
-  zone               = var.zone
+#   base_naming        = module.base_naming
+#   environment        = var.environment
+#   environment_devops = var.environment_devops
+#   project_app_group  = var.project_app_group
+#   project_ledger     = var.project_ledger
+#   project_prefix     = var.project_prefix
+#   site               = var.site
+#   tier               = var.tier
+#   zone               = var.zone
 
-  project_objects = {
-    "glue_bucket_id"                     = module.s3_glue_artifacts_bucket.bucket_id
-    "data_bucket_id"                     = module.s3_data_bucket.bucket_id
-    "artifacts_bucket_id"                = module.s3_artifacts_bucket.bucket_id
-    "glue_bucket_arn"                    = module.s3_glue_artifacts_bucket.bucket_arn
-    "data_bucket_arn"                    = module.s3_data_bucket.bucket_arn
-    "artifacts_bucket_arn"               = module.s3_artifacts_bucket.bucket_arn
-    "glue_enc_key"                       = module.glue_enc_key.key_arn
-    "data_key_arn"                       = module.data_key.key_arn
-    "cron_schedule"                      = var.cron_schedule
-    "cron_trigger_enabled"               = var.cron_trigger_enabled
-    "lambda_ec_agent_target_table_name"  = var.lambda_ec_agent_target_table_name
-    "lambda_ec_office_target_table_name" = var.lambda_ec_office_target_table_name
-    "lambda_ec_agent_source_table_name"  = var.lambda_ec_agent_source_table_name
-    "lambda_ec_office_source_table_name" = var.lambda_ec_office_source_table_name
-    "aurora_backup_retention_period"     = var.aurora_backup_retention_period
-    "aurora_preferred_backup_window"     = var.aurora_preferred_backup_window
-    "aurora_max_capacity"                = var.aurora_max_capacity
-    "aurora_min_capacity"                = var.aurora_min_capacity
-    "max_records_per_file"               = var.glue_max_records_per_file
-    "alaya_trigger_key"                  = var.alaya_trigger_key
-    "glue_geosvc_subnetid"               = var.glue_geosvc_subnetid
-    "lambda_chatbot_arn"                 = data.aws_ssm_parameter.lambda_chatbot_arn.value
-  }
-}
+#   project_objects = {
+#     "glue_bucket_id"                     = module.s3_glue_artifacts_bucket.bucket_id
+#     "data_bucket_id"                     = module.s3_data_bucket.bucket_id
+#     "artifacts_bucket_id"                = module.s3_artifacts_bucket.bucket_id
+#     "glue_bucket_arn"                    = module.s3_glue_artifacts_bucket.bucket_arn
+#     "data_bucket_arn"                    = module.s3_data_bucket.bucket_arn
+#     "artifacts_bucket_arn"               = module.s3_artifacts_bucket.bucket_arn
+#     "glue_enc_key"                       = module.glue_enc_key.key_arn
+#     "data_key_arn"                       = module.data_key.key_arn
+#     "cron_schedule"                      = var.cron_schedule
+#     "cron_trigger_enabled"               = var.cron_trigger_enabled
+#     "lambda_ec_agent_target_table_name"  = var.lambda_ec_agent_target_table_name
+#     "lambda_ec_office_target_table_name" = var.lambda_ec_office_target_table_name
+#     "lambda_ec_agent_source_table_name"  = var.lambda_ec_agent_source_table_name
+#     "lambda_ec_office_source_table_name" = var.lambda_ec_office_source_table_name
+#     "aurora_backup_retention_period"     = var.aurora_backup_retention_period
+#     "aurora_preferred_backup_window"     = var.aurora_preferred_backup_window
+#     "aurora_max_capacity"                = var.aurora_max_capacity
+#     "aurora_min_capacity"                = var.aurora_min_capacity
+#     "max_records_per_file"               = var.glue_max_records_per_file
+#     "alaya_trigger_key"                  = var.alaya_trigger_key
+#     "glue_geosvc_subnetid"               = var.glue_geosvc_subnetid
+#     "lambda_chatbot_arn"                 = data.aws_ssm_parameter.lambda_chatbot_arn.value
+#   }
+# }
 
 #------------------------------------------------------------------------------
 # Alaya Sync Process
