@@ -192,7 +192,7 @@ def lambda_handler(event, context):
         "format": "default",
         "source": "Alaya Sync",
         "description": f"""
-            Syncronization process started for table {table}. \n 
+            Synchronization process started for table {table}. \n 
             Processing: {initial_ids} Files, Skipped Files:{len(ids_to_update)} \n
             dt_utc: {batch} \n
             Records: {total_records}"""
