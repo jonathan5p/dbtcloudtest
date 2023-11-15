@@ -28,7 +28,7 @@ module "glue_resources" {
   site               = var.site
   tier               = var.tier
   zone               = var.zone
-  project_objects = var.project_objects
+  project_objects    = var.project_objects
 }
 
 module "lambda_resources" {
