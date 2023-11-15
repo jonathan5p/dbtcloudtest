@@ -6,6 +6,7 @@ import os
 import time
 
 from boto3.dynamodb.conditions import Key, Attr
+from sync.interfaces.dynamo_interface import DynamoInterface
 from datetime import datetime
 
 import random
@@ -99,7 +100,7 @@ def get_records(database, table, dt_utc, athena_bucket, ids):
 
     return query_id
     
-def process_records(dfs, payload):
+def process_records(dfs, payload, ids):
 
     records = []
     processing_options = ['lambda_function', 'ecs']
@@ -114,6 +115,7 @@ def process_records(dfs, payload):
                 
                 num_records += row['num_records']
                 list_id.append(row['id'])
+                ids.remove(row['id'])
                 
                 if (num_records > max_records) or (index+1 == df.shape[0]):
 
@@ -131,7 +133,7 @@ def process_records(dfs, payload):
         error = f'Error in initial iteration: {repr(e)}'
         raise ValueError(f'Failed calculating load records. {error}')
 
-    return records
+    return records, ids
 
 def validate_response(response):
 
@@ -167,6 +169,20 @@ def wait_on_query(id):
         raise ValueError(f'Failure waiting for query:{id}. Error: {repr(e)}')
 
     return status
+    
+def update_record(table, payload):
+
+    query_parameters = {
+        'Key': {'id': payload['id']},
+        'UpdateExpression': "set #r=:r, #p=:p, #s=:s, #pr=:pr, #t=:t",
+        'ExpressionAttributeValues': {':r': payload['records'], ':p': payload['processed_file'], ':s': payload['status'], ':pr': payload['processing_engine'], ':t': payload['task_id']},
+        'ExpressionAttributeNames': {"#r": "records", "#p": "processed_file", "#s": "status", "#pr": "processing_engine", "#t": "task_id"},
+        'ReturnValues': "UPDATED_NEW"
+    }
+
+    response = DynamoInterface(table).update_item(query_parameters)
+
+    return None
 
 
 def lambda_handler(event, context):
@@ -183,8 +199,6 @@ def lambda_handler(event, context):
     
     payload_notification = {
         "format": "default",
-        "user_mentions": "@user1,@user2",
-        "additional_information": ["Running scheduling step"],
         "source": "Alaya Sync",
         "description": f"Syncronization process started for table {event['table']}. \n Processing: {len(ids)} Files."
     }
@@ -210,7 +224,25 @@ def lambda_handler(event, context):
         query_id = get_records(event['database'], event['table'], event['batch'], athena_bucket, list_ids)
         dfs = wr.athena.get_query_results(query_execution_id=query_id,chunksize = chunk_size)
 
-        records = process_records(dfs, payload)
+        records, ids_to_update = process_records(dfs, payload, ids)
+        logger.info(f'Ids to update:{ids_to_update}')
+        
+        if ids_to_update:
+            for id_to_update in ids_to_update:
+                payload = {
+                    'id': id_to_update,
+                    'processed_file': 'No file proccesed',
+                    'processing_engine': '',
+                    'status': 'SUCCEEDED',
+                    'records': {
+                        'total' : 0, 
+                        'succeeded': 0, 
+                        'failed': 0
+                        },
+                    'task_id': ''
+                }
+                
+                update_record("OIDH_TABLE", payload)
 
     logger.info(f'Response: {records}')
     
