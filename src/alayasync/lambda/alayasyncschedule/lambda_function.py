@@ -3,23 +3,23 @@ import boto3
 import json
 import logging
 import os
+import random
 import time
 
 from boto3.dynamodb.conditions import Key, Attr
-from sync.interfaces.dynamo_interface import DynamoInterface
 from datetime import datetime
-
-import random
+from sync.interfaces.dynamo_interface import DynamoInterface
 
 chunk_size = 500
 max_records = 5000
+
+athena_bucket = os.environ['ATHENA_BUCKET']
 notification_arn = os.environ['LAMBDA_CHATBOT']
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 athena_client = boto3.client('athena')
-athena_bucket = os.environ['ATHENA_BUCKET']
 lambda_client = boto3.client('lambda')
 
 dynamodb = boto3.resource('dynamodb')
