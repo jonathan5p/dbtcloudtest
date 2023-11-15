@@ -9,10 +9,6 @@ output "functions_mapping" {
   }
 }
 
-output "glue_conn_sg_id" {
-  value = module.aurora_connection.conn_sg_id
-}
-
 output "alayasyncdb_path" {
   value = aws_glue_catalog_database.alayasync_process_glue_db.location_uri
 }
