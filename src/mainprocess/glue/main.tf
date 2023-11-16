@@ -153,14 +153,6 @@ data "aws_ssm_parameter" "aurora_db_sg" {
 # Glue Aurora Connection
 #------------------------------------------------------------------------------
 
-data "aws_rds_cluster" "aurora_db" {
-  cluster_identifier = data.aws_ssm_parameter.aurora_db_id.value
-}
-
-data "aws_db_subnet_group" "aurora_subnetgroup" {
-  name = data.aws_rds_cluster.aurora_db.db_subnet_group_name
-}
-
 module "aurora_connection" {
   source         = "../../../modules/glue_connection"
   base_naming    = var.base_naming
@@ -168,8 +160,8 @@ module "aurora_connection" {
   conn_name      = "auroraconn"
   password       = data.aws_ssm_parameter.aurora_conn_password.value
   username       = data.aws_ssm_parameter.aurora_conn_username.value
-  jdbc_url       = data.aws_ssm_parameter.aurora_db_jdbc_url
-  subnet_id      = split(",", data.aws_ssm_parameter.aurora_db_subnets)[0]
+  jdbc_url       = data.aws_ssm_parameter.aurora_db_jdbc_url.value
+  subnet_id      = split(",", data.aws_ssm_parameter.aurora_db_subnets.value)[0]
 }
 
 #------------------------------------------------------------------------------
