@@ -579,18 +579,10 @@ data "aws_iam_policy_document" "dev_deploy" {
   statement {
     effect = "Allow"
     actions = [
-      "kms:TagResource",
-      "kms:DeleteKey",
-      "kms:ScheduleKeyDeletion",
-      "kms:EnableKey",
-      "kms:PutKeyPolicy",
-      "kms:GenerateDataKey",
-      "kms:EnableKeyRotation",
       "kms:DescribeKey",
       "kms:GetKeyPolicy",
       "kms:GetKeyRotationStatus",
       "kms:ListResourceTags",
-      "kms:DeleteAlias",
       "kms:CreateGrant",
       "kms:ListGrants",
       "kms:RevokeGrant",
@@ -600,23 +592,6 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"
     ]
     sid = "kmspermissions"
-  }
-
-  statement {
-    effect  = "Allow"
-    actions = ["kms:DeleteAlias"]
-    resources = [
-      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
-      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"
-    ]
-    sid = "kmsaliaspermissions"
-  }
-
-  statement {
-    effect    = "Allow"
-    actions   = ["kms:CreateKey", "kms:CreateAlias", "kms:ListAliases"]
-    resources = ["*"]
-    sid       = "kmscreatepermissions"
   }
 
   statement {
