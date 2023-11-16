@@ -160,8 +160,8 @@ module "aurora_connection" {
   conn_name      = "auroraconn"
   password       = data.aws_ssm_parameter.aurora_conn_password.value
   username       = data.aws_ssm_parameter.aurora_conn_username.value
-  jdbc_url       = data.aws_ssm_parameter.aurora_db_jdbc_url
-  subnet_id      = split(",", data.aws_ssm_parameter.aurora_db_subnets)[0]
+  jdbc_url       = data.aws_ssm_parameter.aurora_db_jdbc_url.value
+  subnet_id      = split(",", data.aws_ssm_parameter.aurora_db_subnets.value)[0]
 }
 
 #------------------------------------------------------------------------------
