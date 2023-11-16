@@ -30,7 +30,7 @@ resource "aws_s3_bucket_ownership_controls" "s3_ownership" {
 #------------------------------------------------------------------------------
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "default_encryption" {
-  count = var.s3_bucket_key_id == null?1:0
+  count = var.s3_bucket_key_id == null ? 1 : 0
   bucket = aws_s3_bucket.s3_bucket.id
 
   rule {
