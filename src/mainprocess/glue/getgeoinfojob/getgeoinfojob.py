@@ -161,7 +161,7 @@ if __name__ == "__main__":
     write_options = options["write_options"]
     merge_key = write_options.get("merge_key")
 
-    staging_table = args["table"].replace("raw", "staging")
+    staging_table = "staging_" + args["table"]
     table_exists = spark._jsparkSession.catalog().tableExists(
         args["database"], staging_table
     )

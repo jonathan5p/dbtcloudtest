@@ -2,7 +2,7 @@
   "agent_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bright_raw_agent_latest",
+    "catalog_table": "bright_agent_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "getgeoinfo": true,
@@ -35,7 +35,7 @@
   "office_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bright_raw_office_latest",
+    "catalog_table": "bright_office_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "getgeoinfo": true,
@@ -68,7 +68,7 @@
   "team_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bright_raw_team_latest",
+    "catalog_table": "bright_team_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "getgeoinfo": false,

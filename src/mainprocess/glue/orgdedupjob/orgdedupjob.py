@@ -343,11 +343,13 @@ if __name__ == "__main__":
     job.init(args["JOB_NAME"], args)
 
     # Read clean office and team data
-    splink_clean_office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
-    office_df = spark.read.format("delta").load(splink_clean_office_data_s3_path)
+    office_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['office_table_name']}"
+    )
 
-    splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
-    team_df = spark.read.format("delta").load(splink_clean_team_data_s3_path)
+    team_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['team_table_name']}"
+    )
 
     office_df = (
         office_df.withColumn("orgsourcetype", F.lit("OFFICE"))

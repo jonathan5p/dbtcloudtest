@@ -287,8 +287,9 @@ if __name__ == "__main__":
     job.init(args["JOB_NAME"], args)
 
     # Read clean agent data and enrich office data
-    splink_clean_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['agent_table_name']}/"
-    clean_df = spark.read.format("delta").load(splink_clean_data_s3_path)
+    clean_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['agent_table_name']}"
+    )
 
     clean_df = (
         clean_df.withColumn(
