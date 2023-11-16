@@ -1,3 +1,11 @@
+locals{
+  kms_key_count = var.s3_bucket_key_id == null ? 0 : 1
+}
+
+#------------------------------------------------------------------------------
+# Bucket defaults
+#------------------------------------------------------------------------------
+
 resource "aws_s3_bucket" "s3_bucket" {
   bucket = var.s3_bucket
   tags   = var.s3_bucket_tags
@@ -6,11 +14,38 @@ resource "aws_s3_bucket" "s3_bucket" {
 resource "aws_s3_bucket_versioning" "s3_bucket_versioning" {
   bucket = aws_s3_bucket.s3_bucket.id
   versioning_configuration {
-    status = "Enabled"
+    status = var.s3_bucket_versioning
   }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption" {
+resource "aws_s3_bucket_ownership_controls" "s3_ownership" {
+  bucket = aws_s3_bucket.s3_bucket.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+#------------------------------------------------------------------------------
+# Default Encryption
+#------------------------------------------------------------------------------
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "default_encryption" {
+  count = var.s3_bucket_key_id == null ? 1 : 0
+  bucket = aws_s3_bucket.s3_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+#------------------------------------------------------------------------------
+# KMS Encryption
+#------------------------------------------------------------------------------
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "kms_encryption" {
+  count = local.kms_key_count
   bucket = aws_s3_bucket.s3_bucket.id
 
   rule {
@@ -22,14 +57,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "s3_encryption" {
   }
 }
 
-resource "aws_s3_bucket_ownership_controls" "s3_ownership" {
-  bucket = aws_s3_bucket.s3_bucket.id
-  rule {
-    object_ownership = "BucketOwnerEnforced"
-  }
-}
-
 data "aws_iam_policy_document" "security_policy" {
+  count = local.kms_key_count
   statement {
     principals {
       type        = "*"
@@ -67,9 +96,14 @@ data "aws_iam_policy_document" "security_policy" {
 }
 
 resource "aws_s3_bucket_policy" "security_policy" {
+  count = local.kms_key_count
   bucket = aws_s3_bucket.s3_bucket.id
-  policy = data.aws_iam_policy_document.security_policy.json
+  policy = data.aws_iam_policy_document.security_policy[0].json
 }
+
+#------------------------------------------------------------------------------
+# KMS Encryption
+#------------------------------------------------------------------------------
 
 resource "aws_s3_bucket_lifecycle_configuration" "bucket_lifecycle" {
   depends_on = [aws_s3_bucket_versioning.s3_bucket_versioning]

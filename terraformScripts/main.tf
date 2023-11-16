@@ -85,6 +85,7 @@ module "base_naming" {
 #   s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
 #   s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
 #   s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+#   s3_bucket_versioning              = "Enabled"
 # }
 
 # # Artifacts Bucket
