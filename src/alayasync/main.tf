@@ -1,130 +1,130 @@
 module "tables" {
   source = "./glue"
 
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
-    project_objects     = var.project_objects
+  project_objects = var.project_objects
 }
 
 module "sqs" {
-    source = "./sqs"
+  source = "./sqs"
 
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    queue_name          = "alayasyncregister"
-    tier                = var.tier
-    zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  queue_name        = "alayasyncregister"
+  tier              = var.tier
+  zone              = var.zone
 
-    project_objects     = var.project_objects
+  project_objects = var.project_objects
 }
 
 module "dynamo" {
-    source = "./dynamo"
+  source = "./dynamo"
 
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    table_name          = "alayasync"  
-    tier                = var.tier
-    zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  table_name        = "alayasync"
+  tier              = var.tier
+  zone              = var.zone
 
-    project_objects     = var.project_objects
+  project_objects = var.project_objects
 
 }
 
 module "lambdas" {
-    source = "./lambda"
-    
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
+  source = "./lambda"
 
-    project_objects     = merge(var.project_objects, 
-      module.tables.primary_keys,
-      module.layers.layers_mapping,
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
+
+  project_objects = merge(var.project_objects,
+    module.tables.primary_keys,
+    module.layers.layers_mapping,
     {
-        "dynamo_table_register" = "${module.dynamo.table_naming.name}"
-        "task_definition" = "${module.ecs.alayapush_task_definition}"
-    })
+      "dynamo_table_register" = "${module.dynamo.table_naming.name}"
+      "task_definition"       = "${module.ecs.alayapush_task_definition}"
+  })
 }
 
 module "step_functions" {
-    source = "./stepfunction"
+  source = "./stepfunction"
 
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
-    policy_variables    = merge(var.project_objects,module.lambdas.functions_mapping)
+  policy_variables = merge(var.project_objects, module.lambdas.functions_mapping)
 }
 
 module "lambdas_execution" {
-    source = "./lambda_execution"
-    
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
+  source = "./lambda_execution"
 
-    project_objects     = merge(var.project_objects, 
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
+
+  project_objects = merge(var.project_objects,
     {
-        "dynamo_table_register" = "${module.dynamo.table_naming.name}",
-        "sfn_alaya_sync" = "${module.step_functions.sfn_alaya_sync_arn}"
-    })
+      "dynamo_table_register" = "${module.dynamo.table_naming.name}",
+      "sfn_alaya_sync"        = "${module.step_functions.sfn_alaya_sync_arn}"
+  })
 }
 
 module "ecs" {
   source = "./ecs"
 
-  environment         = var.environment
-  project_app_group   = var.project_app_group
-  project_ledger      = var.project_ledger
-  project_prefix      = var.project_prefix
-  site                = var.site
-  tier                = var.tier
-  zone                = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
-  project_objects     = merge(var.project_objects, 
-  {
+  project_objects = merge(var.project_objects,
+    {
       "dynamo_table_register" = "${module.dynamo.table_naming.name}",
-      "sfn_alaya_sync" = "${module.step_functions.sfn_alaya_sync_arn}"
+      "sfn_alaya_sync"        = "${module.step_functions.sfn_alaya_sync_arn}"
   })
 }
 
 module "layers" {
-    source = "./layers"
-    
-    environment         = var.environment
-    project_app_group   = var.project_app_group
-    project_ledger      = var.project_ledger
-    project_prefix      = var.project_prefix
-    site                = var.site
-    tier                = var.tier
-    zone                = var.zone
+  source = "./layers"
 
-    project_objects     = var.project_objects
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
+
+  project_objects = var.project_objects
 }
 
 resource "aws_lambda_event_source_mapping" "register" {
@@ -146,15 +146,15 @@ resource "aws_s3_bucket_notification" "register" {
   bucket = var.project_objects.bucket_id
 
   queue {
-    queue_arn = module.sqs.sqs_register_queue_arn
-    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    queue_arn     = module.sqs.sqs_register_queue_arn
+    events        = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
     filter_prefix = trimprefix("${var.project_objects.alayasyncdb_path}/individuals/", "s3://${var.project_objects.bucket_id}/")
     filter_suffix = ".parquet"
   }
 
   queue {
-    queue_arn = module.sqs.sqs_register_queue_arn
-    events    = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    queue_arn     = module.sqs.sqs_register_queue_arn
+    events        = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
     filter_prefix = trimprefix("${var.project_objects.alayasyncdb_path}/organizations/", "s3://${var.project_objects.bucket_id}/")
     filter_suffix = ".parquet"
   }
@@ -164,7 +164,7 @@ resource "aws_s3_bucket_notification" "register" {
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = "consume_data/resultData/executions/"
     #filter_prefix       = var.alaya_trigger_key
-    filter_suffix       = ".json"
+    filter_suffix = ".json"
   }
 }
 
@@ -199,7 +199,7 @@ resource "aws_cloudwatch_metric_alarm" "sfn" {
   insufficient_data_actions = []
   tags                      = module.cwa_alaya_sync_naming.tags
   dimensions = {
-    StateMachineArn=module.step_functions.sfn_alaya_sync_arn
+    StateMachineArn = module.step_functions.sfn_alaya_sync_arn
   }
 }
 
@@ -224,6 +224,6 @@ resource "aws_cloudwatch_metric_alarm" "register" {
   insufficient_data_actions = []
   tags                      = module.cwa_alaya_sync_register_naming.tags
   dimensions = {
-    QueueName=module.sqs.sqs_names.registration_dlq
+    QueueName = module.sqs.sqs_names.registration_dlq
   }
 }
