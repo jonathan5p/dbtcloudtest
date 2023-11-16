@@ -162,6 +162,7 @@ if __name__ == "__main__":
     merge_key = write_options.get("merge_key")
 
     staging_table = "staging_" + args["table"]
+    source_table =  "raw_" + args["table"]
     table_exists = spark._jsparkSession.catalog().tableExists(
         args["database"], staging_table
     )
@@ -172,7 +173,7 @@ if __name__ == "__main__":
             target_table=staging_table,
             geo_cols=geo_cols,
             database=args["database"],
-            source_table=args["table"],
+            source_table=source_table,
             repartition_num=repartition_num,
         )
     elif table_exists:
@@ -180,7 +181,7 @@ if __name__ == "__main__":
             spark.read.option("readChangeFeed", "true")
             .option("startingVersion", "1")
             .format("delta")
-            .table(f"{args['database']}.{args['table']}")
+            .table(f"{args['database']}.{source_table}")
         )
 
         latest_df = (
