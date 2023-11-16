@@ -38,24 +38,6 @@ module "resource_names" {
 }
 
 #----------------------------------
-# KMS Key names
-#----------------------------------
-
-module "data_key_name" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "kma"
-  purpose     = join("", [var.project_prefix, "-", "datakey"])
-}
-
-module "glue_enc_key_name" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "kma"
-  purpose     = join("", [var.project_prefix, "-", "glueenckey"])
-}
-
-#----------------------------------
 # S3 Bucket names
 #----------------------------------
 
@@ -465,31 +447,6 @@ module "cwa_alaya_sync_register_naming" {
 }
 
 #----------------------------------
-# Aurora Names
-#----------------------------------
-
-# module "aurora_security_group_naming" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "sgp"
-#   purpose     = join("", [var.project_prefix, "-", "admintooldbsecuritygroup"])
-# }
-
-# module "aurora_subnet_group_naming" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "rdu"
-#   purpose     = join("", [var.project_prefix, "-", "admintooldbsubnetgroup"])
-# }
-
-# module "aurora_cluster_naming" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "rcc"
-#   purpose     = join("", [var.project_prefix, "-", "admintooldb"])
-# }
-
-#----------------------------------
 # Sfn names
 #----------------------------------
 
@@ -596,92 +553,6 @@ data "aws_iam_policy_document" "assume_dev_deploy" {
 }
 
 # ------------------------------------------------------------------------------
-# Aurora Deployment
-# ------------------------------------------------------------------------------
-
-# data "aws_iam_policy_document" "aurora_deploy" {
-
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "rds:ListTagsForResource",
-#       "rds:AddTagsToResource",
-#       "rds:DescribeDBClusterParameterGroups",
-#       "rds:DescribeDBSecurityGroups",
-#       "rds:CreateDBCluster",
-#       "rds:DeleteDBCluster",
-#       "rds:ModifyDBCluster",
-#       "rds:DescribeDBCluster",
-#       "rds:ModifyDBClusterParameterGroup",
-#       "rds:DescribeDBSubnetGroups",
-#       "rds:CreateDBSubnetGroup",
-#       "rds:DeleteDBSubnetGroup",
-#       "rds:ModifyDBSubnetGroup",
-#       "rds:DescribeDBClusters",
-#       "rds:DescribeGlobalClusters",
-#       "rds:AddRoleToDBCluster",
-#       "rds:CreateDBInstance",
-#       "rds:DescribeDBInstances",
-#       "rds:DeleteDBInstance",
-#       "rds:ModifyDBInstance",
-#       "rds:AddRoleToDBInstance"
-#     ]
-#     resources = [
-#       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}",
-#       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:subgrp:${module.aurora_subnet_group_naming.name}",
-#       "arn:aws:rds::${var.aws_account_number_env}:global-cluster:*"
-#     ]
-#     sid = "clusterpermissions"
-#   }
-
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "rds:CreateDBInstance",
-#       "rds:DescribeDBInstances",
-#       "rds:DeleteDBInstance",
-#       "rds:ModifyDBInstance",
-#       "rds:AddRoleToDBInstance",
-#       "rds:ListTagsForResource",
-#       "rds:AddTagsToResource"
-#     ]
-#     resources = [
-#       "arn:aws:rds:${var.region}:${var.aws_account_number_env}:db:*"
-#     ]
-#     condition {
-#       test     = "StringEquals"
-#       variable = "rds:db-tag/Name"
-#       values   = ["${module.aurora_cluster_naming.name}"]
-#     }
-#     sid = "rdsinstancepermissions"
-#   }
-
-#   statement {
-#     effect = "Allow"
-#     actions = [
-#       "secretsmanager:DescribeSecret",
-#       "secretsmanager:CancelRotateSecret",
-#       "secretsmanager:UpdateSecret",
-#       "secretsmanager:CreateSecret",
-#       "secretsmanager:DeleteSecret",
-#       "secretsmanager:PutSecretValue",
-#       "secretsmanager:TagResource",
-#       "secretsmanager:UntagResource",
-#       "secretsmanager:ListSecrets"
-#     ]
-#     resources = [
-#       "arn:aws:secretsmanager:${var.region}:${var.aws_account_number_env}:secret:*"
-#     ]
-#     condition {
-#       test     = "StringEquals"
-#       variable = "secretsmanager:ResourceTag/aws:rds:primaryDBClusterArn"
-#       values   = ["arn:aws:rds:${var.region}:${var.aws_account_number_env}:cluster:${module.aurora_cluster_naming.name}"]
-#     }
-#     sid = "clustersecretpermissions"
-#   }
-# }
-
-# ------------------------------------------------------------------------------
 # KMS, S3, SSM Policies
 # ------------------------------------------------------------------------------
 
@@ -690,18 +561,10 @@ data "aws_iam_policy_document" "dev_deploy" {
   statement {
     effect = "Allow"
     actions = [
-      "kms:TagResource",
-      "kms:DeleteKey",
-      "kms:ScheduleKeyDeletion",
-      "kms:EnableKey",
-      "kms:PutKeyPolicy",
-      "kms:GenerateDataKey",
-      "kms:EnableKeyRotation",
       "kms:DescribeKey",
       "kms:GetKeyPolicy",
       "kms:GetKeyRotationStatus",
       "kms:ListResourceTags",
-      "kms:DeleteAlias",
       "kms:CreateGrant",
       "kms:ListGrants",
       "kms:RevokeGrant",
@@ -711,23 +574,6 @@ data "aws_iam_policy_document" "dev_deploy" {
       "arn:aws:kms:${var.region}:${var.aws_account_number_env}:key/*"
     ]
     sid = "kmspermissions"
-  }
-
-  statement {
-    effect  = "Allow"
-    actions = ["kms:DeleteAlias"]
-    resources = [
-      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.data_key_name.name}",
-      "arn:aws:kms:${var.region}:${var.aws_account_number_env}:alias/${module.glue_enc_key_name.name}"
-    ]
-    sid = "kmsaliaspermissions"
-  }
-
-  statement {
-    effect    = "Allow"
-    actions   = ["kms:CreateKey", "kms:CreateAlias", "kms:ListAliases"]
-    resources = ["*"]
-    sid       = "kmscreatepermissions"
   }
 
   statement {
@@ -1175,14 +1021,6 @@ data "aws_iam_policy_document" "dev_deploy4" {
 # Deployment role policy attachements
 # ------------------------------------------------------------------------------
 
-# module "irp_aurora_deployment_naming" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "irp"
-#   env         = var.environment
-#   purpose     = join("", ["auroradeploy", var.project_prefix])
-# }
-
 module "irp_dev_deployment_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
@@ -1227,11 +1065,6 @@ resource "aws_iam_role" "dev_deployment" {
   tags               = module.iro_dev_deployment_naming.tags
 }
 
-# resource "aws_iam_policy" "aurora_deployment" {
-#   name   = module.irp_aurora_deployment_naming.name
-#   policy = data.aws_iam_policy_document.aurora_deploy.json
-# }
-
 resource "aws_iam_policy" "dev_deployment" {
   name   = module.irp_dev_deployment_naming.name
   policy = data.aws_iam_policy_document.dev_deploy.json
@@ -1251,11 +1084,6 @@ resource "aws_iam_policy" "dev_deployment4" {
   name   = module.irp_dev_deployment_naming4.name
   policy = data.aws_iam_policy_document.dev_deploy4.json
 }
-
-# resource "aws_iam_role_policy_attachment" "aurora_deployment" {
-#   role       = aws_iam_role.dev_deployment.name
-#   policy_arn = aws_iam_policy.aurora_deployment.arn
-# }
 
 resource "aws_iam_role_policy_attachment" "dev_deployment" {
   role       = aws_iam_role.dev_deployment.name

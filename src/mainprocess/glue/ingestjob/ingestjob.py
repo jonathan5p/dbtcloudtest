@@ -60,6 +60,7 @@ def full_load(
             f"ALTER TABLE {catalog_db}.{catalog_table} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)"
         )
 
+
 def incremental_load(
     spark: SparkSession,
     input_df: DataFrame,
@@ -122,7 +123,6 @@ if __name__ == "__main__":
     write_options = json.loads(args["options"]).get("write_options", {})
     conn_ops = json.loads(args["options"]).get("connection_options", {})
     merge_key = write_options.get("merge_key")
-    s3_target_path = f"s3://{args.get('target')}/{args.get('target_prefixes')}/{args.get('catalog_database')}/{args.get('catalog_table')}/"
 
     input_df = glueContext.create_dynamic_frame_from_options(
         connection_type=args.get("connection_type"),
@@ -135,8 +135,11 @@ if __name__ == "__main__":
 
     partitions = write_options.get("partitions")
 
+    catalog_table_name = "raw_" + args["catalog_table"]
+    s3_target_path = f"s3://{args.get('target')}/{args.get('target_prefixes')}/{args.get('catalog_database')}/{catalog_table_name}/"
+
     table_exists = spark._jsparkSession.catalog().tableExists(
-        args["catalog_database"], args["catalog_table"]
+        args["catalog_database"], catalog_table_name
     )
 
     if not table_exists:
@@ -145,7 +148,7 @@ if __name__ == "__main__":
             s3_target_path,
             write_options.get("compression"),
             args["catalog_database"],
-            args["catalog_table"],
+            catalog_table_name,
             partitions=partitions,
         )
 
