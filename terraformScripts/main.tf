@@ -27,44 +27,6 @@ module "base_naming" {
 }
 
 #------------------------------------------------------------------------------
-# KMS Keys for the S3 Buckets and Glue
-#------------------------------------------------------------------------------
-
-# # OIDH Dedup Process Encryption Key
-# module "data_key_name" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "kma"
-#   purpose     = join("", [var.project_prefix, "-", "datakey"])
-# }
-# module "data_key" {
-#   source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
-#   key_name           = module.data_key_name.name
-#   key_tags           = module.data_key_name.tags
-#   key_admins         = var.kms_data_admins
-#   key_users          = var.kms_data_users
-#   key_description    = "KMS key used for data encryption of all the data in the datahub-dedup process"
-#   aws_account_number = data.aws_caller_identity.current.account_id
-# }
-
-# # Glue Data Encryption Key
-# module "glue_enc_key_name" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "kma"
-#   purpose     = join("", [var.project_prefix, "-", "glueenckey"])
-# }
-# module "glue_enc_key" {
-#   source             = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//kms?ref=develop"
-#   key_name           = module.glue_enc_key_name.name
-#   key_tags           = module.glue_enc_key_name.tags
-#   key_admins         = var.kms_glue_admins
-#   key_users          = var.kms_glue_users
-#   key_description    = "KMS key used for data encryption of all the glue resources used in the datahub-dedup process"
-#   aws_account_number = data.aws_caller_identity.current.account_id
-# }
-
-#------------------------------------------------------------------------------
 # S3 Buckets
 #------------------------------------------------------------------------------
 
@@ -185,10 +147,6 @@ module "base_naming" {
 #     "lambda_ec_office_target_table_name" = var.lambda_ec_office_target_table_name
 #     "lambda_ec_agent_source_table_name"  = var.lambda_ec_agent_source_table_name
 #     "lambda_ec_office_source_table_name" = var.lambda_ec_office_source_table_name
-#     "aurora_backup_retention_period"     = var.aurora_backup_retention_period
-#     "aurora_preferred_backup_window"     = var.aurora_preferred_backup_window
-#     "aurora_max_capacity"                = var.aurora_max_capacity
-#     "aurora_min_capacity"                = var.aurora_min_capacity
 #     "max_records_per_file"               = var.glue_max_records_per_file
 #     "alaya_trigger_key"                  = var.alaya_trigger_key
 #     "glue_geosvc_subnetid"               = var.glue_geosvc_subnetid
