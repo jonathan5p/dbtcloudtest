@@ -1,5 +1,5 @@
 locals{
-  kms_key_count = var.s3_bucket_key_id == null?0:1
+  kms_key_count = var.s3_bucket_key_id == null ? 0 : 1
 }
 
 #------------------------------------------------------------------------------
