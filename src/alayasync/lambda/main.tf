@@ -37,11 +37,11 @@ module "lambda_alaya_sync_scheduling" {
   policy_variables = var.project_objects
 
   environment_variables = {
-    "ATHENA_BUCKET" = var.project_objects.athena_bucket_id
-    "INDIVIDUALS"     = var.project_objects.individuals
+    "ATHENA_BUCKET"  = var.project_objects.athena_bucket_id
+    "INDIVIDUALS"    = var.project_objects.individuals
     "LAMBDA_CHATBOT" = var.project_objects.lambda_chatbot_arn
-    "OIDH_TABLE"    = var.project_objects.dynamo_table_register
-    "ORGANIZATIONS"   = var.project_objects.organizations
+    "OIDH_TABLE"     = var.project_objects.dynamo_table_register
+    "ORGANIZATIONS"  = var.project_objects.organizations
   }
 
   layers = [
@@ -67,7 +67,7 @@ module "lambda_alaya_sync_reduce" {
 
   environment_variables = {
     "LAMBDA_CHATBOT" = var.project_objects.lambda_chatbot_arn
-    "OIDH_TABLE" = var.project_objects.dynamo_table_register
+    "OIDH_TABLE"     = var.project_objects.dynamo_table_register
   }
 }
 

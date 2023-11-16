@@ -7,7 +7,7 @@ data "aws_ssm_parameter" "bright_pypi_pipconf" {
 }
 
 locals {
-  parameter_path        = "parameter/${var.site}/${var.environment}/geosvc/api_uri"
+  parameter_path        = "parameter/${var.site}/${var.environment}/${var.project_app_group}/geosvc/api_uri"
   ind_dedup_job_workers = 20
   org_dedup_job_workers = 30
   counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
@@ -126,7 +126,7 @@ module "redshift_connection" {
 }
 
 #------------------------------------------------------------------------------
-# Aurora Credentials
+# Aurora Parameters
 #------------------------------------------------------------------------------
 
 data "aws_ssm_parameter" "aurora_conn_username" {
@@ -137,9 +137,29 @@ data "aws_ssm_parameter" "aurora_conn_password" {
   name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/aurora/password"
 }
 
+data "aws_ssm_parameter" "aurora_db_jdbc_url" {
+  name = "/parameter/${var.site}/${var.environment}/data/admintooldb/jdbc_url"
+}
+
+data "aws_ssm_parameter" "aurora_db_subnets" {
+  name = "/parameter/${var.site}/${var.environment}/data/admintooldb/subnets"
+}
+
+data "aws_ssm_parameter" "aurora_db_sg" {
+  name = "/parameter/${var.site}/${var.environment}/data/admintooldb/security_group"
+}
+
 #------------------------------------------------------------------------------
 # Glue Aurora Connection
 #------------------------------------------------------------------------------
+
+data "aws_rds_cluster" "aurora_db" {
+  cluster_identifier = data.aws_ssm_parameter.aurora_db_id.value
+}
+
+data "aws_db_subnet_group" "aurora_subnetgroup" {
+  name = data.aws_rds_cluster.aurora_db.db_subnet_group_name
+}
 
 module "aurora_connection" {
   source         = "../../../modules/glue_connection"
@@ -148,9 +168,30 @@ module "aurora_connection" {
   conn_name      = "auroraconn"
   password       = data.aws_ssm_parameter.aurora_conn_password.value
   username       = data.aws_ssm_parameter.aurora_conn_username.value
-  jdbc_url       = var.project_objects.aurora_jdbc_url
-  subnet_id      = var.project_objects.aurora_subnetid
+  jdbc_url       = data.aws_ssm_parameter.aurora_db_jdbc_url
+  subnet_id      = split(",", data.aws_ssm_parameter.aurora_db_subnets)[0]
 }
+
+#------------------------------------------------------------------------------
+# Glue Aurora Connection Security Group
+#------------------------------------------------------------------------------
+
+resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
+  security_group_id            = module.aurora_connection.conn_sg_id
+  ip_protocol                  = "tcp"
+  from_port                    = 0
+  to_port                      = 65535
+  referenced_security_group_id = data.aws_ssm_parameter.aurora_db_sg.value
+}
+
+resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
+  security_group_id            = data.aws_ssm_parameter.aurora_db_sg.value
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+  referenced_security_group_id = module.aurora_connection.conn_sg_id
+}
+
 
 #------------------------------------------------------------------------------
 # Glue Ingest Job

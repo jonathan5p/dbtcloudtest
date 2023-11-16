@@ -51,28 +51,6 @@ variable "zone" {
   default = {}
 }
 
-# Data KMS Admins and Users
-variable "kms_data_admins" {
-  description = "Arn of the IAM roles/users that will administrate the kms data key"
-  default     = []
-}
-
-variable "kms_data_users" {
-  description = "Arn of the IAM roles/users that will use the kms data key"
-  default     = []
-}
-
-# Glue KMS Admins and Users
-variable "kms_glue_admins" {
-  description = "Arn of the IAM roles/users that will administrate the kms data key"
-  default     = []
-}
-
-variable "kms_glue_users" {
-  description = "Arn of the IAM roles/users that will use the kms data key"
-  default     = []
-}
-
 # S3 parameters
 variable "s3_bucket_tmp_expiration_days" {
   description = "Expiration lifecycle policy for all objects store in the tmp prefix of the s3 buckets"
@@ -84,27 +62,6 @@ variable "s3_bucket_objects_expiration_days" {
 
 variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
-}
-
-# Lambda enrich caar data parameters
-variable "lambda_ec_agent_source_table_name" {
-  description = "Name of the agent table registered in the S3 Raw layer"
-  default     = "bright_raw_agent_latest"
-}
-
-variable "lambda_ec_agent_target_table_name" {
-  description = "Name of the agent table registered in the S3 Staging layer"
-  default     = "bright_staging_agent_latest"
-}
-
-variable "lambda_ec_office_source_table_name" {
-  description = "Name of the office table registered in the S3 Raw layer"
-  default     = "bright_raw_office_latest"
-}
-
-variable "lambda_ec_office_target_table_name" {
-  description = "Name of the office table registered in the S3 Staging layer"
-  default     = "bright_staging_office_latest"
 }
 
 # Glue max records per file
@@ -150,27 +107,6 @@ variable "ecs_task_alaya_memory" {
 variable "retention_days_ecs_alaya_logs" {
   description = "Retention days for logs in cloudwatch"
   default     = 30
-}
-
-# Aurora serverlessv2 postgresql db
-variable "aurora_backup_retention_period" {
-  description = "Admin tool aurora postgresql database retention period"
-  default     = 30
-}
-
-variable "aurora_preferred_backup_window" {
-  description = "Admin tool aurora postgresql database preferred backup window"
-  default     = "21:00-00:00"
-}
-
-variable "aurora_max_capacity" {
-  description = "Admin tool aurora postgresql max capacity"
-  default     = 4
-}
-
-variable "aurora_min_capacity" {
-  description = "Admin tool aurora postgresql min capacity"
-  default     = 2
 }
 
 variable "ecs_subnets" {
