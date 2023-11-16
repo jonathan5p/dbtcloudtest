@@ -4,7 +4,7 @@ variable "s3_bucket" {
 
 variable "s3_bucket_versioning" {
   description = "Bucket versioning enable flag"
-  default = false
+  default = "Disabled"
 }
 
 variable "s3_bucket_tags" {
