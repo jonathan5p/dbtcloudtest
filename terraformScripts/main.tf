@@ -175,45 +175,46 @@ module "mainprocess" {
 # Alaya Sync Process
 #------------------------------------------------------------------------------
 
-#data "aws_ssm_parameter" "ecs_cluster_name" {
-#  name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
-#}
+data "aws_ssm_parameter" "ecs_cluster_name" {
+  name = "/parameter/${var.site}/${var.environment}/data/ecs_cluster"
+}
 
-#data "aws_ssm_parameter" "dynamo_async_name" {
-#  name = "/parameter/${var.site}/${var.environment}/data/dynamo_async"
-#}
+data "aws_ssm_parameter" "dynamo_async_name" {
+  name = "/parameter/${var.site}/${var.environment}/data/dynamo_async"
+}
 
-#module "alayasync" {
-#  source = "../src/alayasync"
+module "alayasync" {
+  source = "../src/alayasync"
 
-#  environment       = var.environment
-#  project_app_group = var.project_app_group
-#  project_ledger    = var.project_ledger
-#  project_prefix    = var.project_prefix
-#  site              = var.site
-#  tier              = var.tier
-#  zone              = var.zone
+  environment       = var.environment
+  project_app_group = var.project_app_group
+  project_ledger    = var.project_ledger
+  project_prefix    = var.project_prefix
+  site              = var.site
+  tier              = var.tier
+  zone              = var.zone
 
-#  project_objects = {
-#    "alayasyncdb"           = module.mainprocess.alayasync_db
-#    "alayasyncdb_path"      = module.mainprocess.alayasyncdb_path
-#    "alayatrigger_key"      = var.alaya_trigger_key
-#    "async_lambda_timeout"  = "890"
-#    "athena_bucket_id"      = module.athena.bucket_id
-#    "bucket_id"             = module.s3_data_bucket.bucket_id
-#    "bucket_arn"            = module.s3_data_bucket.bucket_arn
-#    "concurrent_tasks"      = var.concurrent_tasks
-#    "data_key_id"           = module.data_key.key_id
-#    "data_key_arn"          = module.data_key.key_arn
-#    "dynamo_table_async"    = data.aws_ssm_parameter.dynamo_async_name.value
-#    "ecs_cluster"           = data.aws_ssm_parameter.ecs_cluster_name.value
-#    "ecs_subnets"           = var.ecs_subnets
-#    "ecs_task_alaya_cpu"    = var.ecs_task_alaya_cpu
-#    "ecs_task_alaya_memory" = var.ecs_task_alaya_memory
-#    "lambda_chatbot_arn"    = data.aws_ssm_parameter.lambda_chatbot_arn.value
-#    "ttl_days_async"        = var.ttl_days_async
-#  }
-#}
+  project_objects = {
+    "alayasyncdb"           = module.mainprocess.alayasync_db
+    "alayasyncdb_path"      = module.mainprocess.alayasyncdb_path
+    "alayatrigger_key"      = var.alaya_trigger_key
+    "async_lambda_timeout"  = "890"
+    "athena_bucket_id"      = module.athena.bucket_id
+    "bucket_id"             = module.s3_data_bucket.bucket_id
+    "bucket_arn"            = module.s3_data_bucket.bucket_arn
+    "concurrent_tasks"      = var.concurrent_tasks
+    "data_key_id"           = "abc"
+    "data_key_arn"          = data.aws_ssm_parameter.data_key_arn.value
+    "dynamo_table_async"    = data.aws_ssm_parameter.dynamo_async_name.value
+    "ecs_cluster"           = data.aws_ssm_parameter.ecs_cluster_name.value
+    "ecs_subnets"           = var.ecs_subnets
+    "ecs_task_alaya_cpu"    = var.ecs_task_alaya_cpu
+    "ecs_task_alaya_memory" = var.ecs_task_alaya_memory
+    "lambda_chatbot_arn"    = data.aws_ssm_parameter.lambda_chatbot_arn.value
+    "lambda_task_alaya_memory" = var.lambda_task_alaya_memory
+    "ttl_days_async"        = var.ttl_days_async
+  }
+}
 
 #------------------------------------------------------------------------------
 # Athena

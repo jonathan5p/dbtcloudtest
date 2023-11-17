@@ -125,3 +125,8 @@ variable "ttl_days_async" {
   description = "number of days to keep lambda execution when running alaya sync"
   default     = 2
 }
+
+variable "lambda_task_alaya_memory" {
+  type        = number
+  default     = 512
+}
