@@ -71,11 +71,11 @@ module "lambda_alaya_sync_reduce" {
   }
 }
 
-module "lambda_alaya_sync_ecs_start" {
+module "lambda_alaya_sync_start_task" {
   source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
 
   environment       = var.environment
-  lambda_name       = "alayasyncecsstart"
+  lambda_name       = "alayasyncstarttask"
   lambda_path       = "../src/alayasync/lambda"
   project_app_group = var.project_app_group
   project_ledger    = var.project_ledger
@@ -102,11 +102,11 @@ module "lambda_alaya_sync_ecs_start" {
 }
 
 
-module "lambda_alaya_sync_ecs_status" {
+module "lambda_alaya_sync_status_task" {
   source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//lambdas?ref=v0.0.4"
 
   environment       = var.environment
-  lambda_name       = "alayasyncecsstatus"
+  lambda_name       = "alayasyncstatustask"
   lambda_path       = "../src/alayasync/lambda"
   project_app_group = var.project_app_group
   project_ledger    = var.project_ledger
@@ -131,7 +131,7 @@ module "lambda_alaya_sync_async" {
   environment       = var.environment
   lambda_name       = "alayasyncasync"
   lambda_path       = "../src/alayasync/lambda"
-  memory_size       = 512
+  memory_size       = var.project_objects.lambda_task_alaya_memory
   project_app_group = var.project_app_group
   project_ledger    = var.project_ledger
   project_prefix    = var.project_prefix

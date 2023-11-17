@@ -14,4 +14,4 @@ glue_geosvc_subnetid = "subnet-0edd5c963fca279cf"
 cron_schedule = "cron(0 23 * * ? *)"
 
 # ECS parameters
-ecs_subnets   = "subnet-0112c4c44ce9649c2"
+ecs_subnets   = "subnet-0edd5c963fca279cf"
