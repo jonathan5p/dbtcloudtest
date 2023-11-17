@@ -285,9 +285,9 @@ module "cleaning_job" {
     "--job-bookmark-option"             = "job-bookmark-disable"
     "--config_bucket"                   = var.project_objects.artifacts_bucket_id
     "--data_bucket"                     = var.project_objects.data_bucket_id
-    "--agent_table_name"                = "bright_staging_agent_latest"
-    "--office_table_name"               = "bright_staging_office_latest"
-    "--team_table_name"                 = "bright_raw_team_latest"
+    "--agent_table_name"                = "staging_bright_agent_latest"
+    "--office_table_name"               = "staging_bright_office_latest"
+    "--team_table_name"                 = "raw_bright_team_latest"
     "--datalake-formats"                = "delta"
     "--python-modules-installer-option" = local.jfrog_url
     "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
