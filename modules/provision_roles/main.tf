@@ -270,26 +270,26 @@ module "lambda_schedule_naming" {
 }
 
 # lambdas - processing
-module "ipl_lambda_processing_policy_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
-}
+#module "ipl_lambda_processing_policy_naming" {
+#  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#  base_object = module.base_naming
+#  type        = "ipl"
+#  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
+#}
 
-module "iro_lambda_processing_role_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
-}
+#module "iro_lambda_processing_role_naming" {
+#  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#  base_object = module.base_naming
+#  type        = "iro"
+#  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
+#}
 
-module "lambda_processing_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = module.base_naming
-  type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
-}
+#module "lambda_processing_naming" {
+#  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+#  base_object = module.base_naming
+#  type        = "lmb"
+#  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
+#}
 
 # lambdas - reduce
 module "ipl_lambda_reduce_policy_naming" {
@@ -335,48 +335,48 @@ module "lambda_execution_naming" {
   purpose     = join("", [var.project_prefix, "-", "alayasyncexecution"])
 }
 
-# lambdas - ecs_start
-module "ipl_lambda_ecs_start_policy_naming" {
+# lambdas - alayasyncstarttask
+module "ipl_lambda_start_task_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstart"])
+  purpose     = join("", [var.project_prefix, "-", "alayasyncstarttask"])
 }
 
-module "iro_lambda_ecs_start_role_naming" {
+module "iro_lambda_start_task_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstart"])
+  purpose     = join("", [var.project_prefix, "-", "alayasyncstarttask"])
 }
 
-module "lambda_ecs_start_naming" {
+module "lambda_start_task_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstart"])
+  purpose     = join("", [var.project_prefix, "-", "alayasyncstarttask"])
 }
 
-# lambdas - ecs_status
-module "ipl_lambda_ecs_status_policy_naming" {
+# lambdas - alayasyncstatustask
+module "ipl_lambda_status_task_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "ipl"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+  purpose     = join("", [var.project_prefix, "-", "alayasyncstatustask"])
 }
 
-module "iro_lambda_ecs_status_role_naming" {
+module "iro_lambda_status_task_role_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "iro"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+  purpose     = join("", [var.project_prefix, "-", "alayasyncstatustask"])
 }
 
-module "lambda_ecs_status_naming" {
+module "lambda_status_task_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
   base_object = module.base_naming
   type        = "lmb"
-  purpose     = join("", [var.project_prefix, "-", "alayasyncecsstatus"])
+  purpose     = join("", [var.project_prefix, "-", "alayasyncstatustask"])
 }
 
 # lambdas - alayasync
@@ -763,11 +763,11 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_ecs_task_execution_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_register_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_schedule_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_processing_role_naming.name}",
+      #"arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_processing_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_reduce_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_execution_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_ecs_start_role_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_ecs_status_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_start_task_role_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_status_task_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_sfn_alayasync_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${module.iro_lambda_async_role_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:role/${var.site}${var.environment}${var.zone}iro${var.project_prefix}*"
@@ -800,11 +800,11 @@ data "aws_iam_policy_document" "dev_deploy2" {
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_ecs_task_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_register_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_schedule_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_processing_policy_naming.name}",
+      #"arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_processing_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_reduce_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_execution_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_ecs_start_policy_naming.name}",
-      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_ecs_status_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_start_task_policy_naming.name}",
+      "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_status_task_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_lambda_async_policy_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${module.ipl_sfn_alayasync_naming.name}",
       "arn:aws:iam::${var.aws_account_number_env}:policy/${var.site}${var.environment}${var.zone}ipl${var.project_prefix}*"
@@ -924,11 +924,11 @@ data "aws_iam_policy_document" "dev_deploy4" {
     resources = [
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_register_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_schedule_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_processing_naming.name}",
+      #"arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_processing_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_reduce_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_execution_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_start_naming.name}",
-      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_ecs_status_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_start_task_naming.name}",
+      "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_status_task_naming.name}",
       "arn:aws:lambda:${var.region}:${var.aws_account_number_env}:function:${module.lambda_async_naming.name}",
     ]
   }
