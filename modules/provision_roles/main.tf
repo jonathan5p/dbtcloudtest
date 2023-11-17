@@ -269,28 +269,6 @@ module "lambda_schedule_naming" {
   purpose     = join("", [var.project_prefix, "-", "alayasyncschedule"])
 }
 
-# lambdas - processing
-#module "ipl_lambda_processing_policy_naming" {
-#  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#  base_object = module.base_naming
-#  type        = "ipl"
-#  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
-#}
-
-#module "iro_lambda_processing_role_naming" {
-#  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#  base_object = module.base_naming
-#  type        = "iro"
-#  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
-#}
-
-#module "lambda_processing_naming" {
-#  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#  base_object = module.base_naming
-#  type        = "lmb"
-#  purpose     = join("", [var.project_prefix, "-", "alayasyncprocessing"])
-#}
-
 # lambdas - reduce
 module "ipl_lambda_reduce_policy_naming" {
   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
