@@ -203,7 +203,7 @@ module "alayasync" {
     "bucket_id"             = module.s3_data_bucket.bucket_id
     "bucket_arn"            = module.s3_data_bucket.bucket_arn
     "concurrent_tasks"      = var.concurrent_tasks
-    "data_key_id"           = "abc"
+    "data_key_id"           = data.aws_ssm_parameter.data_key_id.value
     "data_key_arn"          = data.aws_ssm_parameter.data_key_arn.value
     "dynamo_table_async"    = data.aws_ssm_parameter.dynamo_async_name.value
     "ecs_cluster"           = data.aws_ssm_parameter.ecs_cluster_name.value
