@@ -37,7 +37,7 @@
                         "States": {
                           "Start_Sending_to_Alaya": {
                             "Type": "Task",
-                            "Resource": "${ecs_start}",
+                            "Resource": "${start_task}",
                             "ResultPath": "$.run_async_id",
                             "Next": "Wait_Send"
                           },
@@ -48,7 +48,7 @@
                           },
                           "Send_status": {
                             "Type": "Task",
-                            "Resource": "${ecs_status}",
+                            "Resource": "${status_task}",
                             "ResultPath": "$.run_async_status",
                             "Next": "Choice_status"
                           },
