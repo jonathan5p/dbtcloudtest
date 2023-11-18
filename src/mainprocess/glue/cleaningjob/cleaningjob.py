@@ -61,8 +61,7 @@ if __name__ == "__main__":
         "model_version",
         "data_bucket",
         "glue_db",
-        "source_tables",
-        "getgeoinfo",
+        "tables",
     ]
 
     args = getResolvedOptions(sys.argv, params)
@@ -73,9 +72,12 @@ if __name__ == "__main__":
     job = Job(glueContext)
     job.init(args["JOB_NAME"], args)
 
+    # Load tables config
+    tables_config = json.loads(args["tables_config"])
     table_names = {}
-    for source_table, staging_flag in zip(args["source_tables"], args["getgeoinfo"]):
-        if staging_flag:
+    for table_config in tables_config:
+        source_table = table_config["catalog_table"]
+        if table_config["getgeoinfo"]:
             table_names[source_table.split("_")[1]] = "staging_" + source_table
         else:
             table_names[source_table.split("_")[1]] = "raw_" + source_table
