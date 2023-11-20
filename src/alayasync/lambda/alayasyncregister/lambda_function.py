@@ -34,11 +34,13 @@ def parse_s3_event(s3_event):
         'database': database,
         'error': "",
         'key': unquote_plus(s3_event['s3']['object']['key']),
+        'processed_file': "",
+        'processing_engine': "",
         'records': {},
         'size': s3_event['s3']['object']['size'],
         'table': table,
+        'task_id': "",
         'timestamp': int(round(datetime.utcnow().timestamp()*1000, 0))
-        #'last_modified_date': s3_event['eventTime'].split('.')[0]+'+00:00',
     }
 
 def put_item(table, item, key):

@@ -1,6 +1,9 @@
+locals {
+  user_mentions = jsondecode(file("../src/mainprocess/stepfunction/mainprocess/user_mentions.json"))
+}
+
 module "stepfunction" {
-  #source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=dev"
-  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=dev"
+  source = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//step_functions?ref=v0.1.0"
 
   environment       = var.environment
   sfn_name          = "mainprocess"
@@ -12,7 +15,7 @@ module "stepfunction" {
   tier              = var.tier
   zone              = var.zone
 
-  policy_variables = var.policy_variables
+  policy_variables = merge(var.policy_variables, local.user_mentions)
 }
 
 # Cron trigger execution role
@@ -60,6 +63,12 @@ resource "aws_cloudwatch_event_target" "etl_sfn" {
   target_id = "StartStateMachine"
   arn       = module.stepfunction.sfn_arn
   role_arn  = aws_iam_role.crontrigger_role.arn
+  input = jsonencode(
+    {
+      "ARTIFACTS_BUCKET" = var.policy_variables.trigger_bucket
+      "ETL_CONFIG_KEY"   = var.trigger_bucket_key
+    }
+  )
 }
 
 # Cron trigger policies

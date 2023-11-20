@@ -4,105 +4,68 @@ from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
-from geopy.geocoders import Nominatim
-from geopy.extra.rate_limiter import RateLimiter
 import pyspark.sql.functions as F
 from pyspark.sql import Window, DataFrame, SparkSession
 from pyspark.sql.types import *
 from delta import DeltaTable
 import json
+import requests
+import boto3
 
-state_abb2name = {
-    "AL": "Alabama",
-    "AK": "Alaska",
-    "AZ": "Arizona",
-    "AR": "Arkansas",
-    "CA": "California",
-    "CO": "Colorado",
-    "CT": "Connecticut",
-    "DE": "Delaware",
-    "FL": "Florida",
-    "GA": "Georgia",
-    "HI": "Hawaii",
-    "ID": "Idaho",
-    "IL": "Illinois",
-    "IN": "Indiana",
-    "IA": "Iowa",
-    "KS": "Kansas",
-    "KY": "Kentucky",
-    "LA": "Louisiana",
-    "ME": "Maine",
-    "MD": "Maryland",
-    "MA": "Massachusetts",
-    "MI": "Michigan",
-    "MN": "Minnesota",
-    "MS": "Mississippi",
-    "MO": "Missouri",
-    "MT": "Montana",
-    "NE": "Nebraska",
-    "NV": "Nevada",
-    "NH": "New Hampshire",
-    "NJ": "New Jersey",
-    "NM": "New Mexico",
-    "NY": "New York",
-    "NC": "North Carolina",
-    "ND": "North Dakota",
-    "OH": "Ohio",
-    "OK": "Oklahoma",
-    "OR": "Oregon",
-    "PA": "Pennsylvania",
-    "RI": "Rhode Island",
-    "SC": "South Carolina",
-    "SD": "South Dakota",
-    "TN": "Tennessee",
-    "TX": "Texas",
-    "UT": "Utah",
-    "VT": "Vermont",
-    "VA": "Virginia",
-    "WA": "Washington",
-    "WV": "WestVirginia",
-    "WI": "Wisconsin",
-    "WY": "Wyoming",
-}
+geo_args_order = ["address", "city", "county", "state", "postalcode"]
 
 
-@F.udf(returnType=StringType())
-def get_geo_info(city, state):
+@F.udf(returnType=MapType(StringType(), StringType()))
+def get_geo_info(address, city, county, state, postalcode, country="US"):
     """
     Auxiliar function to get CAAR county data
     """
-    geolocator = Nominatim(user_agent="geoapp", timeout=15)
-    geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
 
     output = None
-    if city is not None:
-        query = city + ", " + state_abb2name.get(state, "")
-        location = geocode(
-            query,
-            country_codes=["us"],
-            addressdetails=True,
-            featuretype="",
-        )
+    payload = {
+        "streetAddress": address,
+        "cityName": city,
+        "countyName": county,
+        "stateName": state,
+        "postalCode": postalcode,
+        "country": country,
+    }
 
-        if location is not None:
-            address = location.raw.get("address")
-            output = (
-                address.get("county", address.get("city", address.get("town")))
-                if address != None
-                else None
-            )
+    if address != None:
+        try:
+            response = requests.get(api_uri, params=payload, timeout=15)
+            if response.status_code == requests.codes.ok:
+                data = response.json()
+                data["statusCode"] = 200
+                output = data
+            else:
+                output = {
+                    "statusCode": response.status_code,
+                    "apiResponse": response.text,
+                }
+        except Exception as e:
+            print(e)
 
     return output
 
 
-def get_geo_info_df(geo_cols: str, input_df: DataFrame):
-    geo_cols = geo_cols.split(",")
-    if geo_cols not in ["", None]:
-        geo_cols = [F.col(col_name) for col_name in geo_cols]
-        output_df = input_df.withColumn("geo_info", get_geo_info(*geo_cols))
+def get_geo_info_df(geo_cols: dict, input_df: DataFrame, repartition_num: int = None):
+    if geo_cols not in [{}, None]:
+        try:
+            paritioned_df = (
+                input_df.repartition(repartition_num)
+                if repartition_num != None
+                else input_df
+            )
+            geo_cols = [F.col(geo_cols[arg_name]) for arg_name in geo_args_order]
+            output_df = paritioned_df.withColumn("geo_info", get_geo_info(*geo_cols))
+        except KeyError as e:
+            raise KeyError(
+                f"Key {str(e)} not found in geo_cols argument.\nThe geo_cols argument must contain the keys [address,city,county,state,postalcode] with their respective value."
+            )
     else:
         raise ValueError(
-            "The geo_cols argument must contain n columns following the order: [WIP]"
+            "The geo_cols argument must contain the keys [address,city,county,state,postalcode] with their respective value."
         )
     return output_df
 
@@ -111,45 +74,19 @@ def first_load(
     target_path: str,
     target_table: str,
     geo_cols: str,
-    entity: str,
-    merge_key: str,
+    repartition_num: int,
     compression: str = "snappy",
     database: str = "default",
     source_table: str = "test_table",
     test: bool = False,
-    tmp: bool = False,
 ):
     input_df = spark.read.format("delta").table(f"{database}.{source_table}")
-
-    if tmp:
-        # TODO Tmp until we get access to the geosvc API
-        caar_cond = (F.col(f"{entity}subsystemlocale") == "BRIGHT_CAAR") & (
-            F.col(f"{entity}city") != "OTHER"
-        )
-
-        caar_data = input_df.filter(caar_cond)
-        county_df = get_geo_info_df(geo_cols, caar_data)
-
-        insert_df = (
-            input_df.join(county_df.select(merge_key, "geo_info"), on=merge_key, how="left")
-            .withColumn(
-                f"{entity}county",
-                F.when(F.col("geo_info").isNotNull(), F.col("geo_info")).otherwise(
-                    F.col(f"{entity}county")
-                ),
-            )
-            .drop("geo_info")
-        )
-
-    else:
-        insert_df = (
-            get_geo_info_df(geo_cols, input_df)
-            .withColumn(f"{entity}county", F.col("geo_info"))
-            .drop("geo_info")
-        )
+    insert_df = get_geo_info_df(geo_cols, input_df, repartition_num)
+    number_of_files = int(repartition_num // 10) if repartition_num // 10 != 0 else 1
 
     write_df = (
-        insert_df.write.mode("overwrite")
+        insert_df.repartition(number_of_files)
+        .write.mode("overwrite")
         .format("delta")
         .option("path", target_path)
         .option("overwriteSchema", "true")
@@ -172,45 +109,44 @@ def incremental_load(
     database: str,
     table: str,
     merge_key: str,
-    entity: str,
 ):
     changes_df = latest_df.filter(
         F.col("_change_type").isin(["update_postimage", "insert"])
     )
-
     delete_df = latest_df.filter(F.col("_change_type") == "delete")
-
-    updates_df = (
-        get_geo_info_df(geo_cols, changes_df)
-        .withColumn(f"{entity}county", F.col("geo_info"))
-        .drop("geo_info")
-    )
-
-    upsert_df = updates_df.unionByName(delete_df)
-
+    updates_df = get_geo_info_df(geo_cols, changes_df)
+    upsert_df = updates_df.unionByName(delete_df, allowMissingColumns=True)
     target_df = DeltaTable.forName(spark, f"{database}.{table}")
 
     target_df.alias("target").merge(
         upsert_df.alias("updates"), f"target.{merge_key} = updates.{merge_key}"
-    ).whenMatchedUpdate(
-        condition=(F.col("_change_type") == "update_postimage"),
-        set={f"{entity}county": f"updates.{entity}county"},
+    ).whenMatchedUpdateAll(
+        condition=(F.col("_change_type") == "update_postimage")
     ).whenMatchedDelete(
         condition=(F.col("_change_type") == "delete")
     ).whenNotMatchedInsertAll().execute()
 
 
 if __name__ == "__main__":
+    global api_uri
+
     args = getResolvedOptions(
         sys.argv,
         [
             "JOB_NAME",
             "table",
             "data_bucket",
+            "geo_api_parameter",
             "database",
             "options",
         ],
     )
+
+    ssm = boto3.client("ssm")
+    api_endpoint = ssm.get_parameter(Name=args["geo_api_parameter"])["Parameter"][
+        "Value"
+    ]
+    api_uri = api_endpoint + "geoCodeAddressFull"
 
     sc = SparkContext()
     glueContext = GlueContext(sc)
@@ -220,13 +156,13 @@ if __name__ == "__main__":
 
     options = json.loads(args["options"])
     geo_cols = options["geoinfo_config"]["geoinfo_cols"]
-    entity = options["geoinfo_config"]["entity"]
+    repartition_num = int(options["geoinfo_config"]["repartition_num"])
 
     write_options = options["write_options"]
     merge_key = write_options.get("merge_key")
 
-    staging_table = args["table"].replace("raw", "staging")
-
+    staging_table = "staging_" + args["table"]
+    source_table = "raw_" + args["table"]
     table_exists = spark._jsparkSession.catalog().tableExists(
         args["database"], staging_table
     )
@@ -237,17 +173,15 @@ if __name__ == "__main__":
             target_table=staging_table,
             geo_cols=geo_cols,
             database=args["database"],
-            source_table=args["table"],
-            entity=entity,
-            merge_key=merge_key,
-            tmp=True,
+            source_table=source_table,
+            repartition_num=repartition_num,
         )
     elif table_exists:
         cdc_df = (
             spark.read.option("readChangeFeed", "true")
             .option("startingVersion", "1")
             .format("delta")
-            .table(f"{args['database']}.{args['table']}")
+            .table(f"{args['database']}.{source_table}")
         )
 
         latest_df = (
@@ -261,13 +195,14 @@ if __name__ == "__main__":
             .drop("latest_version")
         )
 
+        print(
+            "Latest Changes: \n",
+            latest_df.select(
+                "_commit_version", "_change_type", "_commit_timestamp"
+            ).show(10),
+        )
+
         incremental_load(
-            spark,
-            geo_cols,
-            latest_df,
-            args["database"],
-            staging_table,
-            merge_key,
-            entity,
+            spark, geo_cols, latest_df, args["database"], staging_table, merge_key
         )
 job.commit()

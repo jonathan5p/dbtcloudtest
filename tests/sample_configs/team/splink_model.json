@@ -1,0 +1,230 @@
+{
+    "link_type": "dedupe_only",
+    "comparisons": [
+        {
+            "output_column_name": "name",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`name_l` IS NULL OR `name_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`name_l` = `name_r`",
+                    "label_for_charts": "Exact match name",
+                    "m_probability": 0.2148091988880465,
+                    "u_probability": 0.0006417999490884573
+                },
+                {
+                    "sql_condition": "damerau_levenshtein(`name_l`, `name_r`) <= 1",
+                    "label_for_charts": "Damerau_levenshtein <= 1",
+                    "m_probability": 0.06545362648471063,
+                    "u_probability": 0.00015725573025138312
+                },
+                {
+                    "sql_condition": "jaro_winkler(`name_l`, `name_r`) >= 0.9",
+                    "label_for_charts": "Jaro_winkler >= 0.9",
+                    "m_probability": 0.70381602223907,
+                    "u_probability": 0.0030792637679848958
+                },
+                {
+                    "sql_condition": "jaro_winkler(`name_l`, `name_r`) >= 0.8",
+                    "label_for_charts": "Jaro_winkler >= 0.8",
+                    "m_probability": 0.0020217336365933787,
+                    "u_probability": 0.026693177361858212
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.01389941875157948,
+                    "u_probability": 0.9694285031908171
+                }
+            ],
+            "comparison_description": "Exact match vs. Name within levenshtein threshold 1 vs. Name within damerau-levenshtein threshold 1 vs. Name within jaro_winkler thresholds 0.9, 0.8 vs. anything else"
+        },
+        {
+            "output_column_name": "fullname__agent",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`fullname__agent_l` IS NULL OR `fullname__agent_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`fullname__agent_l` = `fullname__agent_r`",
+                    "label_for_charts": "Exact match fullname__agent",
+                    "m_probability": 0.42317412180945163,
+                    "u_probability": 0.001033956426402844
+                },
+                {
+                    "sql_condition": "damerau_levenshtein(`fullname__agent_l`, `fullname__agent_r`) <= 1",
+                    "label_for_charts": "Damerau_levenshtein <= 1",
+                    "m_probability": 0.40826383623957546,
+                    "u_probability": 0.0005592406907064812
+                },
+                {
+                    "sql_condition": "jaro_winkler(`fullname__agent_l`, `fullname__agent_r`) >= 0.9",
+                    "label_for_charts": "Jaro_winkler >= 0.9",
+                    "m_probability": 0.1344452868334597,
+                    "u_probability": 0.0005258238480280623
+                },
+                {
+                    "sql_condition": "jaro_winkler(`fullname__agent_l`, `fullname__agent_r`) >= 0.8",
+                    "label_for_charts": "Jaro_winkler >= 0.8",
+                    "m_probability": 0.010108668182966895,
+                    "u_probability": 0.003107766369092959
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.024008086934546372,
+                    "u_probability": 0.9947732126657697
+                }
+            ],
+            "comparison_description": "Exact match vs. Fullname__Agent within levenshtein threshold 1 vs. Fullname__Agent within damerau-levenshtein threshold 1 vs. Fullname__Agent within jaro_winkler thresholds 0.9, 0.8 vs. anything else"
+        },
+        {
+            "output_column_name": "name__office",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`name__office_l` IS NULL OR `name__office_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`name__office_l` = `name__office_r`",
+                    "label_for_charts": "Exact match",
+                    "m_probability": 0.9766237048268891,
+                    "u_probability": 0.017865702123471373
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.023376295173110944,
+                    "u_probability": 0.9821342978765286
+                }
+            ],
+            "comparison_description": "Exact match vs. anything else"
+        },
+        {
+            "output_column_name": "email__agent",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`email__agent_l` IS NULL OR `email__agent_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`email__agent_l` = `email__agent_r`",
+                    "label_for_charts": "Exact match email__agent",
+                    "m_probability": 0.6907443884042952,
+                    "u_probability": 0.0014329928419157287
+                },
+                {
+                    "sql_condition": "\n        regexp_extract(`email__agent_l`, '^[^@]+', 0)\n     = \n        regexp_extract(`email__agent_r`, '^[^@]+', 0)\n    ",
+                    "label_for_charts": "Exact match email__agent",
+                    "m_probability": 0.0003050257120068881,
+                    "u_probability": 0.00048749276377928766
+                },
+                {
+                    "sql_condition": "jaro_winkler(`email__agent_l`, `email__agent_r`) >= 0.88",
+                    "label_for_charts": "Jaro_winkler email__agent >= 0.88",
+                    "m_probability": 0.0022887507036100335,
+                    "u_probability": 5.995374715833981e-05
+                },
+                {
+                    "sql_condition": "jaro_winkler(\n        regexp_extract(`email__agent_l`, '^[^@]+', 0)\n    , \n        regexp_extract(`email__agent_r`, '^[^@]+', 0)\n    ) >= 0.88",
+                    "label_for_charts": "Jaro_winkler Username >= 0.88",
+                    "m_probability": 0.0004019654837694054,
+                    "u_probability": 0.0005828290502441887
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.3066133652942066,
+                    "u_probability": 0.9974367315969025
+                }
+            ],
+            "comparison_description": "Exact match vs. Exact username match different domain vs. Fuzzy Email within jaro_winkler threshold 0.88 vs. Fuzzy Username within jaro_winkler threshold 0.88 vs. anything else"
+        },
+        {
+            "output_column_name": "address__office",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`address__office_l` IS NULL OR `address__office_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`address__office_l` = `address__office_r`",
+                    "label_for_charts": "Exact match",
+                    "m_probability": 0.9754864796563053,
+                    "u_probability": 0.006344332078442952
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.02451352034369472,
+                    "u_probability": 0.993655667921557
+                }
+            ],
+            "comparison_description": "Exact match vs. anything else"
+        },
+        {
+            "output_column_name": "city__office",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`city__office_l` IS NULL OR `city__office_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`city__office_l` = `city__office_r`",
+                    "label_for_charts": "Exact match",
+                    "m_probability": 0.9754864796563053,
+                    "u_probability": 0.016689549961861175
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.02451352034369472,
+                    "u_probability": 0.9833104500381388
+                }
+            ],
+            "comparison_description": "Exact match vs. anything else"
+        },
+        {
+            "output_column_name": "stateorprovince__office",
+            "comparison_levels": [
+                {
+                    "sql_condition": "`stateorprovince__office_l` IS NULL OR `stateorprovince__office_r` IS NULL",
+                    "label_for_charts": "Null",
+                    "is_null_level": true
+                },
+                {
+                    "sql_condition": "`stateorprovince__office_l` = `stateorprovince__office_r`",
+                    "label_for_charts": "Exact match",
+                    "m_probability": 0.9988627748294162,
+                    "u_probability": 0.2616037991191162
+                },
+                {
+                    "sql_condition": "ELSE",
+                    "label_for_charts": "All other comparisons",
+                    "m_probability": 0.0011372251705837756,
+                    "u_probability": 0.7383962008808839
+                }
+            ],
+            "comparison_description": "Exact match vs. anything else"
+        }
+    ],
+    "blocking_rules_to_generate_predictions": [
+        "l.stateorprovince__office = r.stateorprovince__office and substr(l.name,1,1) = substr(r.name,1,1)",
+        "substr(l.name,1,2) = substr(r.name,1,2)",
+        "l.city__office = r.city__office and substr(l.name__office,1,1) = substr(r.name__office,1,1)"
+    ],
+    "retain_matching_columns": true,
+    "retain_intermediate_calculation_columns": true,
+    "sql_dialect": "spark",
+    "linker_uid": "gdpbqsc3",
+    "probability_two_random_records_match": 0.0001
+}

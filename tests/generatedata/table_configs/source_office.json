@@ -1,0 +1,388 @@
+{
+    "name": "source_data/bright_raw_office_latest",
+    "pk": "officekey",
+    "n_rows": 100,
+    "output_format": "parquet",
+    "fields": {
+        "franchiseaffiliation": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "idxofficeparticipationyn": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "bool"
+        },
+        "mainofficekey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "mainofficemlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "modificationtimestamp": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "officeassociationprimary": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeaddress1": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeaddress2": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeboxnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebranchtype": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokeracceptedportaltermsofuseyn": {
+            "dynamic": false,
+            "default_value": false,
+            "type": "bool"
+        },
+        "officebrokeracceptedportaltermsofuseversion": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokerkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "officebrokerleademail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokerleadphonenumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrokermlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officecity": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officecountry": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officecounty": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officedateadded": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "officedateterminated": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "officeemail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officefax": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officekey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "officemanagerkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "officelatitude": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "float16"
+        },
+        "officeleadtolistingagentyn": {
+            "dynamic": false,
+            "default_value": false,
+            "type": "bool"
+        },
+        "officelongitude": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "float16"
+        },
+        "officemanageremail": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officemanagermlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officemanagername": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officemlsid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officename": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officenationalassociationid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officenumviolations": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "officephone": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officephoneext": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "officephoneother": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officepostalcode": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officepostalcodeplus4": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officerolelist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officestateorprovince": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officestatus": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officestreetdirsuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officestreetexception": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officestreetname": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officestreetnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "int"
+        },
+        "officestreetsuffix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officetradingas": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officetype": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeunitdesignation": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeunitnumber": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeusername": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officesubsystemlocale": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officesystemlocale": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediablogurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediafacebookurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmedialinkedinurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediatwitterurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediawebsiteurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "socialmediayoutubeurlorid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officesourcebusinesspartner": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officesourcerecordkey": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "syndicateagentoption": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "syndicateto": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officesourcerecordid": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officebrightconvertedyn": {
+            "dynamic": true,
+            "default_value": true,
+            "type": "bool"
+        },
+        "officesourceinput": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officesourcetransport": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "mainofficename": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officeassociationsfulllist": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officevalidationstatus": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "officecorporatelicense": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "sourcemodificationtimestamp": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        },
+        "officestreetdirprefix": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "string"
+        },
+        "datetimeinsertedtoredshift": {
+            "dynamic": true,
+            "default_value": null,
+            "type": "timestamp"
+        }
+    }
+}

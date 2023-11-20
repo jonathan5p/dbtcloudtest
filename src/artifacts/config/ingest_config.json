@@ -2,10 +2,10 @@
   "agent_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bright_raw_agent_latest",
+    "catalog_table": "bright_agent_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
-    "getgeoinfo" : false,
+    "getgeoinfo": true,
     "options": {
       "connection_options": {
         "useConnectionProperties": "True",
@@ -19,13 +19,23 @@
         "merge_key": "memberkey",
         "precombine_keys": "modificationtimestamp",
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
+      },
+      "geoinfo_config": {
+        "geoinfo_cols": {
+          "address": "memberaddress1",
+          "city": "membercity",
+          "county": "membercounty",
+          "state": "memberstateorprovince",
+          "postalcode": "memberpostalcode"
+        },
+        "repartition_num": 76
       }
     }
   },
   "office_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bright_raw_office_latest",
+    "catalog_table": "bright_office_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "getgeoinfo": true,
@@ -44,15 +54,21 @@
         "update_condition": "source.modificationtimestamp > target.modificationtimestamp"
       },
       "geoinfo_config": {
-        "geoinfo_cols": "officecity,officestateorprovince",
-        "entity": "office"
+        "geoinfo_cols": {
+          "address": "officeaddress1",
+          "city": "officecity",
+          "county": "officecounty",
+          "state": "officestateorprovince",
+          "postalcode": "officepostalcode"
+        },
+        "repartition_num": 36
       }
     }
   },
   "team_latest_view": {
     "target": "aue1d1z1s3boidhoidh-datastorage",
     "target_prefixes": "raw_data",
-    "catalog_table": "bright_raw_team_latest",
+    "catalog_table": "bright_team_latest",
     "catalog_database": "aue1d1z1gldoidhoidh_oidhdb",
     "connection_type": "redshift",
     "getgeoinfo": false,

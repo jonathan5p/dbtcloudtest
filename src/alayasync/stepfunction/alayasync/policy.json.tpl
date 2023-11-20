@@ -8,10 +8,9 @@
       ],
       "Resource": [
         "${schedule_lambda}",
-        "${processing_lambda}",
         "${reduce_lambda}",
-        "${ecs_start}",
-        "${ecs_status}"
+        "${start_task}",
+        "${status_task}"
       ]
     },
     {

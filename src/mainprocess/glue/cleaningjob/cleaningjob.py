@@ -61,9 +61,7 @@ if __name__ == "__main__":
         "model_version",
         "data_bucket",
         "glue_db",
-        "agent_table_name",
-        "office_table_name",
-        "team_table_name",
+        "tables",
     ]
 
     args = getResolvedOptions(sys.argv, params)
@@ -74,15 +72,25 @@ if __name__ == "__main__":
     job = Job(glueContext)
     job.init(args["JOB_NAME"], args)
 
+    # Load tables config
+    tables_config = json.loads(args["tables_config"])
+    table_names = {}
+    for table_config in tables_config:
+        source_table = table_config["catalog_table"]
+        if table_config["getgeoinfo"]:
+            table_names[source_table.split("_")[1]] = "staging_" + source_table
+        else:
+            table_names[source_table.split("_")[1]] = "raw_" + source_table
+
     # Load delta tables for agents, offices and teams
-    agent_df = spark.read.format("delta").load(
-        f"s3://{args['data_bucket']}/raw_data/{args['glue_db']}/{args['agent_table_name']}/"
+    agent_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{table_names['agent']}"
     )
-    office_df = spark.read.format("delta").load(
-        f"s3://{args['data_bucket']}/staging_data/{args['glue_db']}/{args['office_table_name']}/"
+    office_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{table_names['office']}"
     )
-    team_df = spark.read.format("delta").load(
-        f"s3://{args['data_bucket']}/raw_data/{args['glue_db']}/{args['team_table_name']}/"
+    team_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{table_names['team']}"
     )
 
     # Download config files for agents, offices and team

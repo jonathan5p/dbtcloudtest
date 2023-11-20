@@ -1,32 +1,16 @@
 {
   "Version": "2012-10-17",
-  "Statement" : [
+  "Statement" : [    
     {
       "Effect": "Allow",
-      "Action" : [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults",
+        "athena:GetQueryResultsStream"
       ],
       "Resource" : [
-        "arn:aws:logs:${region}:${account_id}:log-group:/aws/lambda/*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
-      "Action" : [
-        "sqs:DeleteMessage",
-        "sqs:DeleteMessageBatch",
-        "sqs:GetQueueAttributes",
-        "sqs:GetQueueUrl",
-        "sqs:ListQueues",
-        "sqs:ListDeadLetterSourceQueues",
-        "sqs:ListQueueTags",
-        "sqs:ReceiveMessage",
-        "sqs:SendMessage",
-        "sqs:SendMessageBatch"
-      ],
-      "Resource" : [
-        "arn:aws:sqs:${region}:${account_id}:*"
+        "arn:aws:athena:${region}:${account_id}:workgroup/*"
       ]
     },
     {
@@ -50,6 +34,58 @@
     },
     {
       "Effect" : "Allow",
+      "Action" : [
+        "ecs:DescribeTasks"
+      ],
+      "Resource": [
+        "arn:aws:ecs:${region}:${account_id}:task/*"
+      ]
+    },
+    {
+      "Effect" : "Allow",
+      "Action" : [
+        "ecs:RunTask"
+      ],
+      "Resource": [
+        "arn:aws:ecs:${region}:${account_id}:task-definition/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTable",
+        "glue:BatchCreatePartition",
+        "glue:UpdateTable",
+        "glue:CreateTable",
+        "glue:GetPartitions",
+        "glue:GetPartition"
+      ],
+      "Resource": [
+        "arn:aws:glue:${region}:${account_id}:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "${lambda_chatbot_arn}",
+        "${lambda_chatbot_arn}:*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action" : [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource" : [
+        "arn:aws:logs:${region}:${account_id}:log-group:/aws/lambda/*"
+      ]
+    },
+    {
+      "Effect" : "Allow",
       "Action": [
         "kms:DescribeKey",
         "kms:Encrypt",
@@ -63,21 +99,12 @@
       ]
     },
     {
-      "Effect" : "Allow",
-      "Action" : [
-        "ecs:RunTask"
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation"
       ],
       "Resource": [
-        "arn:aws:ecs:${region}:${account_id}:task-definition/*"
-      ]
-    },
-    {
-      "Effect" : "Allow",
-      "Action" : [
-        "ecs:DescribeTasks"
-      ],
-      "Resource": [
-        "arn:aws:ecs:${region}:${account_id}:task/*"
+        "arn:aws:s3:::*"
       ]
     },
     {
@@ -98,38 +125,21 @@
       ]
     },
     {
-      "Effect": "Allow",
-      "Action": [
-        "athena:StartQueryExecution",
-        "athena:GetQueryExecution",
-        "athena:GetQueryResults",
-        "athena:GetQueryResultsStream"
+      "Effect" : "Allow",
+      "Action" : [
+        "sqs:DeleteMessage",
+        "sqs:DeleteMessageBatch",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ListQueues",
+        "sqs:ListDeadLetterSourceQueues",
+        "sqs:ListQueueTags",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch"
       ],
       "Resource" : [
-        "arn:aws:athena:${region}:${account_id}:workgroup/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:GetBucketLocation"
-      ],
-      "Resource": [
-        "arn:aws:s3:::*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "glue:GetTable",
-        "glue:BatchCreatePartition",
-        "glue:UpdateTable",
-        "glue:CreateTable",
-        "glue:GetPartitions",
-        "glue:GetPartition"
-      ],
-      "Resource": [
-        "arn:aws:glue:${region}:${account_id}:*"
+        "arn:aws:sqs:${region}:${account_id}:*"
       ]
     }
   ]

@@ -3,7 +3,7 @@ from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from pyspark.sql.window import Window
-from pyspark.sql.types import BooleanType, NullType
+from pyspark.sql.types import *
 import pyspark.sql.functions as F
 from awsglue.context import GlueContext
 from awsglue.dynamicframe import DynamicFrame
@@ -20,50 +20,52 @@ team_sql_map_query = """
     SELECT 
         dtf.dlid as bdmporgkey,
         dof.uniqueorgid as orgsourceresouoi,
-        dtf.cluster_id as orghubid,
+        string(dtf.cluster_id) as orghubid,
         CASE WHEN dtf.subsystemlocale = 'BRIGHT_CAAR'
         THEN 'CAAR'
         ELSE 'BrightMls'
         END as orgsourcename,
         dof.mlsid as orgsourcerecordid,
-        dtf.key as orgsourcerecordkey,
-        dtf.dlingestionts as orgcreatedts,
-        current_timestamp() as orglastmodifiedts,
+        string(dtf.key) as orgsourcerecordkey,
+        string(dtf.dlingestionts) as orgcreatedts,
+        string(current_timestamp()) as orglastmodifiedts,
         dof.orgsourcetype as orgsourcetype,
         dof.type||' '||dof.branchtype as orgtype,
         dof.status as orgstatus,
         dtf.name as orgname,
-        upper(dof.address) as orgstreetaddress,
-        upper(dof.city) as orgcity,
-        dof.stateorprovince as orgstate,
-        dof.postalcode as orgpostalcode,
-        dof.county as orgcounty,
+        upper(dof.address) as orgstreetaddress_raw,
+        upper(dof.city) as orgcity_raw,
+        dof.stateorprovince as orgstate_raw,
+        dof.postalcode as orgpostalcode_raw,
+        dof.county as orgcounty_raw,
         CASE WHEN dof.country = 'US' 
         THEN 'USA' 
-        ELSE upper(dof.country) END as orgcountry,
+        ELSE upper(dof.country) END as orgcountry_raw,
         dof.phone as orgprimaryphone,
-        dof.phoneext as orgprimaryphoneext,
+        int(dof.phoneext) as orgprimaryphoneext,
         dof.phoneother as orgsecondaryphone,
         dof.fax as orgfax,
         dof.email as orgemail,
         dof.socialmediawebsiteurlorid as orgurl,
         dof.corporatelicense as orglicensenumber,
-        dof.dateterminated as orglicenseexpirationdate,
+        string(dof.dateterminated) as orglicenseexpirationdate,
         dof.nationalassociationid as orgnrdsid,
         dof.mainname as orgparentorgname,
         dof.mainmlsid as orgparentorgsourcerecordid,
-        dof.mainkey as orgparentorgsourcerecordkey,
+        string(dof.mainkey) as orgparentorgsourcerecordkey,
         dof.brokermlsid as orgindividualbrokerid,
-        dof.brokerkey as orgindividualbrokerkey,
-        dof.dateadded as orgstartdate,
-        dof.dateterminated as orgexpirationdate,
+        string(dof.brokerkey) as orgindividualbrokerkey,
+        string(dof.dateadded) as orgstartdate,
+        string(dof.dateterminated) as orgexpirationdate,
         'OIDH' as orgsourcetransport,
         dof.tradingas as orgtradingasname,
-        dtf.key as orgalternatesourcerecordkey,
-        dof.dateadded as sourcesystemcreatedtms,
-        dtf.modificationtimestamp as sourcesystemmodtms
+        string(dtf.key) as orgalternatesourcerecordkey,
+        string(dof.dateadded) as sourcesystemcreatedtms,
+        string(dtf.modificationtimestamp) as sourcesystemmodtms,
+        false as orgcanbenative,
+        dof.geoinfostr as orgstandardizedaddress
     FROM dedup_team_df as dtf
-    LEFT JOIN dedup_office_df as dof ON dtf.mlsid__office = dof.mlsid
+    LEFT JOIN dedup_office_df as dof ON dtf.unique_id__office = dof.key
     """
 
 # Map offices to organizations structure query
@@ -71,48 +73,50 @@ office_sql_map_query = """
     SELECT 
         dedup_office_df.dlid as bdmporgkey,
         dedup_office_df.uniqueorgid as orgsourceresouoi,
-        dedup_office_df.cluster_id as orghubid,
+        string(dedup_office_df.cluster_id) as orghubid,
         CASE WHEN dedup_office_df.subsystemlocale = 'BRIGHT_CAAR'
         THEN 'CAAR'
         ELSE 'BrightMls'
         END as orgsourcename,
         dedup_office_df.mlsid as orgsourcerecordid,
-        dedup_office_df.key as orgsourcerecordkey,
-        dedup_office_df.dlingestionts as orgcreatedts,
-        current_timestamp() as orglastmodifiedts,
+        string(dedup_office_df.key) as orgsourcerecordkey,
+        string(dedup_office_df.dlingestionts) as orgcreatedts,
+        string(current_timestamp()) as orglastmodifiedts,
         dedup_office_df.orgsourcetype as orgsourcetype,
         dedup_office_df.type||' '||dedup_office_df.branchtype as orgtype,
         dedup_office_df.status as orgstatus,
         dedup_office_df.name as orgname,
-        upper(dedup_office_df.address) as orgstreetaddress,
-        upper(dedup_office_df.city) as orgcity,
-        dedup_office_df.stateorprovince as orgstate,
-        dedup_office_df.postalcode as orgpostalcode,
-        dedup_office_df.county as orgcounty,
+        upper(dedup_office_df.address) as orgstreetaddress_raw,
+        upper(dedup_office_df.city) as orgcity_raw,
+        dedup_office_df.stateorprovince as orgstate_raw,
+        dedup_office_df.postalcode as orgpostalcode_raw,
+        dedup_office_df.county as orgcounty_raw,
         CASE WHEN dedup_office_df.country = 'US' 
         THEN 'USA' 
-        ELSE upper(dedup_office_df.country) END as orgcountry,
+        ELSE upper(dedup_office_df.country) END as orgcountry_raw,
         dedup_office_df.phone as orgprimaryphone,
-        dedup_office_df.phoneext as orgprimaryphoneext,
+        int(dedup_office_df.phoneext) as orgprimaryphoneext,
         dedup_office_df.phoneother as orgsecondaryphone,
         dedup_office_df.fax as orgfax,
         dedup_office_df.email as orgemail,
         dedup_office_df.socialmediawebsiteurlorid as orgurl,
         dedup_office_df.corporatelicense as orglicensenumber,
-        dedup_office_df.dateterminated as orglicenseexpirationdate,
+        string(dedup_office_df.dateterminated) as orglicenseexpirationdate,
         dedup_office_df.nationalassociationid as orgnrdsid,
         dedup_office_df.mainname as orgparentorgname,
         dedup_office_df.mainmlsid as orgparentorgsourcerecordid,
-        dedup_office_df.mainkey as orgparentorgsourcerecordkey,
+        string(dedup_office_df.mainkey) as orgparentorgsourcerecordkey,
         dedup_office_df.brokermlsid as orgindividualbrokerid,
-        dedup_office_df.brokerkey as orgindividualbrokerkey,
-        dedup_office_df.dateadded as orgstartdate,
-        dedup_office_df.dateterminated as orgexpirationdate,
+        string(dedup_office_df.brokerkey) as orgindividualbrokerkey,
+        string(dedup_office_df.dateadded) as orgstartdate,
+        string(dedup_office_df.dateterminated) as orgexpirationdate,
         'OIDH' as orgsourcetransport,
         dedup_office_df.tradingas as orgtradingasname,
-        dedup_office_df.key as orgalternatesourcerecordkey,
-        dedup_office_df.dateadded as sourcesystemcreatedtms,
-        dedup_office_df.modificationtimestamp as sourcesystemmodtms
+        string(dedup_office_df.key) as orgalternatesourcerecordkey,
+        string(dedup_office_df.dateadded) as sourcesystemcreatedtms,
+        string(dedup_office_df.modificationtimestamp) as sourcesystemmodtms,
+        canbenative as orgcanbenative,
+        geoinfostr as orgstandardizedaddress
     FROM dedup_office_df
     """
 
@@ -159,6 +163,41 @@ office_types = [
 ]
 
 
+def generate_canbenative_col(source_df: DataFrame, county_list: list, types: list):
+    check_pairs = F.udf(
+        lambda pair: True if pair in county_list else False, BooleanType()
+    )
+
+    county_col = F.when(
+        (F.col("county").isNotNull()) & (F.col("county") != ""), F.col("county")
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
+            F.col("geo_info.county"),
+        ).otherwise("NA")
+    )
+
+    state_col = F.when(
+        (F.col("stateorprovince").isNotNull()) & (F.col("stateorprovince") != ""),
+        F.col("stateorprovince"),
+    ).otherwise(
+        F.when(
+            (F.col("geo_info").isNotNull()) & (F.col("geo_info.statusCode") == "200"),
+            F.col("geo_info.state"),
+        ).otherwise("NA")
+    )
+
+    native_cond = (check_pairs(F.array(county_col, state_col))) & (
+        F.col("type").isin(types)
+    )
+
+    output_df = source_df.withColumn(
+        "canbenative", F.when(native_cond == True, True).otherwise(False)
+    )
+
+    return output_df
+
+
 # Helper function to run splink model over a dataframe
 def deduplicate_entity(
     entity: str,
@@ -200,7 +239,7 @@ def deduplicate_entity(
 
 
 def generate_globalids_and_native_records(
-    source_df: DataFrame, county_list: list, order_key: str = "orghubid"
+    source_df: DataFrame, order_key: str = "orghubid"
 ):
     null_global_ids_df = source_df.where(source_df["orgglobalidentifier"].isNull())
     not_null_count = source_df.where(
@@ -234,18 +273,7 @@ def generate_globalids_and_native_records(
         .drop("new_orgglobalidentifier")
     )
 
-    check_pairs = F.udf(
-        lambda pair: True if pair in county_list else False, BooleanType()
-    )
-
-    native_cond = (
-        check_pairs(F.array(F.col("orgcounty"), F.col("orgstate"))) == True
-    ) & (F.col("orgtype").isin(office_types))
-
-    bright_participants_df = global_id_df.withColumn(
-        "orgcanbenative", F.when(native_cond == True, True).otherwise(False)
-    )
-    bright_participants_df.createOrReplaceTempView("bright_participants_df")
+    global_id_df.createOrReplaceTempView("bright_participants_df")
 
     output_df = spark.sql(native_records_query)
     return output_df
@@ -315,13 +343,23 @@ if __name__ == "__main__":
     job.init(args["JOB_NAME"], args)
 
     # Read clean office and team data
-    splink_clean_office_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['office_table_name']}/"
-    office_df = spark.read.format("delta").load(splink_clean_office_data_s3_path)
+    office_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['office_table_name']}"
+    )
 
-    splink_clean_team_data_s3_path = f"s3://{args['data_bucket']}/consume_data/{args['glue_db']}/{args['team_table_name']}/"
-    team_df = spark.read.format("delta").load(splink_clean_team_data_s3_path)
+    team_df = spark.read.format("delta").table(
+        f"{args['glue_db']}.{args['team_table_name']}"
+    )
 
-    office_df = office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
+    office_df = (
+        office_df.withColumn("orgsourcetype", F.lit("OFFICE"))
+        .withColumn(
+            "value_maps",
+            F.expr(f"transform(map_values(geo_info), x -> coalesce(x, 'Null'))"),
+        )
+        .withColumn("geoinfostr", F.concat_ws("|", "value_maps"))
+        .drop("value_maps")
+    )
     team_df = team_df.withColumn("orgsourcetype", F.lit("TEAM"))
 
     # Run splink model over office and team data
@@ -332,7 +370,22 @@ if __name__ == "__main__":
         splink_model_path="/tmp/office_splink_model.json",
     )
 
-    clusters_df.createOrReplaceTempView("dedup_office_df")
+    clusters_df.printSchema()
+    # Retrieve native record county rules from s3
+    # and generate a county list with all the counties that are Bright Participants
+    county_df = ps.read_csv(args["county_info_s3_path"])
+
+    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
+    county_list = (
+        bright_participants[["Upper County", "State"]].values.tolist()
+        + bright_participants[["County Name", "State"]].values.tolist()
+    )
+
+    native_df = generate_canbenative_col(clusters_df, county_list, office_types).drop(
+        "geo_info"
+    )
+    clusters_df = clusters_df.drop("geo_info")
+    native_df.createOrReplaceTempView("dedup_office_df")
 
     dedup_team_df = deduplicate_entity(
         entity="team",
@@ -384,20 +437,11 @@ if __name__ == "__main__":
             print("Aurora Exception: ", str(e))
             raise e
 
-    # Retrieve native record county rules from s3
-    # and generate a county list with all the counties that are Bright Participants
-    county_df = ps.read_csv(args["county_info_s3_path"])
-
-    bright_participants = county_df.groupby("Native/Bordering").get_group("Native")
-    county_list = (
-        bright_participants[["Upper County", "State"]].values.tolist()
-        + bright_participants[["County Name", "State"]].values.tolist()
+    org_changes_df = organization_changes_df.withColumn(
+        "orgglobalidentifier", F.lit(None)
     )
-
-    # Generate global ids and final organizations df
-    organizations_df = generate_globalids_and_native_records(
-        org_changes_df, county_list
-    )
+    # # Generate global ids and final organizations df
+    organizations_df = generate_globalids_and_native_records(org_changes_df)
 
     # Write data to S3
     partition_col = "dt_utc"
@@ -431,7 +475,7 @@ if __name__ == "__main__":
         "consume_data",
         "organizations",
         args["alaya_glue_db"],
-        int(args.get("max_records_per_file", 1000)),
+        int(args.get("max_records_per_file", 5000)),
         partition_col,
         partition_value,
     )

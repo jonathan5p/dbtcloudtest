@@ -11,6 +11,7 @@ from delta import *
 import sys
 import uuid
 import pathlib
+
 import logging
 
 logger = logging.getLogger()
@@ -41,15 +42,16 @@ def test_test():
 
 #     conf = SparkConf()
 
-#     conf.set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-#     conf.set(
-#         "spark.sql.catalog.spark_catalog",
-#         "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-#     )
-#     conf.set(
-#         "spark.jars",
-#         f"{similarity_jar_location()},{parent_folder}/jars/delta-core_2.12-2.3.0.jar,{parent_folder}/jars/delta-storage-2.3.0.jar",
-#     )
+    conf.set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+    conf.set(
+        "spark.sql.catalog.spark_catalog",
+        "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    )
+    conf.set(
+        "spark.jars",
+        f"{similarity_jar_location()},{str(parent_folder)}/jars/delta-core_2.12-2.3.0.jar,{str(parent_folder)}/jars/delta-storage-2.3.0.jar",
+    )
+    conf.set("spark.sql.catalogImplementation", "in-memory")
 
 #     sc = SparkContext.getOrCreate(conf=conf)
 #     sc.setCheckpointDir(f"{base_dir}/tmp")
@@ -200,75 +202,22 @@ def test_test():
 #     ), "Incremental load df schema is not the same as the one expected"
 
 
-# # Tests for glue splink cleaning job
-# def test_splink_clean_agent(glue_context):
-#     """
-#     Test that the clean_splink_data function defined
-#     in the OIDH glue cleaning job works as expected
-#     for agent data.
-#     """
-#     spark = glue_context.spark_session
-#     helper_test_splink_clean_data(
-#         "agent", spark, assert_counts={"raw": 100, "clean": 99}, base_dir=base_dir
-#     )
+# Tests for glue splink dedup job
+def test_splink_dedupe_agent(glue_context):
+    """
+    Test that the deduplicate_entity function defined
+    in the OIDH glue individuals dedup job works as expected
+    for agent data.
+    """
+    spark = glue_context.spark_session
+    helper_test_splink_dedup_data("agent", spark, base_dir=base_dir)
 
 
-# def test_splink_clean_office(glue_context):
-#     """
-#     Test that the clean_splink_data function defined
-#     in the OIDH glue cleaning job works as expected
-#     for office data.
-#     """
-#     spark = glue_context.spark_session
-#     helper_test_splink_clean_data(
-#         "office", spark, assert_counts={"raw": 100, "clean": 98}, base_dir=base_dir
-#     )
-
-
-# def test_splink_clean_team(glue_context):
-#     """
-#     Test that the clean_splink_data function defined
-#     in the OIDH glue cleaning job works as expected
-#     for team data.
-#     """
-#     spark = glue_context.spark_session
-#     helper_test_splink_clean_data(
-#         "team", spark, assert_counts={"raw": 100, "clean": 5}, base_dir=base_dir
-#     )
-
-
-# # Tests for glue splink dedup job
-# def test_splink_dedupe_agent(glue_context):
-#     """
-#     Test that the deduplicate_entity function defined
-#     in the OIDH glue individuals dedup job works as expected
-#     for agent data.
-#     """
-#     spark = glue_context.spark_session
-#     helper_test_splink_dedup_data(
-#         "agent", spark, assert_counts={"raw": 99, "dedup": 99}, base_dir=base_dir
-#     )
-
-
-# def test_splink_dedupe_office(glue_context):
-#     """
-#     Test that the deduplicate_entity function defined
-#     in the OIDH glue individuals dedup job works as expected
-#     for office data.
-#     """
-#     spark = glue_context.spark_session
-#     helper_test_splink_dedup_data(
-#         "office", spark, assert_counts={"raw": 98, "dedup": 98}, base_dir=base_dir
-#     )
-
-
-# def test_splink_dedupe_team(glue_context):
-#     """
-#     Test that the deduplicate_entity function defined
-#     in the OIDH glue individuals dedup job works as expected
-#     for team data.
-#     """
-#     spark = glue_context.spark_session
-#     helper_test_splink_dedup_data(
-#         "team", spark, assert_counts={"raw": 5, "dedup": 5}, base_dir=base_dir
-#     )
+def test_splink_dedupe_office(glue_context):
+    """
+    Test that the deduplicate_entity function defined
+    in the OIDH glue individuals dedup job works as expected
+    for office data.
+    """
+    spark = glue_context.spark_session
+    helper_test_splink_dedup_data("office", spark, base_dir=base_dir)

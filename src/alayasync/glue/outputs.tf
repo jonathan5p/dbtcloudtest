@@ -1,6 +1,6 @@
 output "primary_keys" {
-    value = {
-        "individuals" : module.individuals.primary_key
-        "organizations" : module.organizations.primary_key
-    }
+  value = {
+    "individuals" : module.individuals.primary_key
+    "organizations" : module.organizations.primary_key
+  }
 }

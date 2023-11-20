@@ -51,28 +51,6 @@ variable "zone" {
   default = {}
 }
 
-# Data KMS Admins and Users
-variable "kms_data_admins" {
-  description = "Arn of the IAM roles/users that will administrate the kms data key"
-  default     = []
-}
-
-variable "kms_data_users" {
-  description = "Arn of the IAM roles/users that will use the kms data key"
-  default     = []
-}
-
-# Glue KMS Admins and Users
-variable "kms_glue_admins" {
-  description = "Arn of the IAM roles/users that will administrate the kms data key"
-  default     = []
-}
-
-variable "kms_glue_users" {
-  description = "Arn of the IAM roles/users that will use the kms data key"
-  default     = []
-}
-
 # S3 parameters
 variable "s3_bucket_tmp_expiration_days" {
   description = "Expiration lifecycle policy for all objects store in the tmp prefix of the s3 buckets"
@@ -86,31 +64,16 @@ variable "s3_bucket_objects_transition_days" {
   description = "Transition to Inteligent Tiering lifecycle policy for all objects store in the s3 buckets except tmp"
 }
 
-# Lambda enrich caar data parameters
-variable "lambda_ec_agent_source_table_name" {
-  description = "Name of the agent table registered in the S3 Raw layer"
-  default     = "bright_raw_agent_latest"
-}
-
-variable "lambda_ec_agent_target_table_name" {
-  description = "Name of the agent table registered in the S3 Staging layer"
-  default     = "bright_staging_agent_latest"
-}
-
-variable "lambda_ec_office_source_table_name" {
-  description = "Name of the office table registered in the S3 Raw layer"
-  default     = "bright_raw_office_latest"
-}
-
-variable "lambda_ec_office_target_table_name" {
-  description = "Name of the office table registered in the S3 Staging layer"
-  default     = "bright_staging_office_latest"
-}
-
 # Glue max records per file
 variable "glue_max_records_per_file" {
   description = "Maximum number of records per parquet file write in the deduplication jobs"
   default     = 5000
+}
+
+# Glue geosvc subnet id
+variable "glue_geosvc_subnetid" {
+  description = "Subnet id used to create the glue connection to acces the GeoSvc API endpoint"
+  type        = string
 }
 
 # Update alaya triggers
@@ -146,27 +109,6 @@ variable "retention_days_ecs_alaya_logs" {
   default     = 30
 }
 
-# Aurora serverlessv2 postgresql db
-variable "aurora_backup_retention_period" {
-  description = "Admin tool aurora postgresql database retention period"
-  default     = 30
-}
-
-variable "aurora_preferred_backup_window" {
-  description = "Admin tool aurora postgresql database preferred backup window"
-  default     = "21:00-00:00"
-}
-
-variable "aurora_max_capacity" {
-  description = "Admin tool aurora postgresql max capacity"
-  default     = 4
-}
-
-variable "aurora_min_capacity" {
-  description = "Admin tool aurora postgresql min capacity"
-  default     = 2
-}
-
 variable "ecs_subnets" {
   type        = string
   description = "comma separated values for the subnets to use"
@@ -175,5 +117,16 @@ variable "ecs_subnets" {
 variable "concurrent_tasks" {
   type        = number
   description = "number of concurrent tasks for alaya sync"
-  default     = 18
+  default     = 25
+}
+
+variable "ttl_days_async" {
+  type        = number
+  description = "number of days to keep lambda execution when running alaya sync"
+  default     = 2
+}
+
+variable "lambda_task_alaya_memory" {
+  type        = number
+  default     = 512
 }

@@ -41,6 +41,11 @@
             "Effect":"Allow",
             "Action": ["logs:AssociateKmsKey"],
             "Resource": ["arn:aws:logs:${region}:${account_id}:log-group:/aws-glue/jobs/*"]
+        },
+        {
+            "Effect":"Allow",
+            "Action": ["ssm:GetParameter"],
+            "Resource": ["arn:aws:ssm:${region}:${account_id}:parameter/${parameter_name}"]
         }
     ]
 }

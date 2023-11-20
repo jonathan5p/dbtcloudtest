@@ -1,3 +1,19 @@
+data "aws_ssm_parameter" "ds_clean_library_version" {
+  name = "/parameter/${var.site}/${var.environment}/codebuild/bright_clean_version"
+}
+
+data "aws_ssm_parameter" "bright_pypi_pipconf" {
+  name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
+}
+
+locals {
+  parameter_path        = "parameter/${var.site}/${var.environment}/${var.project_app_group}/geosvc/api_uri"
+  ind_dedup_job_workers = 20
+  org_dedup_job_workers = 30
+  counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
+  jfrog_url             = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
+}
+
 #------------------------------------------------------------------------------
 # Upload S3 Data
 #------------------------------------------------------------------------------
@@ -110,7 +126,7 @@ module "redshift_connection" {
 }
 
 #------------------------------------------------------------------------------
-# Aurora Credentials
+# Aurora Parameters
 #------------------------------------------------------------------------------
 
 data "aws_ssm_parameter" "aurora_conn_username" {
@@ -121,37 +137,16 @@ data "aws_ssm_parameter" "aurora_conn_password" {
   name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/aurora/password"
 }
 
-#------------------------------------------------------------------------------
-# Glue Aurora Connection Security Group
-#------------------------------------------------------------------------------
-
-data "aws_subnet" "connection_subnet" {
-  id = var.project_objects.aurora_subnetid
+data "aws_ssm_parameter" "aurora_db_jdbc_url" {
+  name = "/parameter/${var.site}/${var.environment}/data/admintooldb/jdbc_url"
 }
 
-module "conn_sg_naming" {
-  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-  base_object = var.base_naming
-  type        = "sgp"
-  purpose     = join("", [var.project_prefix, "-", "glueconnsg"])
+data "aws_ssm_parameter" "aurora_db_subnets" {
+  name = "/parameter/${var.site}/${var.environment}/data/admintooldb/subnets"
 }
 
-resource "aws_security_group" "conn_sg" {
-  name   = module.conn_sg_naming.name
-  tags   = module.conn_sg_naming.tags
-  vpc_id = data.aws_subnet.connection_subnet.vpc_id
-}
-
-resource "aws_vpc_security_group_ingress_rule" "glue_sg_ingress" {
-  security_group_id            = aws_security_group.conn_sg.id
-  ip_protocol                  = -1
-  referenced_security_group_id = aws_security_group.conn_sg.id
-}
-
-resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
-  security_group_id = aws_security_group.conn_sg.id
-  ip_protocol       = -1
-  cidr_ipv4         = "0.0.0.0/0"
+data "aws_ssm_parameter" "aurora_db_sg" {
+  name = "/parameter/${var.site}/${var.environment}/data/admintooldb/security_group"
 }
 
 #------------------------------------------------------------------------------
@@ -159,23 +154,43 @@ resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
 #------------------------------------------------------------------------------
 
 module "aurora_connection" {
-  source                 = "../../../modules/glue_connection"
-  base_naming            = var.base_naming
-  project_prefix         = var.project_prefix
-  conn_name              = "auroraconn"
-  password               = data.aws_ssm_parameter.aurora_conn_password.value
-  username               = data.aws_ssm_parameter.aurora_conn_username.value
-  jdbc_url               = var.project_objects.aurora_jdbc_url
-  subnet_id              = var.project_objects.aurora_subnetid
-  security_group_id_list = [aws_security_group.conn_sg.id]
+  source         = "../../../modules/glue_connection"
+  base_naming    = var.base_naming
+  project_prefix = var.project_prefix
+  conn_name      = "auroraconn"
+  password       = data.aws_ssm_parameter.aurora_conn_password.value
+  username       = data.aws_ssm_parameter.aurora_conn_username.value
+  jdbc_url       = data.aws_ssm_parameter.aurora_db_jdbc_url.value
+  subnet_id      = split(",", data.aws_ssm_parameter.aurora_db_subnets.value)[0]
 }
+
+#------------------------------------------------------------------------------
+# Glue Aurora Connection Security Group
+#------------------------------------------------------------------------------
+
+resource "aws_vpc_security_group_egress_rule" "glue_sg_egress" {
+  security_group_id            = module.aurora_connection.conn_sg_id
+  ip_protocol                  = "tcp"
+  from_port                    = 0
+  to_port                      = 65535
+  referenced_security_group_id = data.aws_ssm_parameter.aurora_db_sg.value
+}
+
+resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
+  security_group_id            = data.aws_ssm_parameter.aurora_db_sg.value
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+  referenced_security_group_id = module.aurora_connection.conn_sg_id
+}
+
 
 #------------------------------------------------------------------------------
 # Glue Ingest Job
 #------------------------------------------------------------------------------
 
 module "ingest_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
@@ -202,31 +217,45 @@ module "ingest_job" {
 }
 
 #------------------------------------------------------------------------------
+# Glue GeoSvc Network Connection
+#------------------------------------------------------------------------------
+
+module "geosvc_connection" {
+  source          = "../../../modules/glue_connection"
+  connection_type = "NETWORK"
+  base_naming     = var.base_naming
+  project_prefix  = var.project_prefix
+  conn_name       = "geosvcconn"
+  subnet_id       = var.project_objects.glue_geosvc_subnetid
+}
+
+#------------------------------------------------------------------------------
 # Glue Get Geo Info Job
 #------------------------------------------------------------------------------
 
 module "geo_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=develop"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 4
-  timeout             = 60
+  timeout             = 180
   worker_type         = "G.1X"
-  number_of_workers   = 5
+  number_of_workers   = 21
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "getgeoinfojob"
   script_bucket       = var.project_objects.glue_bucket_id
-  policy_variables    = var.project_objects
+  policy_variables    = merge(var.project_objects, { "parameter_name" = local.parameter_path })
+  connections         = [module.geosvc_connection.conn_name]
   job_arguments = {
-    "--data_bucket"                     = var.project_objects.data_bucket_id
-    "--conf" = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+    "--data_bucket"       = var.project_objects.data_bucket_id
+    "--geo_api_parameter" = "/${local.parameter_path}"
+    "--conf"              = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.network.timeout=3600"
     "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
     "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
     "--job-bookmark-option" = "job-bookmark-disable"
     "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
-    "--additional-python-modules" = "geopy"
   }
 }
 
@@ -234,20 +263,8 @@ module "geo_job" {
 # Glue Cleaning Job
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "ds_clean_library_version" {
-  name = "/parameter/${var.site}/${var.environment}/codebuild/bright_clean_version"
-}
-
-data "aws_ssm_parameter" "bright_pypi_pipconf" {
-  name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
-}
-
-locals {
-  jfrog_url = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
-}
-
 module "cleaning_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -258,7 +275,7 @@ module "cleaning_job" {
   retry_interval      = 2
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "cleaningjob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
@@ -268,9 +285,6 @@ module "cleaning_job" {
     "--job-bookmark-option"             = "job-bookmark-disable"
     "--config_bucket"                   = var.project_objects.artifacts_bucket_id
     "--data_bucket"                     = var.project_objects.data_bucket_id
-    "--agent_table_name"                = "bright_raw_agent_latest"
-    "--office_table_name"               = "bright_staging_office_latest"
-    "--team_table_name"                 = "bright_raw_team_latest"
     "--datalake-formats"                = "delta"
     "--python-modules-installer-option" = local.jfrog_url
     "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
@@ -284,13 +298,8 @@ module "cleaning_job" {
 # Glue Splink Individuals Job
 #------------------------------------------------------------------------------
 
-locals {
-  ind_dedup_job_workers = 20
-  counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
-}
-
 module "ind_dedup_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -302,7 +311,7 @@ module "ind_dedup_job" {
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
   connections         = [module.aurora_connection.conn_name]
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "inddedupjob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects
@@ -313,7 +322,7 @@ module "ind_dedup_job" {
     "--config_bucket"             = var.project_objects.artifacts_bucket_id
     "--data_bucket"               = var.project_objects.data_bucket_id
     "--agent_table_name"          = "clean_splink_agent_data"
-    "--office_table_name"         = "bright_staging_office_latest"
+    "--office_table_name"         = "clean_splink_office_data"
     "--TempDir"                   = "s3://${var.project_objects.glue_bucket_id}/tmp/"
     "--ssm_params_base"           = "${var.site}/${var.environment}/${var.project_prefix}/aurora"
     "--county_info_s3_path"       = local.counties_path
@@ -333,12 +342,8 @@ module "ind_dedup_job" {
 # Glue Splink Organizations Job
 #------------------------------------------------------------------------------
 
-locals {
-  org_dedup_job_workers = 30
-}
-
 module "org_dedup_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.0.6"
+  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
   base_naming         = var.base_naming
   project_prefix      = var.project_prefix
   max_concurrent_runs = 1
@@ -350,7 +355,7 @@ module "org_dedup_job" {
   retry_backoff_rate  = 2
   security_config_id  = aws_glue_security_configuration.glue_security_config.id
   connections         = [module.aurora_connection.conn_name]
-  glue_path           = "../src/mainprocess/glue/"
+  glue_path           = "../src/mainprocess/glue"
   job_name            = "orgdedupjob"
   script_bucket       = var.project_objects.glue_bucket_id
   policy_variables    = var.project_objects

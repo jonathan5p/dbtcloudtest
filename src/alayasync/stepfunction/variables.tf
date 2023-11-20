@@ -4,9 +4,9 @@ variable "environment" {
 }
 
 variable "policy_variables" {
-    type = map(string)
-    description = "Policy variables for executor policy"
-    default = {}
+  type        = map(string)
+  description = "Policy variables for executor policy"
+  default     = {}
 }
 
 variable "project_app_group" {
