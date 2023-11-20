@@ -1,17 +1,17 @@
-data "aws_ssm_parameter" "ds_clean_library_version" {
-  name = "/parameter/${var.site}/${var.environment}/codebuild/bright_clean_version"
-}
+# data "aws_ssm_parameter" "ds_clean_library_version" {
+#   name = "/parameter/${var.site}/${var.environment}/codebuild/bright_clean_version"
+# }
 
-data "aws_ssm_parameter" "bright_pypi_pipconf" {
-  name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
-}
+# data "aws_ssm_parameter" "bright_pypi_pipconf" {
+#   name = "/secure/${var.site}/${var.environment_devops}/codebuild/bright_pypi_pipconf"
+# }
 
 locals {
   parameter_path        = "parameter/${var.site}/${var.environment}/${var.project_app_group}/geosvc/api_uri"
   ind_dedup_job_workers = 20
   org_dedup_job_workers = 30
   counties_path         = "s3://${var.project_objects.data_bucket_id}/raw_data/${aws_glue_catalog_database.dedup_process_glue_db.name}/native_counties/RulesToDetermineNativeRecords.csv"
-  jfrog_url             = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
+  #jfrog_url             = "--${trimspace(replace(replace(data.aws_ssm_parameter.bright_pypi_pipconf.value, "[global]", ""), " ", ""))}"
 }
 
 #------------------------------------------------------------------------------
@@ -89,41 +89,41 @@ resource "aws_glue_security_configuration" "glue_security_config" {
 # Redshift Credentials
 #------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "redshift_conn_username" {
-  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
-}
+# data "aws_ssm_parameter" "redshift_conn_username" {
+#   name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/username"
+# }
 
-data "aws_ssm_parameter" "redshift_conn_password" {
-  name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
-}
+# data "aws_ssm_parameter" "redshift_conn_password" {
+#   name = "/secure/${var.site}/${var.environment}/${var.project_app_group}/redshift/password"
+# }
 
-data "aws_ssm_parameter" "redshift_conn_jdbc_url" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/jdbc_url"
-}
+# data "aws_ssm_parameter" "redshift_conn_jdbc_url" {
+#   name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/jdbc_url"
+# }
 
-data "aws_ssm_parameter" "redshift_conn_subnetid" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/subnetid"
-}
+# data "aws_ssm_parameter" "redshift_conn_subnetid" {
+#   name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/subnetid"
+# }
 
-data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
-  name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/securitygroupid"
-}
+# data "aws_ssm_parameter" "redshift_conn_securitygroupid" {
+#   name = "/parameter/${var.site}/${var.environment}/${var.project_app_group}/redshift/securitygroupid"
+# }
 
 #------------------------------------------------------------------------------
 # Glue Redshift Connection
 #------------------------------------------------------------------------------
 
-module "redshift_connection" {
-  source                 = "../../../modules/glue_connection"
-  base_naming            = var.base_naming
-  project_prefix         = var.project_prefix
-  conn_name              = "redshiftconn"
-  password               = data.aws_ssm_parameter.redshift_conn_password.value
-  username               = data.aws_ssm_parameter.redshift_conn_username.value
-  jdbc_url               = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
-  subnet_id              = data.aws_ssm_parameter.redshift_conn_subnetid.value
-  security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
-}
+# module "redshift_connection" {
+#   source                 = "../../../modules/glue_connection"
+#   base_naming            = var.base_naming
+#   project_prefix         = var.project_prefix
+#   conn_name              = "redshiftconn"
+#   password               = data.aws_ssm_parameter.redshift_conn_password.value
+#   username               = data.aws_ssm_parameter.redshift_conn_username.value
+#   jdbc_url               = data.aws_ssm_parameter.redshift_conn_jdbc_url.value
+#   subnet_id              = data.aws_ssm_parameter.redshift_conn_subnetid.value
+#   security_group_id_list = [data.aws_ssm_parameter.redshift_conn_securitygroupid.value]
+# }
 
 #------------------------------------------------------------------------------
 # Aurora Parameters
@@ -189,110 +189,110 @@ resource "aws_vpc_security_group_ingress_rule" "aurora_sg_ingress" {
 # Glue Ingest Job
 #------------------------------------------------------------------------------
 
-module "ingest_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
-  base_naming         = var.base_naming
-  project_prefix      = var.project_prefix
-  max_concurrent_runs = 4
-  timeout             = 60
-  worker_type         = "G.1X"
-  number_of_workers   = 4
-  retry_max_attempts  = 0
-  retry_interval      = 2
-  retry_backoff_rate  = 2
-  security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  connections         = [module.redshift_connection.conn_name]
-  glue_path           = "../src/mainprocess/glue/"
-  job_name            = "ingestjob"
-  script_bucket       = var.project_objects.glue_bucket_id
-  policy_variables    = var.project_objects
-  job_arguments = {
-    "--conf" = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
-    "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
-    "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
-    "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
-    "--job-bookmark-option" = "job-bookmark-disable"
-    "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
-  }
-}
+# module "ingest_job" {
+#   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+#   base_naming         = var.base_naming
+#   project_prefix      = var.project_prefix
+#   max_concurrent_runs = 4
+#   timeout             = 60
+#   worker_type         = "G.1X"
+#   number_of_workers   = 4
+#   retry_max_attempts  = 0
+#   retry_interval      = 2
+#   retry_backoff_rate  = 2
+#   security_config_id  = aws_glue_security_configuration.glue_security_config.id
+#   connections         = [module.redshift_connection.conn_name]
+#   glue_path           = "../src/mainprocess/glue/"
+#   job_name            = "ingestjob"
+#   script_bucket       = var.project_objects.glue_bucket_id
+#   policy_variables    = var.project_objects
+#   job_arguments = {
+#     "--conf" = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+#     "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
+#     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
+#     "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
+#     "--job-bookmark-option" = "job-bookmark-disable"
+#     "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
+#   }
+# }
 
 #------------------------------------------------------------------------------
 # Glue GeoSvc Network Connection
 #------------------------------------------------------------------------------
 
-module "geosvc_connection" {
-  source          = "../../../modules/glue_connection"
-  connection_type = "NETWORK"
-  base_naming     = var.base_naming
-  project_prefix  = var.project_prefix
-  conn_name       = "geosvcconn"
-  subnet_id       = var.project_objects.glue_geosvc_subnetid
-}
+# module "geosvc_connection" {
+#   source          = "../../../modules/glue_connection"
+#   connection_type = "NETWORK"
+#   base_naming     = var.base_naming
+#   project_prefix  = var.project_prefix
+#   conn_name       = "geosvcconn"
+#   subnet_id       = var.project_objects.glue_geosvc_subnetid
+# }
 
 #------------------------------------------------------------------------------
 # Glue Get Geo Info Job
 #------------------------------------------------------------------------------
 
-module "geo_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=develop"
-  base_naming         = var.base_naming
-  project_prefix      = var.project_prefix
-  max_concurrent_runs = 4
-  timeout             = 180
-  worker_type         = "G.1X"
-  number_of_workers   = 21
-  security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  glue_path           = "../src/mainprocess/glue"
-  job_name            = "getgeoinfojob"
-  script_bucket       = var.project_objects.glue_bucket_id
-  policy_variables    = merge(var.project_objects, { "parameter_name" = local.parameter_path })
-  connections         = [module.geosvc_connection.conn_name]
-  job_arguments = {
-    "--data_bucket"       = var.project_objects.data_bucket_id
-    "--geo_api_parameter" = "/${local.parameter_path}"
-    "--conf"              = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.network.timeout=3600"
-    "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
-    "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
-    "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
-    "--job-bookmark-option" = "job-bookmark-disable"
-    "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
-  }
-}
+# module "geo_job" {
+#   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=develop"
+#   base_naming         = var.base_naming
+#   project_prefix      = var.project_prefix
+#   max_concurrent_runs = 4
+#   timeout             = 180
+#   worker_type         = "G.1X"
+#   number_of_workers   = 21
+#   security_config_id  = aws_glue_security_configuration.glue_security_config.id
+#   glue_path           = "../src/mainprocess/glue"
+#   job_name            = "getgeoinfojob"
+#   script_bucket       = var.project_objects.glue_bucket_id
+#   policy_variables    = merge(var.project_objects, { "parameter_name" = local.parameter_path })
+#   connections         = [module.geosvc_connection.conn_name]
+#   job_arguments = {
+#     "--data_bucket"       = var.project_objects.data_bucket_id
+#     "--geo_api_parameter" = "/${local.parameter_path}"
+#     "--conf"              = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog --conf spark.network.timeout=3600"
+#     "--extra-jars" = join(",", ["s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}",
+#     "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-storage-2.3.0.jar"].id}"])
+#     "--extra-py-files"      = "s3://${var.project_objects.glue_bucket_id}/${aws_s3_object.glue_jars["delta-core_2.12-2.3.0.jar"].id}"
+#     "--job-bookmark-option" = "job-bookmark-disable"
+#     "--TempDir"             = "s3://${var.project_objects.glue_bucket_id}/tmp/"
+#   }
+# }
 
 #------------------------------------------------------------------------------
 # Glue Cleaning Job
 #------------------------------------------------------------------------------
 
-module "cleaning_job" {
-  source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
-  base_naming         = var.base_naming
-  project_prefix      = var.project_prefix
-  max_concurrent_runs = 1
-  timeout             = 60
-  worker_type         = "G.1X"
-  number_of_workers   = 10
-  retry_max_attempts  = 0
-  retry_interval      = 2
-  retry_backoff_rate  = 2
-  security_config_id  = aws_glue_security_configuration.glue_security_config.id
-  glue_path           = "../src/mainprocess/glue"
-  job_name            = "cleaningjob"
-  script_bucket       = var.project_objects.glue_bucket_id
-  policy_variables    = var.project_objects
+# module "cleaning_job" {
+#   source              = "git::ssh://git@github.com/BrightMLS/bdmp-terraform-pipeline.git//glue?ref=v0.1.0"
+#   base_naming         = var.base_naming
+#   project_prefix      = var.project_prefix
+#   max_concurrent_runs = 1
+#   timeout             = 60
+#   worker_type         = "G.1X"
+#   number_of_workers   = 10
+#   retry_max_attempts  = 0
+#   retry_interval      = 2
+#   retry_backoff_rate  = 2
+#   security_config_id  = aws_glue_security_configuration.glue_security_config.id
+#   glue_path           = "../src/mainprocess/glue"
+#   job_name            = "cleaningjob"
+#   script_bucket       = var.project_objects.glue_bucket_id
+#   policy_variables    = var.project_objects
 
-  job_arguments = {
-    "--conf"                            = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
-    "--job-bookmark-option"             = "job-bookmark-disable"
-    "--config_bucket"                   = var.project_objects.artifacts_bucket_id
-    "--data_bucket"                     = var.project_objects.data_bucket_id
-    "--datalake-formats"                = "delta"
-    "--python-modules-installer-option" = local.jfrog_url
-    "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
-    "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
-    "--model_version"                   = "1"
-    "--additional-python-modules"       = "clean==${data.aws_ssm_parameter.ds_clean_library_version.value}"
-  }
-}
+#   job_arguments = {
+#     "--conf"                            = "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog"
+#     "--job-bookmark-option"             = "job-bookmark-disable"
+#     "--config_bucket"                   = var.project_objects.artifacts_bucket_id
+#     "--data_bucket"                     = var.project_objects.data_bucket_id
+#     "--datalake-formats"                = "delta"
+#     "--python-modules-installer-option" = local.jfrog_url
+#     "--TempDir"                         = "s3://${var.project_objects.glue_bucket_id}/tmp/"
+#     "--glue_db"                         = aws_glue_catalog_database.dedup_process_glue_db.name
+#     "--model_version"                   = "1"
+#     "--additional-python-modules"       = "clean==${data.aws_ssm_parameter.ds_clean_library_version.value}"
+#   }
+# }
 
 #------------------------------------------------------------------------------
 # Glue Splink Individuals Job

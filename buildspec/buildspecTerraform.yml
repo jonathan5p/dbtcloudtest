@@ -3,8 +3,8 @@ env:
   shell: bash
   variables:
     TERRAFORM_DOWNLOAD_URL: https://releases.hashicorp.com/terraform/1.5.4/terraform_1.5.4_linux_amd64.zip
-  parameter-store:
-    SSH_KEY: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/github_ssh_private_key'
+  #parameter-store:
+  #  SSH_KEY: '/secure/aue1/${ENVIRONMENT_DEVOPS}/codebuild/github_ssh_private_key'
 
 phases:
   install:
@@ -15,12 +15,12 @@ phases:
       - rm terraform_1.5.4_linux_amd64.zip
 
       # Adding ssh key to codebuild to enable git::ssh access
-      - eval `ssh-agent`
-      - echo "${SSH_KEY}" | ssh-add -
+      #- eval `ssh-agent`
+      #- echo "${SSH_KEY}" | ssh-add -
 
   build:
     commands:
-      - mkdir -p src/lambda/layers/delta_geopy/python
+      #- mkdir -p src/lambda/layers/delta_geopy/python
       - cd terraformScripts
       - |
         sed -i "s/\${bucket_backend}/${bucket_backend}/" ${TF_VAR_environment}_backend.conf
