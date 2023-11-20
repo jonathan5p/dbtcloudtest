@@ -10,7 +10,7 @@ variable "environment" {
 
 variable "project_app_group" {
   description = "This is Bright's specified value"
-  default     = "oidh"
+  default     = "brtest"
 }
 
 variable "project_ledger" {
