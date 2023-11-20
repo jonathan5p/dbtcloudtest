@@ -1,34 +1,34 @@
-# provider "aws" {
-#   region = var.region[var.site]
-#   assume_role {
-#     role_arn     = var.role_arn
-#     session_name = "oidh"
-#   }
-# }
+provider "aws" {
+  region = var.region[var.site]
+  assume_role {
+    role_arn     = var.role_arn
+    session_name = "oidh"
+  }
+}
 
-# provider "archive" {}
+provider "archive" {}
 
-# data "aws_caller_identity" "current" {}
-# data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
 
-# locals {
-#   lambda_runtime = "python3.10"
-#   lambda_handler = "lambda_function.lambda_handler"
-# }
+locals {
+  lambda_runtime = "python3.10"
+  lambda_handler = "lambda_function.lambda_handler"
+}
 
-# module "base_naming" {
-#   source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   app_group = var.project_app_group
-#   env       = var.environment
-#   ledger    = var.project_ledger
-#   site      = var.site
-#   tier      = var.tier
-#   zone      = var.zone
-# }
+module "base_naming" {
+  source    = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  app_group = var.project_app_group
+  env       = var.environment
+  ledger    = var.project_ledger
+  site      = var.site
+  tier      = var.tier
+  zone      = var.zone
+}
 
-# #------------------------------------------------------------------------------
-# # KMS Keys
-# #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# KMS Keys
+#------------------------------------------------------------------------------
 
 # data "aws_ssm_parameter" "data_key_id" {
 #   name = "/parameter/${var.site}/${var.environment}/data/data_key/key_id"
@@ -46,29 +46,26 @@
 #   name = "/parameter/${var.site}/${var.environment}/data/glue_enc_key/key_arn"
 # }
 
-# #------------------------------------------------------------------------------
-# # S3 Buckets
-# #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# S3 Buckets
+#------------------------------------------------------------------------------
 
-# # Data Bucket
-# module "s3b_data_naming" {
-#   source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
-#   base_object = module.base_naming
-#   type        = "s3b"
-#   purpose     = join("", [var.project_prefix, "-", "datastorage"])
-# }
+# Data Bucket
+module "s3b_data_naming" {
+  source      = "git::ssh://git@github.com/BrightMLS/common_modules_terraform.git//bright_naming_conventions?ref=v0.0.4"
+  base_object = module.base_naming
+  type        = "s3b"
+  purpose     = join("", [var.project_prefix, "-", "datastorage"])
+}
 
-# module "s3_data_bucket" {
-#   source                            = "../modules/s3"
-#   s3_bucket                         = module.s3b_data_naming.name
-#   s3_bucket_tags                    = module.s3b_data_naming.tags
-#   s3_bucket_key_id                  = data.aws_ssm_parameter.data_key_id.value
-#   s3_bucket_key_arn                 = data.aws_ssm_parameter.data_key_arn.value
-#   s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
-#   s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
-#   s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
-#   s3_bucket_versioning              = "Enabled"
-# }
+module "s3_data_bucket" {
+  source                            = "../modules/s3"
+  s3_bucket                         = module.s3b_data_naming.name
+  s3_bucket_tags                    = module.s3b_data_naming.tags
+  s3_bucket_tmp_expiration_days     = var.s3_bucket_tmp_expiration_days
+  s3_bucket_objects_expiration_days = var.s3_bucket_objects_expiration_days
+  s3_bucket_objects_transition_days = var.s3_bucket_objects_transition_days
+}
 
 # # Artifacts Bucket
 # module "s3b_artifacts_naming" {
