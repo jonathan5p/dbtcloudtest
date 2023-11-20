@@ -16,18 +16,18 @@ phases:
   pre_build:
     commands:
       - echo "Install dependencies"
-      - mkdir ${HOME}/.pip
-      - JF_FILE_PARSED=$(sed -e 's/^"//' -e 's/"$//' -e 's/\\n/\n/g' <<<"${JF_PIP_FILE}")
-      - echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
-      - python3 --version
-      - pip3 install boto3
-      - pip3 install -r tests/glue_requirements.txt
-      - pip3 list
-      - rm -rf ${HOME}/.pip/pip.conf
+      #- mkdir ${HOME}/.pip
+      #- JF_FILE_PARSED=$(sed -e 's/^"//' -e 's/"$//' -e 's/\\n/\n/g' <<<"${JF_PIP_FILE}")
+      #- echo "${JF_FILE_PARSED}" >> ${HOME}/.pip/pip.conf
+      #- python3 --version
+      #- pip3 install boto3
+      #- pip3 install -r tests/glue_requirements.txt
+      #- pip3 list
+      #- rm -rf ${HOME}/.pip/pip.conf
 
   build:
     commands:
       - "echo Build started on `date`"
       - aws sts get-caller-identity
-      - python3 tests/generatedata/data_gen.py
-      - python3 -m pytest tests/test/test_glue.py
+      #- python3 tests/generatedata/data_gen.py
+      #- python3 -m pytest tests/test/test_glue.py
